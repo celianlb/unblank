@@ -3,9 +3,10 @@ import { Button } from '../components/Button';
 
 interface OverlayAppProps {
   onClose: () => void;
+  onLogin?: () => void;
 }
 
-function OverlayApp({ onClose }: OverlayAppProps) {
+function OverlayApp({ onClose, onLogin }: OverlayAppProps) {
   const handleOpenWebApp = () => {
     window.open('https://unblank.app', '_blank');
   };
@@ -13,6 +14,9 @@ function OverlayApp({ onClose }: OverlayAppProps) {
   const handleLogin = () => {
     // TODO: Implement login logic
     console.log('Login clicked');
+    if (onLogin) {
+      onLogin();
+    }
   };
 
   const handleSignup = () => {

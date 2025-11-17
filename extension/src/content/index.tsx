@@ -2,9 +2,13 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import OverlayApp from './OverlayApp';
+import ConnectedOverlayApp from './ConnectedOverlayApp';
 
 console.log('[UNBLANK] Content script loaded on', window.location.href);
 console.log('[UNBLANK] Ready to receive messages');
+
+// TODO: Replace this with actual auth check
+let isConnected = false; // Set to true to show connected view, false for login view
 
 // Load Heebo font from Google Fonts
 const loadHeeboFont = () => {
@@ -12,7 +16,7 @@ const loadHeeboFont = () => {
     const link = document.createElement('link');
     link.id = 'unblank-heebo-font';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Heebo:wght@600&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&display=swap';
     document.head.appendChild(link);
   }
 };
@@ -24,6 +28,18 @@ loadHeeboFont();
 let overlayRoot: ReturnType<typeof createRoot> | null = null;
 let overlayContainer: HTMLDivElement | null = null;
 let isOverlayVisible = false;
+
+// Function to switch to connected view
+function switchToConnectedView() {
+  isConnected = true;
+  if (overlayRoot && overlayContainer) {
+    overlayRoot.render(
+      <React.StrictMode>
+        <ConnectedOverlayApp onClose={hideOverlay} />
+      </React.StrictMode>
+    );
+  }
+}
 
 // Apply styles to overlay container
 function applyOverlayStyles(container: HTMLDivElement) {
@@ -73,7 +89,11 @@ function showOverlay() {
   overlayRoot = createRoot(overlayContainer);
   overlayRoot.render(
     <React.StrictMode>
-      <OverlayApp onClose={hideOverlay} />
+      {isConnected ? (
+        <ConnectedOverlayApp onClose={hideOverlay} />
+      ) : (
+        <OverlayApp onClose={hideOverlay} onLogin={switchToConnectedView} />
+      )}
     </React.StrictMode>
   );
 
