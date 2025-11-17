@@ -16,19 +16,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      input: {
-        popup: path.resolve(__dirname, 'src/popup/index.html'),
-        options: path.resolve(__dirname, 'src/options/index.html'),
-        background: path.resolve(__dirname, 'src/background/index.ts'),
-        content: path.resolve(__dirname, 'src/content/index.ts'),
-      },
-      output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name].[hash].js',
-        assetFileNames: 'assets/[name].[ext]',
-      },
-    },
   },
   server: {
     port: 5173,
