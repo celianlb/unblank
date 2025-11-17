@@ -13,12 +13,12 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium transition-all focus:outline-none border-2 border-[#0D0D0D]';
+  const baseStyles = 'font-medium transition-all focus:outline-none border-2 border-[#0D0D0D] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]';
 
   const variantStyles = {
-    primary: 'bg-[#FF5070] text-[#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
-    secondary: 'bg-white text-[#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
-    outline: 'bg-[#FFF5EB] text-[#0D0D0D] hover:bg-[#FFEFD9] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
+    primary: 'bg-[#FF5070] text-[#0D0D0D] hover:bg-[#FF6080]',
+    secondary: 'bg-white text-[#0D0D0D] hover:bg-[#F5F5F5]',
+    outline: 'bg-[#FFF5EB] text-[#0D0D0D] hover:bg-[#FFEFD9]',
   };
 
   const sizeStyles = {

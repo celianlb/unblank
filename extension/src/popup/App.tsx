@@ -48,7 +48,7 @@ function App() {
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
+            className="w-6 h-6 flex items-center justify-center transition-colors text-[#0D0D0D] hover:text-[#FF2F2F]"
             aria-label="Close"
           >
             <X className="w-6 h-6" strokeWidth={2} />
