@@ -372,7 +372,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
               }
             }}
             style={tagInputStyle}
-            size={tagInput.length || 'Écrire un tag...'.length}
+            size={tagInput.length || 15}
           />
           <div onClick={handleAddTag} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Plus size={16} color="#8B8B8B" strokeWidth={2} />
@@ -390,9 +390,9 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
                   <span>{tag}</span>
                   <span
                     onClick={() => handleRemoveTag(tag)}
-                    style={{ cursor: 'pointer', fontSize: '12px' }}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   >
-                    ×
+                    <X size={14} color="#0D0D0D" strokeWidth={2} />
                   </span>
                 </div>
               ))}
