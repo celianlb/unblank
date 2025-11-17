@@ -13,18 +13,18 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'rounded font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles = 'font-medium transition-all focus:outline-none border-2 border-[#0D0D0D]';
 
   const variantStyles = {
-    primary: 'bg-foreground text-background hover:opacity-90 focus:ring-foreground',
-    secondary: 'bg-background text-foreground border border-foreground hover:bg-foreground/10 focus:ring-foreground',
-    outline: 'border border-foreground/30 hover:border-foreground hover:bg-foreground/5 focus:ring-foreground',
+    primary: 'bg-[#FF5070] text-[#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
+    secondary: 'bg-white text-[#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
+    outline: 'bg-[#FFF5EB] text-[#0D0D0D] hover:bg-[#FFEFD9] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] hover:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)]',
   };
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: 'px-4 py-2 text-sm rounded-lg',
+    md: 'px-4 py-2.5 text-base rounded-xl',
+    lg: 'px-6 py-3 text-lg rounded-xl',
   };
 
   return (
