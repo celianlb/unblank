@@ -1,6 +1,6 @@
 import { X, WandSparkles, Folder, ChevronDown, Plus } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -13,6 +13,15 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [inputWidth, setInputWidth] = useState(130);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (spanRef.current) {
+      setInputWidth(spanRef.current.offsetWidth || 130);
+    }
+  }, [tagInput]);
 
   const handleOpenWebApp = () => {
     window.open('https://unblank.app', '_blank');
@@ -230,6 +239,17 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     background: 'transparent',
     padding: '0',
     margin: '0',
+    width: `${inputWidth}px`,
+  };
+
+  const measureSpanStyle: React.CSSProperties = {
+    position: 'absolute',
+    visibility: 'hidden',
+    whiteSpace: 'pre',
+    fontFamily: 'Heebo',
+    fontWeight: 400,
+    fontSize: '14px',
+    pointerEvents: 'none',
   };
 
   const tagsDisplayStyle: React.CSSProperties = {
@@ -265,6 +285,14 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     fontWeight: 500,
     fontSize: '14px',
     color: '#0D0D0D',
+    maxWidth: '100%',
+  };
+
+  const tagTextStyle: React.CSSProperties = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    minWidth: 0,
   };
 
   const tagsListStyle: React.CSSProperties = {
@@ -361,18 +389,22 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
 
           {/* Tag Input */}
           <div style={tagInputContainerStyle}>
+          <span ref={spanRef} style={measureSpanStyle}>
+            {tagInput || 'Écrire un tag...'}
+          </span>
           <input
             type="text"
-            placeholder="Écrire un tag..."
+            placeholder={isInputFocused ? '' : 'Écrire un tag...'}
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
                 handleAddTag();
               }
             }}
             style={tagInputStyle}
-            size={tagInput.length || 15}
           />
           <div onClick={handleAddTag} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Plus size={16} color="#8B8B8B" strokeWidth={2} />
@@ -387,10 +419,10 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             <div style={tagsListStyle}>
               {tags.map((tag, index) => (
                 <div key={index} style={tagStyle}>
-                  <span>{tag}</span>
+                  <span style={tagTextStyle}>{tag}</span>
                   <span
                     onClick={() => handleRemoveTag(tag)}
-                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}
                   >
                     <X size={14} color="#0D0D0D" strokeWidth={2} />
                   </span>
