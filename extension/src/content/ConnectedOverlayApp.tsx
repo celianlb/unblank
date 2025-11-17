@@ -270,7 +270,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const tagsListStyle: React.CSSProperties = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '6px',
+    gap: '10px',
     width: '100%',
   };
 
