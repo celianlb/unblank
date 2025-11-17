@@ -13,23 +13,104 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium transition-all focus:outline-none border-2 border-[#0D0D0D] shadow-[4px_4px_0px_0px_rgba(13,13,13,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(13,13,13,1)] cursor-pointer';
+  const getStyleObject = () => {
+    const baseStyle: React.CSSProperties = {
+      fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      fontWeight: 600, // SemiBold
+      fontSize: '16px',
+      transition: 'all 0.2s',
+      outline: 'none',
+      border: '2px solid #0D0D0D',
+      boxShadow: '4px 4px 0px 0px rgba(13,13,13,1)',
+      cursor: 'pointer',
+      width: '100%',
+      boxSizing: 'border-box',
+    };
 
-  const variantStyles = {
-    primary: 'bg-[#FF5070] text-[#0D0D0D] hover:bg-[#FF6080]',
-    secondary: 'bg-white text-[#0D0D0D] hover:bg-[#F5F5F5]',
-    outline: 'bg-[#FFF5EB] text-[#0D0D0D] hover:bg-[#FFEFD9]',
+    const variantStyles: Record<string, React.CSSProperties> = {
+      primary: {
+        backgroundColor: '#FF5070',
+        color: '#0D0D0D',
+      },
+      secondary: {
+        backgroundColor: 'white',
+        color: '#0D0D0D',
+      },
+      outline: {
+        backgroundColor: '#FFF5EB',
+        color: '#0D0D0D',
+      },
+    };
+
+    const sizeStyles: Record<string, React.CSSProperties> = {
+      sm: {
+        padding: '8px 16px',
+        borderRadius: '8px',
+      },
+      md: {
+        padding: '10px 16px',
+        borderRadius: '12px',
+      },
+      lg: {
+        padding: '12px 24px',
+        borderRadius: '12px',
+      },
+    };
+
+    return {
+      ...baseStyle,
+      ...variantStyles[variant],
+      ...sizeStyles[size],
+    };
   };
 
-  const sizeStyles = {
-    sm: 'px-4 py-2 text-sm rounded-lg',
-    md: 'px-4 py-2.5 text-base rounded-xl',
-    lg: 'px-6 py-3 text-lg rounded-xl',
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const target = e.currentTarget;
+    target.style.transform = 'translate(2px, 2px)';
+    target.style.boxShadow = '2px 2px 0px 0px rgba(13,13,13,1)';
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const target = e.currentTarget;
+    target.style.transform = 'translate(0, 0)';
+    target.style.boxShadow = '4px 4px 0px 0px rgba(13,13,13,1)';
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const target = e.currentTarget;
+    if (variant === 'primary') {
+      target.style.backgroundColor = '#FF6080';
+    } else if (variant === 'secondary') {
+      target.style.backgroundColor = '#F5F5F5';
+    } else if (variant === 'outline') {
+      target.style.backgroundColor = '#FFEFD9';
+    }
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const target = e.currentTarget;
+    // Reset transform and shadow when leaving (in case mouse was down)
+    target.style.transform = 'translate(0, 0)';
+    target.style.boxShadow = '4px 4px 0px 0px rgba(13,13,13,1)';
+
+    // Reset background color
+    if (variant === 'primary') {
+      target.style.backgroundColor = '#FF5070';
+    } else if (variant === 'secondary') {
+      target.style.backgroundColor = 'white';
+    } else if (variant === 'outline') {
+      target.style.backgroundColor = '#FFF5EB';
+    }
   };
 
   return (
     <button
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      style={getStyleObject()}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={className}
       {...props}
     >
       {children}
