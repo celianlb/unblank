@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ext:dev": "cd extension && npm run dev",
+    "ext:build": "cd extension && npm run build",
+    "ext:type-check": "cd extension && npm run type-check"
   },
   "dependencies": {
     "next": "16.0.3",
