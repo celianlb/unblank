@@ -1,0 +1,39 @@
+/* Styles for injected overlay - isolated from page styles */
+#unblank-extension-overlay {
+  all: initial;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+#unblank-extension-overlay * {
+  box-sizing: border-box;
+}
+
+/* Animation for overlay appearance */
+@keyframes unblank-overlay-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#unblank-extension-overlay {
+  animation: unblank-overlay-fadein 0.2s ease-in-out;
+}
+
+/* Animation for card appearance */
+@keyframes unblank-card-slidein {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+#unblank-extension-overlay > div {
+  animation: unblank-card-slidein 0.3s ease-out;
+}

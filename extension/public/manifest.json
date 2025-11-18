@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Unblank Extension",
+  "version": "1.0.0",
+  "description": "Chrome extension for Unblank application",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "action": {},
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.tsx"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "options_page": "src/options/index.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*", "UnBlznk.svg"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
