@@ -1,16 +1,17 @@
-import { X, WandSparkles, Folder, ChevronDown, Plus } from 'lucide-react';
-import { Button } from '../components/Button';
-import { useState, useRef, useLayoutEffect } from 'react';
+import { X, WandSparkles, Folder, ChevronDown, Plus } from "lucide-react";
+import { Button } from "../components/Button";
+import { useState, useRef, useLayoutEffect } from "react";
+import { motion } from "framer-motion";
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
 }
 
 function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [autoTagging, setAutoTagging] = useState(false);
-  const [selectedDestination] = useState('Récents');
-  const [tagInput, setTagInput] = useState('');
+  const [selectedDestination, setSelectedDestination] = useState("Récents");
+  const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [inputWidth, setInputWidth] = useState(130);
@@ -29,7 +30,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   }, [tagInput]);
 
   const handleOpenWebApp = () => {
-    window.open('https://unblank.app', '_blank');
+    window.open("https://unblank.app", "_blank");
   };
 
   const handleClose = () => {
@@ -38,18 +39,23 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
 
   const handleSave = () => {
     // TODO: Implement save logic
-    console.log('Save clicked', { url, autoTagging, selectedDestination, tags });
+    console.log("Save clicked", {
+      url,
+      autoTagging,
+      selectedDestination,
+      tags,
+    });
   };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -58,255 +64,274 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
 
   // Styles
   const cardStyle: React.CSSProperties = {
-    width: '420px',
-    backgroundColor: '#FEF8EE',
-    padding: '24px',
-    borderRadius: '24px',
-    border: '4px solid #0D0D0D',
-    boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)',
-    fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    boxSizing: 'border-box',
-    pointerEvents: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
+    width: "420px",
+    backgroundColor: "#FEF8EE",
+    padding: "24px",
+    borderRadius: "24px",
+    border: "4px solid #0D0D0D",
+    boxShadow: "8px 8px 0px 0px rgba(0,0,0,1)",
+    fontFamily:
+      'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    boxSizing: "border-box",
+    pointerEvents: "auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
   };
 
   const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: '42px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "42px",
   };
 
   const logoStyle: React.CSSProperties = {
-    height: '24px',
-    display: 'block',
+    height: "24px",
+    display: "block",
   };
 
   const headerRightStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
   };
 
   const closeButtonStyle: React.CSSProperties = {
-    width: '24px',
-    height: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'color 0.2s',
-    color: '#0D0D0D',
-    cursor: 'pointer',
-    border: 'none',
-    background: 'none',
-    padding: '0',
+    width: "24px",
+    height: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "color 0.2s",
+    color: "#0D0D0D",
+    cursor: "pointer",
+    border: "none",
+    background: "none",
+    padding: "0",
   };
 
   const inputContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '0px',
-    gap: '10px',
-    background: '#FFFFFF',
-    border: '2px solid #000000',
-    boxShadow: '4px 4px 0px #000000',
-    borderRadius: '12px',
-    boxSizing: 'border-box',
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: "0px",
+    gap: "10px",
+    background: "#FFFFFF",
+    border: "2px solid #000000",
+    boxShadow: "4px 4px 0px #000000",
+    borderRadius: "12px",
+    boxSizing: "border-box",
   };
 
   const inputStyle: React.CSSProperties = {
     flex: 1,
-    border: 'none',
-    outline: 'none',
-    fontFamily: 'Heebo',
+    border: "none",
+    outline: "none",
+    fontFamily: "Heebo",
     fontWeight: 500,
-    fontSize: '16px',
-    lineHeight: '23px',
-    color: '#0D0D0D',
-    background: 'transparent',
-    padding: '14px 12px',
+    fontSize: "16px",
+    lineHeight: "23px",
+    color: "#0D0D0D",
+    background: "transparent",
+    padding: "14px 12px",
   };
 
   const toggleSectionStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px',
-    gap: '16px',
-    background: autoTagging ? '#FFE3E8' : '#FFE3E8',
-    borderRadius: '12px',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px",
+    gap: "16px",
+    background: autoTagging ? "#FFE3E8" : "#FFE3E8",
+    borderRadius: "12px",
   };
 
   const toggleLabelStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontFamily: 'Heebo',
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontFamily: "Heebo",
     fontWeight: 500,
-    fontSize: '17px',
-    lineHeight: '26px',
-    color: autoTagging ? '#0D0D0D' : '#8B8B8B',
+    fontSize: "17px",
+    lineHeight: "26px",
+    color: autoTagging ? "#0D0D0D" : "#8B8B8B",
   };
 
   const toggleStyle: React.CSSProperties = {
-    width: '52px',
-    height: '30px',
-    background: autoTagging ? '#FF506F' : '#FFE3E8',
-    border: `2px solid ${autoTagging ? '#0D0D0D' : '#8B8B8B'}`,
-    borderRadius: '22px',
-    padding: '4px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: autoTagging ? 'flex-end' : 'flex-start',
-    transition: 'all 0.3s',
-    boxSizing: 'border-box',
-  };
-
-  const toggleKnobStyle: React.CSSProperties = {
-    width: '22px',
-    height: '22px',
-    background: autoTagging ? '#0D0D0D' : '#8B8B8B',
-    borderRadius: '50%',
+    width: "52px",
+    height: "30px",
+    borderRadius: "22px",
+    padding: "4px",
+    cursor: "pointer",
+    position: "relative",
+    boxSizing: "border-box",
+    border: "2px solid",
   };
 
   const sectionStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
   };
 
   const sectionTitleStyle: React.CSSProperties = {
-    fontFamily: 'Heebo',
+    fontFamily: "Heebo",
     fontWeight: 600,
-    fontSize: '16px',
-    lineHeight: '23px',
-    letterSpacing: '-0.03em',
-    color: '#0D0D0D',
+    fontSize: "16px",
+    lineHeight: "23px",
+    letterSpacing: "-0.03em",
+    color: "#0D0D0D",
   };
 
   const dropdownStyle: React.CSSProperties = {
-    position: 'relative',
-    width: '100%',
+    position: "relative",
+    width: "100%",
   };
 
   const dropdownButtonStyle: React.CSSProperties = {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '10px',
-    background: '#FFFFFF',
-    border: '2px solid #000000',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "10px",
+    background: "#FFFFFF",
+    border: "2px solid #000000",
+    borderRadius: "8px",
+    cursor: "pointer",
+    boxSizing: "border-box",
   };
 
   const dropdownContentStyle: React.CSSProperties = {
-    fontFamily: 'Heebo',
+    fontFamily: "Heebo",
     fontWeight: 600,
-    fontSize: '16px',
-    lineHeight: '23px',
-    color: '#0D0D0D',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
+    fontSize: "16px",
+    lineHeight: "23px",
+    color: "#0D0D0D",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  };
+
+  const dropdownMenuStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    marginTop: "4px",
+    background: "#FFFFFF",
+    border: "2px solid #000000",
+    borderRadius: "8px",
+    boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+    zIndex: 1000,
+    maxHeight: "calc(3 * 43px)", // 3 items max (10px padding top + 23px line + 10px padding bottom)
+    overflowY: "auto",
+  };
+
+  const dropdownItemStyle: React.CSSProperties = {
+    padding: "10px",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontFamily: "Heebo",
+    fontWeight: 600,
+    fontSize: "16px",
+    lineHeight: "23px",
+    color: "#0D0D0D",
+    cursor: "pointer",
+    transition: "background 0.2s",
   };
 
   const tagInputContainerStyle: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '8px 12px',
-    gap: '15px',
-    background: '#FFFFFF',
-    border: '1px dashed #8B8B8B',
-    borderRadius: '8px',
-    boxSizing: 'border-box',
-    cursor: 'pointer',
-    minHeight: '36px',
-    width: 'fit-content',
-    maxWidth: '100%',
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "8px 12px",
+    gap: "15px",
+    background: "#FFFFFF",
+    border: "1px dashed #8B8B8B",
+    borderRadius: "8px",
+    boxSizing: "border-box",
+    cursor: "pointer",
+    minHeight: "36px",
+    width: "fit-content",
+    maxWidth: "100%",
   };
 
   const tagInputStyle: React.CSSProperties = {
-    border: 'none',
-    outline: 'none',
-    fontFamily: 'Heebo',
+    border: "none",
+    outline: "none",
+    fontFamily: "Heebo",
     fontWeight: 400,
-    fontSize: '14px',
-    lineHeight: '21px',
-    color: '#0D0D0D',
-    background: 'transparent',
-    padding: '0',
-    margin: '0',
+    fontSize: "14px",
+    lineHeight: "21px",
+    color: "#0D0D0D",
+    background: "transparent",
+    padding: "0",
+    margin: "0",
     width: `${inputWidth}px`,
   };
 
   const measureSpanStyle: React.CSSProperties = {
-    position: 'absolute',
-    visibility: 'hidden',
-    whiteSpace: 'pre',
-    fontFamily: 'Heebo',
+    position: "absolute",
+    visibility: "hidden",
+    whiteSpace: "pre",
+    fontFamily: "Heebo",
     fontWeight: 400,
-    fontSize: '14px',
-    pointerEvents: 'none',
+    fontSize: "14px",
+    pointerEvents: "none",
   };
 
   const tagsDisplayStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px',
-    background: '#FFFFFF',
-    border: '1px dashed #8B8B8B',
-    borderRadius: '8px',
-    minHeight: '74px',
-    boxSizing: 'border-box',
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "10px",
+    background: "#FFFFFF",
+    border: "1px dashed #8B8B8B",
+    borderRadius: "8px",
+    minHeight: "74px",
+    boxSizing: "border-box",
   };
 
   const noTagsStyle: React.CSSProperties = {
-    fontFamily: 'Heebo',
+    fontFamily: "Heebo",
     fontWeight: 400,
-    fontSize: '14px',
-    lineHeight: '21px',
-    color: '#8B8B8B',
+    fontSize: "14px",
+    lineHeight: "21px",
+    color: "#8B8B8B",
   };
 
   const tagStyle: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '4px 12px',
-    background: '#FFE3E8',
-    border: '1px solid #0D0D0D',
-    borderRadius: '8px',
-    fontFamily: 'Heebo',
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "4px 12px",
+    background: "#FFE3E8",
+    border: "1px solid #0D0D0D",
+    borderRadius: "8px",
+    fontFamily: "Heebo",
     fontWeight: 500,
-    fontSize: '14px',
-    color: '#0D0D0D',
-    maxWidth: '100%',
+    fontSize: "14px",
+    color: "#0D0D0D",
+    maxWidth: "100%",
   };
 
   const tagTextStyle: React.CSSProperties = {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
     minWidth: 0,
   };
 
   const tagsListStyle: React.CSSProperties = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
-    width: '100%',
-    maxHeight: 'calc(3 * (29px + 10px) - 10px)', // 3 lignes: (hauteur tag + gap) * 3 - gap final
-    overflowY: 'auto',
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+    width: "100%",
+    maxHeight: "calc(3 * (29px + 10px) - 10px)", // 3 lignes: (hauteur tag + gap) * 3 - gap final
+    overflowY: "auto",
   };
 
   return (
@@ -314,17 +339,13 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       {/* Header */}
       <div style={headerStyle}>
         <img
-          src={chrome.runtime.getURL('UnBlznk.svg')}
+          src={chrome.runtime.getURL("UnBlznk.svg")}
           alt="UnBlank"
           style={logoStyle}
         />
 
         <div style={headerRightStyle}>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleOpenWebApp}
-          >
+          <Button variant="secondary" size="sm" onClick={handleOpenWebApp}>
             Ouvrir l'app web
           </Button>
 
@@ -332,10 +353,10 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             onClick={handleClose}
             style={closeButtonStyle}
             aria-label="Close"
-            onMouseEnter={(e) => e.currentTarget.style.color = '#FF2F2F'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#0D0D0D'}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#FF2F2F")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#0D0D0D")}
           >
-            <X style={{ width: '24px', height: '24px' }} strokeWidth={2} />
+            <X style={{ width: "24px", height: "24px" }} strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -349,7 +370,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           onChange={(e) => setUrl(e.target.value)}
           style={{
             ...inputStyle,
-            color: url ? '#0D0D0D' : 'rgba(13, 13, 13, 0.5)',
+            color: url ? "#0D0D0D" : "rgba(13, 13, 13, 0.5)",
           }}
         />
       </div>
@@ -359,17 +380,33 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
         <div style={toggleLabelStyle}>
           <WandSparkles
             size={24}
-            color={autoTagging ? '#0D0D0D' : '#8B8B8B'}
+            color={autoTagging ? "#0D0D0D" : "#8B8B8B"}
             strokeWidth={2}
           />
           <span>Activer le tagging automatique</span>
         </div>
-        <div
-          style={toggleStyle}
+        <motion.div
+          style={{ ...toggleStyle, display: "flex", alignItems: "center" }}
           onClick={() => setAutoTagging(!autoTagging)}
+          animate={{
+            backgroundColor: autoTagging ? "#FF506F" : "#FFE3E8",
+            borderColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <div style={toggleKnobStyle}></div>
-        </div>
+          <motion.div
+            animate={{
+              x: autoTagging ? 18 : 0,
+              backgroundColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{
+              width: "22px",
+              height: "22px",
+              borderRadius: "50%",
+            }}
+          />
+        </motion.div>
       </div>
 
       {/* Destination Selector */}
@@ -386,66 +423,170 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             </div>
             <ChevronDown size={24} color="#000000" strokeWidth={2} />
           </div>
-        </div>
-      </div>
-
-      {/* Tags Section */}
-      {!autoTagging && (
-        <div style={sectionStyle}>
-          <div style={sectionTitleStyle}>Tags de recherche (mot clé pour retrouver vos rèfs)</div>
-
-          {/* Tag Input */}
-          <div style={tagInputContainerStyle}>
-          <span ref={spanRef} style={measureSpanStyle}>
-            {tagInput || 'Écrire un tag...'}
-          </span>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Écrire un tag..."
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleAddTag();
-              }
-            }}
-            style={tagInputStyle}
-          />
-          <div onClick={handleAddTag} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Plus size={16} color="#8B8B8B" strokeWidth={2} />
-          </div>
-        </div>
-
-        {/* Tags Display */}
-        <div style={tagsDisplayStyle}>
-          {tags.length === 0 ? (
-            <div style={noTagsStyle}>Aucun tag pour l'instant.</div>
-          ) : (
-            <div style={tagsListStyle}>
-              {tags.map((tag, index) => (
-                <div key={index} style={tagStyle}>
-                  <span style={tagTextStyle}>{tag}</span>
-                  <span
-                    onClick={() => handleRemoveTag(tag)}
-                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                  >
-                    <X size={14} color="#0D0D0D" strokeWidth={2} />
-                  </span>
-                </div>
-              ))}
+          {isDropdownOpen && (
+            <div style={dropdownMenuStyle}>
+              <div
+                style={dropdownItemStyle}
+                onClick={() => {
+                  setSelectedDestination("Logos");
+                  setIsDropdownOpen(false);
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#FFE3E8")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FFFFFF")
+                }
+              >
+                <Folder size={24} color="#000000" strokeWidth={2} />
+                <span>Logos</span>
+              </div>
+              <div
+                style={dropdownItemStyle}
+                onClick={() => {
+                  setSelectedDestination("Affiches");
+                  setIsDropdownOpen(false);
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#FFE3E8")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FFFFFF")
+                }
+              >
+                <Folder size={24} color="#000000" strokeWidth={2} />
+                <span>Affiches</span>
+              </div>
+              <div
+                style={dropdownItemStyle}
+                onClick={() => {
+                  setSelectedDestination("Maquettes");
+                  setIsDropdownOpen(false);
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#FFE3E8")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FFFFFF")
+                }
+              >
+                <Folder size={24} color="#000000" strokeWidth={2} />
+                <span>Maquettes</span>
+              </div>
+              <div
+                style={dropdownItemStyle}
+                onClick={() => {
+                  setSelectedDestination("A ranger");
+                  setIsDropdownOpen(false);
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#FFE3E8")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FFFFFF")
+                }
+              >
+                <Folder size={24} color="#000000" strokeWidth={2} />
+                <span>A ranger</span>
+              </div>
+              <div
+                style={dropdownItemStyle}
+                onClick={() => {
+                  setSelectedDestination("Architecture");
+                  setIsDropdownOpen(false);
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#FFE3E8")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FFFFFF")
+                }
+              >
+                <Folder size={24} color="#000000" strokeWidth={2} />
+                <span>Architecture</span>
+              </div>
             </div>
           )}
         </div>
       </div>
-      )}
+
+      {/* Tags Section */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: autoTagging ? 0 : "auto",
+          marginTop: autoTagging ? 0 : 16,
+          marginBottom: autoTagging ? 0 : 0,
+        }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        style={{ overflow: "hidden" }}
+      >
+        <div style={sectionStyle}>
+          <div style={sectionTitleStyle}>
+            Tags de recherche (mot clé pour retrouver vos rèfs)
+          </div>
+
+          {/* Tag Input */}
+          <div style={tagInputContainerStyle}>
+            <span ref={spanRef} style={measureSpanStyle}>
+              {tagInput || "Écrire un tag..."}
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Écrire un tag..."
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleAddTag();
+                }
+              }}
+              style={tagInputStyle}
+            />
+            <div
+              onClick={handleAddTag}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Plus size={16} color="#8B8B8B" strokeWidth={2} />
+            </div>
+          </div>
+
+          {/* Tags Display */}
+          <div style={tagsDisplayStyle}>
+            {tags.length === 0 ? (
+              <div style={noTagsStyle}>Aucun tag pour l'instant.</div>
+            ) : (
+              <div style={tagsListStyle}>
+                {tags.map((tag, index) => (
+                  <div key={index} style={tagStyle}>
+                    <span style={tagTextStyle}>{tag}</span>
+                    <span
+                      onClick={() => handleRemoveTag(tag)}
+                      style={{
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <X size={14} color="#0D0D0D" strokeWidth={2} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
       {/* Save Button */}
-      <Button
-        variant="primary"
-        size="md"
-        onClick={handleSave}
-      >
+      <Button variant="primary" size="md" onClick={handleSave}>
         Enregistrer
       </Button>
     </div>
