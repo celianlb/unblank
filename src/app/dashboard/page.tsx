@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui';
 import { UserSession } from '@/domain/auth/models';
+import { sendLogoutToExtension } from '@/lib/extension/extensionBridge';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,6 +31,10 @@ export default function DashboardPage() {
   }, [getCurrentSession, router]);
 
   const handleLogout = async () => {
+    // Send logout signal to extension first
+    await sendLogoutToExtension();
+    
+    // Then logout from SaaS
     await signOut();
   };
 
@@ -118,7 +123,7 @@ export default function DashboardPage() {
                 Session expire le
               </p>
               <p className="text-lg font-medium text-[#0D0D0D]">
-                {new Date(session.expiresAt * 1000).toLocaleDateString('fr-FR', {
+                {new Date(session.expiresAt).toLocaleDateString('fr-FR', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',

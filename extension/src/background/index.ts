@@ -1,3 +1,6 @@
+import { saveSession, clearSession } from '../utils/auth';
+import type { AuthSession } from '../types';
+
 // Background service worker for Chrome extension
 console.log('Background service worker loaded');
 
@@ -66,18 +69,125 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
-// Listen for messages from content scripts
-chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-  console.log('Message received in background:', request);
+// Listen for messages from content scripts and external sources (SaaS app)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Message received in background:', request, 'from:', sender);
 
   // Handle different message types
   if (request.type === 'GET_DATA') {
     // Example: fetch data and send response
     sendResponse({ success: true, data: 'Background data' });
+  } else if (request.type === 'AUTH_SESSION') {
+    // Handle authentication session from SaaS app
+    handleAuthSession(request.session as AuthSession)
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('Error handling auth session:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep message channel open for async response
+  } else if (request.type === 'AUTH_LOGOUT') {
+    // Handle logout from SaaS app
+    handleLogout()
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('Error handling logout:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep message channel open for async response
   }
 
   return true; // Keep message channel open for async response
 });
+
+// Listen for messages from external sources (SaaS app)
+chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
+  console.log('External message received:', request, 'from:', sender);
+
+  if (request.type === 'AUTH_SESSION') {
+    handleAuthSession(request.session as AuthSession)
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('Error handling auth session:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+
+  return true;
+});
+
+/**
+ * Handle authentication session from SaaS app
+ */
+async function handleAuthSession(session: AuthSession): Promise<void> {
+  try {
+    console.log('Saving auth session:', session);
+    
+    // Save session to storage
+    await saveSession(session);
+    
+    // Notify all extension components that auth is successful
+    chrome.runtime.sendMessage({ type: 'AUTH_SUCCESS', session }).catch(() => {
+      // Ignore errors if no listeners
+    });
+    
+    // Notify all tabs (content scripts) that auth is successful
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, { type: 'AUTH_SUCCESS', session }).catch(() => {
+            // Ignore errors if content script not loaded in this tab
+          });
+        }
+      });
+    });
+    
+    console.log('Auth session saved successfully');
+  } catch (error) {
+    console.error('Error saving auth session:', error);
+    throw error;
+  }
+}
+
+/**
+ * Handle logout from SaaS app
+ */
+async function handleLogout(): Promise<void> {
+  try {
+    console.log('Clearing auth session');
+    
+    // Clear session from storage
+    await clearSession();
+    
+    // Notify all extension components that user logged out
+    chrome.runtime.sendMessage({ type: 'AUTH_LOGOUT' }).catch(() => {
+      // Ignore errors if no listeners
+    });
+    
+    // Notify all tabs (content scripts) that user logged out
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, { type: 'AUTH_LOGOUT' }).catch(() => {
+            // Ignore errors if content script not loaded in this tab
+          });
+        }
+      });
+    });
+    
+    console.log('Auth session cleared successfully');
+  } catch (error) {
+    console.error('Error clearing auth session:', error);
+    throw error;
+  }
+}
 
 // Export empty object to make this a module
 export {};

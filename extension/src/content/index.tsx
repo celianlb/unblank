@@ -3,12 +3,19 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import OverlayApp from './OverlayApp';
 import ConnectedOverlayApp from './ConnectedOverlayApp';
+import { isAuthenticated } from '../utils/auth';
 
 console.log('[UNBLANK] Content script loaded on', window.location.href);
 console.log('[UNBLANK] Ready to receive messages');
 
-// TODO: Replace this with actual auth check
-let isConnected = false; // Set to true to show connected view, false for login view
+// Check auth status
+let isConnected = false;
+
+// Initialize auth status
+(async () => {
+  isConnected = await isAuthenticated();
+  console.log('[UNBLANK] Auth status:', isConnected);
+})();
 
 // Load Heebo font from Google Fonts
 const loadHeeboFont = () => {
@@ -80,9 +87,24 @@ function applyOverlayStyles(container: HTMLDivElement) {
 }
 
 // Create and show the overlay
-function showOverlay() {
+async function showOverlay() {
+  // Check auth status before showing overlay
+  isConnected = await isAuthenticated();
+  console.log('[UNBLANK] Auth status check:', isConnected);
+
   if (overlayContainer) {
-    // Overlay already exists, re-apply styles and show it
+    // Overlay already exists, update it and show it
+    if (overlayRoot) {
+      overlayRoot.render(
+        <React.StrictMode>
+          {isConnected ? (
+            <ConnectedOverlayApp onClose={hideOverlay} />
+          ) : (
+            <OverlayApp onClose={hideOverlay} onLogin={switchToConnectedView} />
+          )}
+        </React.StrictMode>
+      );
+    }
     applyOverlayStyles(overlayContainer);
     overlayContainer.style.display = 'flex';
     isOverlayVisible = true;
@@ -164,6 +186,25 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   } else if (request.type === 'REMOVE_OVERLAY') {
     removeOverlay();
     sendResponse({ success: true, message: 'Overlay removed' });
+  } else if (request.type === 'AUTH_SUCCESS') {
+    // Auth successful, switch to connected view
+    console.log('[UNBLANK] Auth success received, switching to connected view');
+    isConnected = true;
+    switchToConnectedView();
+    sendResponse({ success: true, message: 'Switched to connected view' });
+  } else if (request.type === 'AUTH_LOGOUT') {
+    // Logout received, switch to login view
+    console.log('[UNBLANK] Logout received, switching to login view');
+    isConnected = false;
+    // If overlay is currently visible, update it to show login view
+    if (overlayRoot && isOverlayVisible) {
+      overlayRoot.render(
+        <React.StrictMode>
+          <OverlayApp onClose={hideOverlay} onLogin={switchToConnectedView} />
+        </React.StrictMode>
+      );
+    }
+    sendResponse({ success: true, message: 'Switched to login view' });
   } else if (request.type === 'PING') {
     sendResponse({ success: true, message: 'Content script is active' });
   }

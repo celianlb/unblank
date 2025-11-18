@@ -39,7 +39,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       user: this.mapSupabaseUserToDomain(supabaseSession.user),
       accessToken: supabaseSession.access_token,
       refreshToken: supabaseSession.refresh_token,
-      expiresAt: supabaseSession.expires_at || 0,
+      expiresAt: (supabaseSession.expires_at || 0) * 1000, // Convert seconds to milliseconds
     };
   }
 

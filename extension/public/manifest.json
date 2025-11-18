@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "action": {},
   "background": {
@@ -19,8 +20,20 @@
       "js": ["src/content/index.tsx"],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": ["http://localhost:3000/*", "https://*.unblank.app/*"],
+      "js": ["src/content/injector.ts"],
+      "run_at": "document_start",
+      "all_frames": false
     }
   ],
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:3000/*",
+      "https://*.unblank.app/*"
+    ]
+  },
   "options_page": "src/options/index.html",
   "web_accessible_resources": [
     {

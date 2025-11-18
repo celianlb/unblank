@@ -1,17 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
 import { useAuth } from "@/lib/auth";
+import { isFromExtension, sendSessionToExtension } from "@/lib/extension/extensionBridge";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
+  const { signIn, signInWithOAuth, isLoading, error, clearError, user, session } = useAuth();
+  const fromExtension = isFromExtension();
+
+  // Check if user is already authenticated when coming from extension
+  useEffect(() => {
+    if (fromExtension && user && session) {
+      // Send session to extension and close tab
+      sendSessionToExtension({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        expiresAt: session.expiresAt,
+        userId: user.id,
+        email: user.email,
+      });
+    }
+  }, [fromExtension, user, session]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +38,18 @@ export default function LoginPage() {
       return;
     }
 
-    await signIn({ email, password });
+    const result = await signIn({ email, password });
+    
+    // If login successful and coming from extension, send session
+    if (result && fromExtension) {
+      sendSessionToExtension({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresAt: result.expiresAt,
+        userId: result.user.id,
+        email: result.user.email,
+      });
+    }
   };
 
   const handleRegisterClick = () => {
