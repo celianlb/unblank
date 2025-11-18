@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #FEF8EE;
+  color: #0D0D0D;
+}
+
+a {
+  color: inherit;
+}
+
+/* UnBlank Design System - Custom Properties */
+@theme {
+  /* Colors */
+  --color-unblank-blue: #202AED;
+  --color-unblank-cream: #FEF8EE;
+  --color-unblank-black: #0D0D0D;
+  --color-unblank-white: #FFFFFF;
+
+  /* Shadows - Neo-brutalist style */
+  --shadow-brutal-lg: 6px 6px 0px #000000;
+  --shadow-brutal: 3px 3px 0px #000000;
+
+  /* Border radius */
+  --radius-card: 24px;
+  --radius-panel: 14px;
+
+  /* Font families */
+  --font-family-display: 'Area Inktrap', var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-body: var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
