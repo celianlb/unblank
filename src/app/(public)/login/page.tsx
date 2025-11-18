@@ -5,25 +5,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
+import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login with:", { email, password });
-    // TODO: Implement authentication logic
+    clearError();
+
+    // Validation côté client
+    if (!email || !password) {
+      return;
+    }
+
+    await signIn({ email, password });
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Login with Google");
-    // TODO: Implement Google OAuth
+  const handleGoogleLogin = async () => {
+    clearError();
+    await signInWithOAuth('google');
   };
 
-  const handlePinterestLogin = () => {
-    console.log("Login with Pinterest");
-    // TODO: Implement Pinterest OAuth
+  const handlePinterestLogin = async () => {
+    clearError();
+    await signInWithOAuth('pinterest');
   };
 
   return (
@@ -79,19 +87,28 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
               {/* Password Input + Forgot Password */}
               <div className="flex flex-col gap-4">
-                <Input
-                  type="password"
-                  label="Mot de passe"
-                  placeholder="***********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1">
+                  <Input
+                    type="password"
+                    label="Mot de passe"
+                    placeholder="***********"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                  {error && (
+                    <p className="text-sm text-red-600 font-medium">
+                      {error}
+                    </p>
+                  )}
+                </div>
                 <Link
                   href="/forgot-password"
                   className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit"
@@ -108,8 +125,9 @@ export default function LoginPage() {
                 size="md"
                 onClick={handleLogin}
                 className="w-full h-[54px] shadow-[3px_3px_0px_#000000]"
+                disabled={isLoading}
               >
-                Se connecter
+                {isLoading ? "Connexion en cours..." : "Se connecter"}
               </Button>
 
               {/* Divider */}
