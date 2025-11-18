@@ -73,8 +73,8 @@ export function OAuthButton({
       <Image
         src={iconSrc}
         alt={`${provider} icon`}
-        width={20}
-        height={20}
+        width={28}
+        height={28}
         draggable={false}
       />
     );

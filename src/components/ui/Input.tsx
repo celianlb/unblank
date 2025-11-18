@@ -19,85 +19,24 @@ export function Input({
   const isPasswordField = type === 'password';
   const inputType = isPasswordField && showPassword ? 'text' : type;
 
-  const getStyleObject = (): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      boxSizing: 'border-box',
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: '6px 16px',
-      gap: '10px',
-      width: '560.5px',
-      height: '54px',
-      backgroundColor: '#FFFFFF',
-      border: '2px solid #000000',
-      borderRadius: '12px',
-      fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      fontStyle: 'normal',
-      fontWeight: 500,
-      fontSize: '16px',
-      lineHeight: '23px',
-      color: 'rgba(13, 13, 13, 0.5)',
-      outline: 'none',
-      flex: 'none',
-      order: 1,
-      alignSelf: 'stretch',
-      flexGrow: 0,
-    };
-
-    return baseStyle;
-  };
-
-  const labelStyle: React.CSSProperties = {
-    width: '560.5px',
-    height: '23px',
-    fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    fontStyle: 'normal',
-    fontWeight: 500,
-    fontSize: '16px',
-    lineHeight: '23px',
-    color: '#0D0D0D',
-    flex: 'none',
-    order: 0,
-    alignSelf: 'stretch',
-    flexGrow: 0,
-  };
-
-  const errorStyle: React.CSSProperties = {
-    fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    fontWeight: 400,
-    fontSize: '14px',
-    color: '#FF2F2F',
-    marginTop: '8px',
-  };
-
-  const inputWrapperStyle: React.CSSProperties = {
-    position: 'relative',
-    width: '100%',
-  };
-
-  const eyeButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    right: '16px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#0D0D0D',
-  };
-
   return (
-    <div className={className}>
-      {label && <label style={labelStyle}>{label}</label>}
-      <div style={inputWrapperStyle}>
+    <div className={`w-full ${className}`}>
+      {label && (
+        <label className="block w-full text-base leading-[23px] font-medium text-[#0D0D0D] mb-1.5">
+          {label}
+        </label>
+      )}
+      <div className="relative w-full">
         <input
           type={inputType}
-          style={getStyleObject()}
+          className="
+            w-full h-[54px] px-4 py-1.5
+            bg-white border-2 border-black rounded-xl
+            font-medium text-base leading-[23px]
+            text-[#0D0D0D] placeholder:text-[rgba(13,13,13,0.5)]
+            outline-none
+            focus:ring-2 focus:ring-[#202AED] focus:ring-offset-0
+          "
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
@@ -106,7 +45,12 @@ export function Input({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={eyeButtonStyle}
+            className="
+              absolute right-4 top-1/2 -translate-y-1/2
+              bg-transparent border-none cursor-pointer p-1
+              flex items-center justify-center text-[#0D0D0D]
+              hover:opacity-70 transition-opacity
+            "
             tabIndex={-1}
           >
             {showPassword ? (
@@ -117,7 +61,11 @@ export function Input({
           </button>
         )}
       </div>
-      {error && <div style={errorStyle}>{error}</div>}
+      {error && (
+        <div className="text-sm text-[#FF2F2F] mt-2">
+          {error}
+        </div>
+      )}
     </div>
   );
 }

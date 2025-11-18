@@ -27,7 +27,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE] p-4 md:p-6 lg:p-10">
+    <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE] p-4 md:p-6 lg:p-10 overscroll-none">
       <Card className="w-full max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-2.5">
           {/* Left Panel - Blue with Logo and Mascot */}
@@ -66,7 +66,7 @@ export default function LoginPage() {
           <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-6 lg:p-8">
             <div className="w-full max-w-[560px] flex flex-col gap-6 md:gap-8">
               {/* Title */}
-              <h1 className="text-3xl md:text-[42px] font-extrabold leading-[0.9] text-[#0D0D0D] font-['Area_Inktrap',_Heebo,_sans-serif]">
+              <h1 className="text-3xl md:text-[42px] font-extrabold leading-[0.9] text-[#0D0D0D] font-['Area_Inktrap',_Heebo,_sans-serif] text-center">
                 Bienvenue sur UnBlank
               </h1>
 
@@ -94,7 +94,8 @@ export default function LoginPage() {
                 />
                 <Link
                   href="/forgot-password"
-                  className="text-base leading-[23px] tracking-[-0.03em] underline text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit"
+                  className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit"
+                  style={{ textDecoration: "underline" }}
                 >
                   Mot de passe oublié ?
                 </Link>
