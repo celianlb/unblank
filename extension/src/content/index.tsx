@@ -21,8 +21,23 @@ const loadHeeboFont = () => {
   }
 };
 
-// Load font on script initialization
+// Add custom CSS for placeholder
+const addCustomStyles = () => {
+  if (!document.getElementById('unblank-custom-styles')) {
+    const style = document.createElement('style');
+    style.id = 'unblank-custom-styles';
+    style.textContent = `
+      input[type="text"]:focus::placeholder {
+        opacity: 0;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+// Load font and styles on script initialization
 loadHeeboFont();
+addCustomStyles();
 
 // Track overlay state
 let overlayRoot: ReturnType<typeof createRoot> | null = null;

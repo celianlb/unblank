@@ -1,6 +1,6 @@
 import { X, WandSparkles, Folder, ChevronDown, Plus } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -14,12 +14,17 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [inputWidth, setInputWidth] = useState(130);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const spanRef = useRef<HTMLSpanElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (spanRef.current) {
-      setInputWidth(spanRef.current.offsetWidth || 130);
+      const newWidth = spanRef.current.offsetWidth + 2; // +2px for cursor
+      setInputWidth(newWidth);
+    }
+    // Reset scroll position to prevent scrolling
+    if (inputRef.current) {
+      inputRef.current.scrollLeft = 0;
     }
   }, [tagInput]);
 
@@ -300,6 +305,8 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     flexWrap: 'wrap',
     gap: '10px',
     width: '100%',
+    maxHeight: 'calc(3 * (29px + 10px) - 10px)', // 3 lignes: (hauteur tag + gap) * 3 - gap final
+    overflowY: 'auto',
   };
 
   return (
@@ -393,12 +400,11 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             {tagInput || 'Écrire un tag...'}
           </span>
           <input
+            ref={inputRef}
             type="text"
-            placeholder={isInputFocused ? '' : 'Écrire un tag...'}
+            placeholder="Écrire un tag..."
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
                 handleAddTag();
