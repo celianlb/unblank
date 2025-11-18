@@ -7,6 +7,7 @@ import {
   AuthError,
   AuthErrorType,
   OAuthProvider,
+  SignUpData,
 } from '@/domain/auth/models';
 
 /**
@@ -80,6 +81,48 @@ export class SupabaseAuthRepository implements AuthRepository {
 
       if (!data.session || !data.user) {
         throw AuthError.unknown(new Error('No session returned from Supabase'));
+      }
+
+      return this.mapSupabaseSessionToDomain(data.session);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      this.handleSupabaseError(error);
+    }
+  }
+
+  async signUp(signUpData: SignUpData): Promise<UserSession> {
+    try {
+      const { data, error } = await this.supabase.auth.signUp({
+        email: signUpData.email,
+        password: signUpData.password,
+        options: {
+          data: {
+            username: signUpData.username || '',
+          },
+        },
+      });
+
+      if (error) {
+        this.handleSupabaseError(error);
+      }
+
+      if (!data.user) {
+        throw AuthError.unknown(
+          new Error('Erreur lors de la création du compte')
+        );
+      }
+
+      // Si pas de session (email confirmation requise)
+      if (!data.session) {
+        // Créer une session temporaire pour afficher un message
+        return {
+          user: this.mapSupabaseUserToDomain(data.user),
+          accessToken: '',
+          refreshToken: '',
+          expiresAt: 0,
+        };
       }
 
       return this.mapSupabaseSessionToDomain(data.session);

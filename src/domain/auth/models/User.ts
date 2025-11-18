@@ -18,6 +18,15 @@ export interface AuthCredentials {
 }
 
 /**
+ * Données pour l'inscription
+ */
+export interface SignUpData {
+  email: string;
+  password: string;
+  username?: string;
+}
+
+/**
  * Session utilisateur après authentification
  */
 export interface UserSession {

@@ -1,4 +1,4 @@
-import { AuthCredentials, User, UserSession, OAuthProvider } from '../models';
+import { AuthCredentials, User, UserSession, OAuthProvider, SignUpData } from '../models';
 
 /**
  * Port (interface) pour le repository d'authentification
@@ -9,6 +9,11 @@ export interface AuthRepository {
    * Authentifie un utilisateur avec email et mot de passe
    */
   signIn(credentials: AuthCredentials): Promise<UserSession>;
+
+  /**
+   * Inscrit un nouvel utilisateur
+   */
+  signUp(data: SignUpData): Promise<UserSession>;
 
   /**
    * Authentifie un utilisateur via OAuth (Google, Pinterest, etc.)

@@ -20,7 +20,7 @@ export function Input({
   const inputType = isPasswordField && showPassword ? 'text' : type;
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className="w-full">
       {label && (
         <label className="block w-full text-base leading-[23px] font-medium text-[#0D0D0D] mb-1.5">
           {label}
@@ -29,14 +29,15 @@ export function Input({
       <div className="relative w-full">
         <input
           type={inputType}
-          className="
+          className={`
             w-full h-[54px] px-4 py-1.5
             bg-white border-2 border-black rounded-xl
             font-medium text-base leading-[23px]
             text-[#0D0D0D] placeholder:text-[rgba(13,13,13,0.5)]
             outline-none
             focus:ring-2 focus:ring-[#202AED] focus:ring-offset-0
-          "
+            ${className}
+          `}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}

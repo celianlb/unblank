@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
 import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
@@ -22,6 +24,10 @@ export default function LoginPage() {
     }
 
     await signIn({ email, password });
+  };
+
+  const handleRegisterClick = () => {
+    router.push('/register');
   };
 
   const handleGoogleLogin = async () => {
@@ -145,7 +151,9 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="md"
+                  onClick={handleRegisterClick}
                   className="w-full h-[54px] bg-[#FEF8EE] shadow-[3px_3px_0px_#000000]"
+                  disabled={isLoading}
                 >
                   S&apos;inscrire
                 </Button>

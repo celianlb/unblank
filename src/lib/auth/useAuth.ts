@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthFactory from './authFactory';
-import { AuthCredentials, AuthError, UserSession, OAuthProvider } from '@/domain/auth/models';
+import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData } from '@/domain/auth/models';
 
 /**
  * Hook personnalisé pour l'authentification
@@ -35,6 +35,43 @@ export function useAuth() {
           setError(err.message);
         } else {
           setError('Une erreur inattendue s\'est produite');
+        }
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router]
+  );
+
+  /**
+   * Inscrit un nouvel utilisateur
+   */
+  const signUp = useCallback(
+    async (data: SignUpData): Promise<UserSession | null> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const signUpUseCase = AuthFactory.createSignUpUseCase();
+        const session = await signUpUseCase.execute(data);
+
+        // Si pas de token d'accès, c'est que la confirmation d'email est requise
+        if (!session.accessToken) {
+          // Ne pas rediriger, juste retourner la session
+          // La page d'inscription affichera un message
+          return session;
+        }
+
+        // Redirection après inscription réussie (si session complète)
+        router.push('/dashboard');
+
+        return session;
+      } catch (err) {
+        if (err instanceof AuthError) {
+          setError(err.message);
+        } else {
+          setError('Une erreur inattendue s\'est produite lors de l\'inscription');
         }
         return null;
       } finally {
@@ -118,6 +155,7 @@ export function useAuth() {
 
   return {
     signIn,
+    signUp,
     signInWithOAuth,
     signOut,
     getCurrentSession,

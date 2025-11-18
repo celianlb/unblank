@@ -3,6 +3,7 @@ import { SupabaseAuthRepository } from '@/infra/auth';
 import { AuthService } from '@/domain/auth/services';
 import {
   SignInUseCase,
+  SignUpUseCase,
   SignInWithOAuthUseCase,
   SignOutUseCase,
   GetCurrentSessionUseCase,
@@ -41,6 +42,13 @@ class AuthFactory {
    */
   static createSignInUseCase(): SignInUseCase {
     return new SignInUseCase(this.getAuthService());
+  }
+
+  /**
+   * Crée une nouvelle instance du use case SignUp
+   */
+  static createSignUpUseCase(): SignUpUseCase {
+    return new SignUpUseCase(this.getAuthService());
   }
 
   /**

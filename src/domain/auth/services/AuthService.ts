@@ -1,5 +1,5 @@
 import { AuthRepository } from '../ports';
-import { AuthCredentials, UserSession, AuthError, OAuthProvider } from '../models';
+import { AuthCredentials, UserSession, AuthError, OAuthProvider, SignUpData } from '../models';
 
 /**
  * Service d'authentification - Logique métier pure
@@ -37,11 +37,56 @@ export class AuthService {
   }
 
   /**
+   * Valide les données d'inscription
+   */
+  private validateSignUpData(data: SignUpData): void {
+    // Validation email
+    if (!data.email || !data.email.trim()) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'L\'email est requis'
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'L\'email n\'est pas valide'
+      );
+    }
+
+    // Validation mot de passe
+    if (!data.password || data.password.length < 6) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'Le mot de passe doit contenir au moins 6 caractères'
+      );
+    }
+
+    // Validation pseudo (optionnel mais si présent doit être valide)
+    if (data.username && data.username.trim().length < 3) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'Le pseudo doit contenir au moins 3 caractères'
+      );
+    }
+  }
+
+  /**
    * Authentifie un utilisateur
    */
   async signIn(credentials: AuthCredentials): Promise<UserSession> {
     this.validateCredentials(credentials);
     return await this.authRepository.signIn(credentials);
+  }
+
+  /**
+   * Inscrit un nouvel utilisateur
+   */
+  async signUp(data: SignUpData): Promise<UserSession> {
+    this.validateSignUpData(data);
+    return await this.authRepository.signUp(data);
   }
 
   /**
