@@ -1,6 +1,7 @@
 import { X, WandSparkles, Folder, ChevronDown, Plus } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useState, useRef, useLayoutEffect } from 'react';
+import { motion } from 'framer-motion';
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -155,23 +156,12 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const toggleStyle: React.CSSProperties = {
     width: '52px',
     height: '30px',
-    background: autoTagging ? '#FF506F' : '#FFE3E8',
-    border: `2px solid ${autoTagging ? '#0D0D0D' : '#8B8B8B'}`,
     borderRadius: '22px',
     padding: '4px',
     cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: autoTagging ? 'flex-end' : 'flex-start',
-    transition: 'all 0.3s',
+    position: 'relative',
     boxSizing: 'border-box',
-  };
-
-  const toggleKnobStyle: React.CSSProperties = {
-    width: '22px',
-    height: '22px',
-    background: autoTagging ? '#0D0D0D' : '#8B8B8B',
-    borderRadius: '50%',
+    border: '2px solid',
   };
 
   const sectionStyle: React.CSSProperties = {
@@ -364,12 +354,28 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           />
           <span>Activer le tagging automatique</span>
         </div>
-        <div
-          style={toggleStyle}
+        <motion.div
+          style={{ ...toggleStyle, display: 'flex', alignItems: 'center' }}
           onClick={() => setAutoTagging(!autoTagging)}
+          animate={{
+            backgroundColor: autoTagging ? '#FF506F' : '#FFE3E8',
+            borderColor: autoTagging ? '#0D0D0D' : '#8B8B8B',
+          }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <div style={toggleKnobStyle}></div>
-        </div>
+          <motion.div
+            animate={{
+              x: autoTagging ? 18 : 0,
+              backgroundColor: autoTagging ? '#0D0D0D' : '#8B8B8B',
+            }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{
+              width: '22px',
+              height: '22px',
+              borderRadius: '50%',
+            }}
+          />
+        </motion.div>
       </div>
 
       {/* Destination Selector */}
@@ -390,7 +396,16 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       </div>
 
       {/* Tags Section */}
-      {!autoTagging && (
+      <motion.div
+        initial={false}
+        animate={{
+          height: autoTagging ? 0 : 'auto',
+          marginTop: autoTagging ? 0 : 16,
+          marginBottom: autoTagging ? 0 : 0
+        }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        style={{ overflow: 'hidden' }}
+      >
         <div style={sectionStyle}>
           <div style={sectionTitleStyle}>Tags de recherche (mot clé pour retrouver vos rèfs)</div>
 
@@ -438,7 +453,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           )}
         </div>
       </div>
-      )}
+      </motion.div>
 
       {/* Save Button */}
       <Button
