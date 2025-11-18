@@ -117,5 +117,28 @@ export class AuthService {
   async getCurrentSession(): Promise<UserSession | null> {
     return await this.authRepository.getCurrentSession();
   }
+
+  /**
+   * Envoie un email de réinitialisation de mot de passe
+   */
+  async resetPassword(email: string): Promise<void> {
+    // Validation de l'email
+    if (!email || !email.trim()) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'L\'email est requis'
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'L\'email n\'est pas valide'
+      );
+    }
+
+    return await this.authRepository.resetPassword(email);
+  }
 }
 

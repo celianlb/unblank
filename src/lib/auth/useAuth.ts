@@ -153,12 +153,36 @@ export function useAuth() {
     setError(null);
   }, []);
 
+  /**
+   * Envoie un email de réinitialisation de mot de passe
+   */
+  const resetPassword = useCallback(async (email: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const resetPasswordUseCase = AuthFactory.createResetPasswordUseCase();
+      await resetPasswordUseCase.execute(email);
+      return true;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('Erreur lors de l\'envoi de l\'email de réinitialisation');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     signIn,
     signUp,
     signInWithOAuth,
     signOut,
     getCurrentSession,
+    resetPassword,
     isLoading,
     error,
     clearError,

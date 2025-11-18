@@ -39,5 +39,10 @@ export interface AuthRepository {
    * Rafraîchit le token d'accès
    */
   refreshSession(): Promise<UserSession>;
+
+  /**
+   * Envoie un email de réinitialisation de mot de passe
+   */
+  resetPassword(email: string): Promise<void>;
 }
 

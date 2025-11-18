@@ -238,5 +238,22 @@ export class SupabaseAuthRepository implements AuthRepository {
       this.handleSupabaseError(error);
     }
   }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
+      });
+
+      if (error) {
+        this.handleSupabaseError(error);
+      }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      this.handleSupabaseError(error);
+    }
+  }
 }
 

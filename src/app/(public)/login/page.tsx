@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
@@ -27,17 +26,26 @@ export default function LoginPage() {
   };
 
   const handleRegisterClick = () => {
-    router.push('/register');
+    router.push("/register");
   };
 
   const handleGoogleLogin = async () => {
     clearError();
-    await signInWithOAuth('google');
+    await signInWithOAuth("google");
   };
 
   const handlePinterestLogin = async () => {
     clearError();
-    await signInWithOAuth('pinterest');
+    await signInWithOAuth("pinterest");
+  };
+
+  const handleForgotPassword = () => {
+    // Passer l'email en query param si renseigné (UX cool!)
+    if (email) {
+      router.push(`/forgot-password?email=${encodeURIComponent(email)}`);
+    } else {
+      router.push("/forgot-password");
+    }
   };
 
   return (
@@ -110,18 +118,17 @@ export default function LoginPage() {
                     disabled={isLoading}
                   />
                   {error && (
-                    <p className="text-sm text-red-600 font-medium">
-                      {error}
-                    </p>
+                    <p className="text-sm text-red-600 font-medium">{error}</p>
                   )}
                 </div>
-                <Link
-                  href="/forgot-password"
-                  className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit"
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit cursor-pointer bg-transparent border-none p-0"
                   style={{ textDecoration: "underline" }}
                 >
                   Mot de passe oublié ?
-                </Link>
+                </button>
               </div>
 
               {/* Login Button */}
