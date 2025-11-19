@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen w-full bg-[#FEF8EE]">
+    <div className="min-h-screen w-full bg-white">
       <Header />
 
       <main className="w-full">

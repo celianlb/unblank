@@ -1,15 +1,17 @@
 'use client';
 
-import { Search, Plus, ChevronDown } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
+import ProfileMenu from './ProfileMenu';
 
 export default function Header() {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   return (
     <>
@@ -40,18 +42,32 @@ export default function Header() {
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-6 md:shrink-0">
-            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FEF5E6] active:translate-y-[2px] active:shadow-none transition-all font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
+            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer">
               <span className="hidden sm:inline">Installer l&apos;extension</span>
               <span className="sm:hidden">Extension</span>
             </button>
 
-            <div className="flex items-center gap-1 xl:gap-1.5">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 xl:w-[62px] xl:h-[62px] rounded-full border-2 md:border-[3px] border-black overflow-hidden bg-gray-200 shrink-0">
-                <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
-              </div>
-              <button className="hover:opacity-70 transition-opacity">
-                <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-1 xl:gap-1.5 cursor-pointer"
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 xl:w-[62px] xl:h-[62px] rounded-full border-2 md:border-[3px] border-black overflow-hidden bg-gray-200 shrink-0">
+                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+                </div>
+                {isProfileMenuOpen ? (
+                  <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
+                ) : (
+                  <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
+                )}
               </button>
+
+              {isProfileMenuOpen && (
+                <ProfileMenu
+                  isOpen={isProfileMenuOpen}
+                  onClose={() => setIsProfileMenuOpen(false)}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -59,7 +75,7 @@ export default function Header() {
         <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4 pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
           <button
             onClick={() => setIsCreateFolderModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF5070] hover:bg-[#FF3D5F] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap"
+            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
@@ -67,7 +83,7 @@ export default function Header() {
 
           <button
             onClick={() => setIsCreateGroupModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FEF5E6] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap"
+            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
@@ -75,7 +91,7 @@ export default function Header() {
 
           <button
             onClick={() => setIsAddLinkModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FEF5E6] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap"
+            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
