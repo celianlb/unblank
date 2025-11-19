@@ -1,16 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import {
+  isFromExtension,
+  sendSessionToExtension,
+} from "@/lib/extension/extensionBridge";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const { signUp, isLoading, error, clearError } = useAuth();
+  const { signUp, isLoading, error, clearError, user, session } = useAuth();
+  const fromExtension = isFromExtension();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (user && session && session.accessToken) {
+      if (fromExtension) {
+        // Coming from extension: send session and close tab
+        sendSessionToExtension({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+          expiresAt: session.expiresAt,
+          userId: user.id,
+          email: user.email,
+        });
+      } else {
+        // Regular access: redirect to dashboard
+        router.push("/dashboard");
+      }
+    }
+  }, [fromExtension, user, session, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,17 +48,26 @@ export default function RegisterPage() {
       return;
     }
 
-    const session = await signUp({
+    const userSession = await signUp({
       email,
       password,
       username: username || undefined,
     });
 
     // Si pas de token, c'est que l'email de confirmation est requis
-    if (session && !session.accessToken) {
+    if (userSession && !userSession.accessToken) {
       setSuccessMessage(
         `Compte créé avec succès ! Un email de confirmation a été envoyé à ${email}. Veuillez vérifier votre boîte mail.`
       );
+    } else if (userSession && fromExtension) {
+      // If registration successful with immediate session and coming from extension, send session
+      sendSessionToExtension({
+        accessToken: userSession.accessToken,
+        refreshToken: userSession.refreshToken,
+        expiresAt: userSession.expiresAt,
+        userId: userSession.user.id,
+        email: userSession.user.email,
+      });
     }
   };
 

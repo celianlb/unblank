@@ -4,4 +4,5 @@ export * from './SignInWithOAuthUseCase';
 export * from './SignOutUseCase';
 export * from './GetCurrentSessionUseCase';
 export * from './ResetPasswordUseCase';
+export * from './UpdatePasswordUseCase';
 

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthFactory from './authFactory';
-import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData } from '@/domain/auth/models';
+import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData, User } from '@/domain/auth/models';
 
 /**
  * Hook personnalisé pour l'authentification
@@ -12,7 +12,30 @@ import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData } fr
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [session, setSession] = useState<UserSession | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+
+  // Load current session on mount
+  useEffect(() => {
+    loadSession();
+  }, []);
+
+  const loadSession = async () => {
+    try {
+      const getCurrentSessionUseCase = AuthFactory.createGetCurrentSessionUseCase();
+      const currentSession = await getCurrentSessionUseCase.execute();
+      if (currentSession) {
+        setSession(currentSession);
+        setUser({
+          id: currentSession.userId,
+          email: currentSession.email,
+        });
+      }
+    } catch (err) {
+      console.error('Error loading session:', err);
+    }
+  };
 
   /**
    * Connecte un utilisateur
@@ -24,12 +47,19 @@ export function useAuth() {
 
       try {
         const signInUseCase = AuthFactory.createSignInUseCase();
-        const session = await signInUseCase.execute(credentials);
+        const userSession = await signInUseCase.execute(credentials);
+
+        // Update state
+        setSession(userSession);
+        setUser({
+          id: userSession.userId,
+          email: userSession.email,
+        });
 
         // Redirection après connexion réussie
         router.push('/dashboard');
 
-        return session;
+        return userSession;
       } catch (err) {
         if (err instanceof AuthError) {
           setError(err.message);
@@ -120,6 +150,10 @@ export function useAuth() {
       const signOutUseCase = AuthFactory.createSignOutUseCase();
       await signOutUseCase.execute();
 
+      // Clear state
+      setSession(null);
+      setUser(null);
+
       // Redirection après déconnexion
       router.push('/login');
     } catch (err) {
@@ -176,6 +210,34 @@ export function useAuth() {
     }
   }, []);
 
+  /**
+   * Met à jour le mot de passe de l'utilisateur
+   */
+  const updatePassword = useCallback(async (newPassword: string): Promise<boolean> => {
+    console.log('[useAuth] updatePassword called');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('[useAuth] Creating updatePasswordUseCase...');
+      const updatePasswordUseCase = AuthFactory.createUpdatePasswordUseCase();
+      console.log('[useAuth] Executing updatePasswordUseCase...');
+      await updatePasswordUseCase.execute(newPassword);
+      console.log('[useAuth] updatePasswordUseCase executed successfully');
+      return true;
+    } catch (err) {
+      console.error('[useAuth] updatePassword error:', err);
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('Erreur lors de la mise à jour du mot de passe');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     signIn,
     signUp,
@@ -183,9 +245,12 @@ export function useAuth() {
     signOut,
     getCurrentSession,
     resetPassword,
+    updatePassword,
     isLoading,
     error,
     clearError,
+    user,
+    session,
   };
 }
 

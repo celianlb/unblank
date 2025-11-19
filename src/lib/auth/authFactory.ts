@@ -8,6 +8,7 @@ import {
   SignOutUseCase,
   GetCurrentSessionUseCase,
   ResetPasswordUseCase,
+  UpdatePasswordUseCase,
 } from '@/domain/auth/usecases';
 
 /**
@@ -78,6 +79,13 @@ class AuthFactory {
    */
   static createResetPasswordUseCase(): ResetPasswordUseCase {
     return new ResetPasswordUseCase(this.getAuthService());
+  }
+
+  /**
+   * Crée une nouvelle instance du use case UpdatePassword
+   */
+  static createUpdatePasswordUseCase(): UpdatePasswordUseCase {
+    return new UpdatePasswordUseCase(this.getAuthRepository(), this.getAuthService());
   }
 }
 

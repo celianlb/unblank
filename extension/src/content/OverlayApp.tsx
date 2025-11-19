@@ -1,27 +1,28 @@
 import { X } from 'lucide-react';
 import { Button } from '../components/Button';
 
+const SAAS_URL = 'http://localhost:3000'; // TODO: Change to production URL
+
 interface OverlayAppProps {
   onClose: () => void;
   onLogin?: () => void;
 }
 
-function OverlayApp({ onClose, onLogin }: OverlayAppProps) {
+function OverlayApp({ onClose }: OverlayAppProps) {
   const handleOpenWebApp = () => {
-    window.open('https://unblank.app', '_blank');
+    window.open(SAAS_URL, '_blank');
   };
 
   const handleLogin = () => {
-    // TODO: Implement login logic
-    console.log('Login clicked');
-    if (onLogin) {
-      onLogin();
-    }
+    // Open SaaS login page with extension flag
+    window.open(`${SAAS_URL}/login?ext=true`, '_blank');
+    console.log('Opening login page...');
   };
 
   const handleSignup = () => {
-    // TODO: Implement signup logic
-    console.log('Signup clicked');
+    // Open SaaS signup page with extension flag
+    window.open(`${SAAS_URL}/register?ext=true`, '_blank');
+    console.log('Opening signup page...');
   };
 
   const handleClose = () => {

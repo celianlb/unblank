@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input } from '@/components/ui';
-import { useAuth } from '@/lib/auth';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const { resetPassword, isLoading, error, clearError } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Récupérer l'email depuis les query params (passé depuis la page login)
   useEffect(() => {
@@ -23,20 +23,44 @@ export default function ForgotPasswordPage() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    setError('');
     setSuccessMessage('');
+    setIsLoading(true);
 
     // Validation côté client
     if (!email) {
+      setError('Veuillez entrer votre email');
+      setIsLoading(false);
       return;
     }
 
-    const success = await resetPassword(email);
-    
-    if (success) {
-      setSuccessMessage(
-        `Un email de réinitialisation a été envoyé à ${email}. Veuillez vérifier votre boîte mail.`
-      );
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === 'oauth_account') {
+          setError(data.message);
+        } else {
+          setError(data.error || 'Une erreur est survenue');
+        }
+      } else {
+        setSuccessMessage(
+          data.message || `Un email de réinitialisation a été envoyé à ${email}. Veuillez vérifier votre boîte mail.`
+        );
+      }
+    } catch (err) {
+      console.error('[Forgot Password] Error:', err);
+      setError('Une erreur inattendue s\'est produite');
+    } finally {
+      setIsLoading(false);
     }
   };
 
