@@ -29,19 +29,8 @@ export default function AppPage() {
     fetchSession();
   }, [getCurrentSession, router]);
 
-  if (loadingSession) {
-    return (
-      <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#202AED] mb-4"></div>
-          <p className="text-lg text-[#0D0D0D]">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null; // Redirection en cours
+  if (loadingSession || !session) {
+    return null; // Chargement ou redirection en cours
   }
 
   return (

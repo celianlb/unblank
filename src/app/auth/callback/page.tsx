@@ -33,17 +33,9 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
-      <div className="text-center">
-        <div className="mb-8">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#202AED]"></div>
-        </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-[#0D0D0D] mb-4">
+      <h2 className="text-2xl md:text-3xl font-bold text-[#0D0D0D]">
           Connexion en cours...
         </h2>
-        <p className="text-base text-[#0D0D0D] opacity-70">
-          Veuillez patienter, vous serez redirigé dans un instant.
-        </p>
-      </div>
     </div>
   );
 }

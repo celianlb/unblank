@@ -12,11 +12,16 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [initialUsername, setInitialUsername] = useState('');
+  const [initialAvatarUrl, setInitialAvatarUrl] = useState('');
   const [loadingSession, setLoadingSession] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Vérifier si des modifications ont été faites
+  const hasChanges = username !== initialUsername || avatarUrl !== initialAvatarUrl;
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -27,8 +32,12 @@ export default function ProfilePage() {
         router.push('/login');
       } else {
         setUser(currentSession.user);
-        setUsername(currentSession.user.username || '');
-        setAvatarUrl(currentSession.user.avatarUrl || '');
+        const currentUsername = currentSession.user.username || '';
+        const currentAvatarUrl = currentSession.user.avatarUrl || '';
+        setUsername(currentUsername);
+        setAvatarUrl(currentAvatarUrl);
+        setInitialUsername(currentUsername);
+        setInitialAvatarUrl(currentAvatarUrl);
       }
       setLoadingSession(false);
     };
@@ -67,6 +76,9 @@ export default function ProfilePage() {
 
       if (updatedUser) {
         setUser(updatedUser);
+        // Mettre à jour les valeurs initiales après sauvegarde
+        setInitialUsername(updatedUser.username || '');
+        setInitialAvatarUrl(updatedUser.avatarUrl || '');
         setSuccessMessage('Profil mis à jour avec succès !');
         
         // Effacer le message après 3 secondes
@@ -84,38 +96,31 @@ export default function ProfilePage() {
     }
   };
 
-  if (loadingSession) {
-    return (
-      <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#202AED] mb-4"></div>
-          <p className="text-lg text-[#0D0D0D]">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleCancel = () => {
+    if (hasChanges) {
+      // Annuler : réinitialiser aux valeurs d'origine
+      setUsername(initialUsername);
+      setAvatarUrl(initialAvatarUrl);
+      setSuccessMessage('');
+      setErrorMessage('');
+    } else {
+      // Retour : retourner à l'application
+      router.push('/app');
+    }
+  };
 
-  if (!user) {
+  if (loadingSession || !user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#FEF8EE] p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen w-full bg-[#FEF8EE] p-8 flex items-center justify-center">
+      <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => router.push('/app')}
-            className="text-[#0D0D0D] hover:text-[#202AED] font-medium mb-4 flex items-center gap-2"
-          >
-            ← Retour à l&apos;application
-          </button>
-          <h1 className="text-4xl font-extrabold text-[#0D0D0D] mb-2">
+          <h1 className="text-4xl font-extrabold text-[#0D0D0D]">
             Profil
           </h1>
-          <p className="text-lg text-[#636363]">
-            Modifiez votre photo de profil et votre pseudo
-          </p>
         </div>
 
         {/* Success Message */}
@@ -141,7 +146,7 @@ export default function ProfilePage() {
                 Photo de profil
               </label>
               <div className="flex items-center gap-6">
-                <div className="relative">
+                <div className="relative cursor-pointer" onClick={handleAvatarClick}>
                   <div className="w-32 h-32 rounded-full border-4 border-black overflow-hidden bg-gradient-to-br from-gray-300 to-gray-400">
                     {avatarUrl ? (
                       <img
@@ -158,7 +163,7 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={handleAvatarClick}
-                    className="absolute bottom-0 right-0 w-10 h-10 bg-[#202AED] rounded-full border-2 border-black flex items-center justify-center hover:bg-[#1820BD] transition-colors"
+                    className="absolute bottom-0 right-0 w-10 h-10 bg-[#202AED] rounded-full border-2 border-black flex items-center justify-center hover:bg-[#1820BD] transition-colors cursor-pointer"
                   >
                     <Camera className="w-5 h-5 text-white" />
                   </button>
@@ -169,18 +174,6 @@ export default function ProfilePage() {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleAvatarClick}
-                    className="h-12 px-6 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-medium text-black"
-                  >
-                    Modifier
-                  </button>
-                  <p className="text-sm text-[#636363] mt-2">
-                    JPG, PNG ou GIF. Max 5MB.
-                  </p>
                 </div>
               </div>
             </div>
@@ -224,7 +217,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={isSaving || isLoading}
-                className="h-14 px-8 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="h-14 px-8 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -238,10 +231,10 @@ export default function ProfilePage() {
               
               <button
                 type="button"
-                onClick={() => router.push('/app')}
-                className="h-14 px-8 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-lg"
+                onClick={handleCancel}
+                className="h-14 px-8 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-lg cursor-pointer"
               >
-                Annuler
+                {hasChanges ? 'Annuler' : 'Retour'}
               </button>
             </div>
           </form>
