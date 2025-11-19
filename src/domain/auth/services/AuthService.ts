@@ -9,6 +9,18 @@ export class AuthService {
   constructor(private readonly authRepository: AuthRepository) {}
 
   /**
+   * Valide un mot de passe
+   */
+  validatePassword(password: string): void {
+    if (!password || password.length < 6) {
+      throw new AuthError(
+        'INVALID_CREDENTIALS' as any,
+        'Le mot de passe doit contenir au moins 6 caractères'
+      );
+    }
+  }
+
+  /**
    * Valide les credentials avant l'authentification
    */
   private validateCredentials(credentials: AuthCredentials): void {
@@ -19,12 +31,7 @@ export class AuthService {
       );
     }
 
-    if (!credentials.password || credentials.password.length < 6) {
-      throw new AuthError(
-        'INVALID_CREDENTIALS' as any,
-        'Le mot de passe doit contenir au moins 6 caractères'
-      );
-    }
+    this.validatePassword(credentials.password);
 
     // Validation basique de l'email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,12 +64,7 @@ export class AuthService {
     }
 
     // Validation mot de passe
-    if (!data.password || data.password.length < 6) {
-      throw new AuthError(
-        'INVALID_CREDENTIALS' as any,
-        'Le mot de passe doit contenir au moins 6 caractères'
-      );
-    }
+    this.validatePassword(data.password);
 
     // Validation pseudo (optionnel mais si présent doit être valide)
     if (data.username && data.username.trim().length < 3) {

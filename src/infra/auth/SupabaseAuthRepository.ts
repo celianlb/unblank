@@ -255,5 +255,31 @@ export class SupabaseAuthRepository implements AuthRepository {
       this.handleSupabaseError(error);
     }
   }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    try {
+      console.log('[SupabaseAuthRepository] updatePassword called');
+      console.log('[SupabaseAuthRepository] Calling supabase.auth.updateUser...');
+      
+      const { data, error } = await this.supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      console.log('[SupabaseAuthRepository] updateUser response:', { data, error });
+
+      if (error) {
+        console.error('[SupabaseAuthRepository] updateUser error:', error);
+        this.handleSupabaseError(error);
+      }
+      
+      console.log('[SupabaseAuthRepository] Password updated successfully');
+    } catch (error) {
+      console.error('[SupabaseAuthRepository] updatePassword catch error:', error);
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      this.handleSupabaseError(error);
+    }
+  }
 }
 

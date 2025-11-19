@@ -210,6 +210,34 @@ export function useAuth() {
     }
   }, []);
 
+  /**
+   * Met à jour le mot de passe de l'utilisateur
+   */
+  const updatePassword = useCallback(async (newPassword: string): Promise<boolean> => {
+    console.log('[useAuth] updatePassword called');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('[useAuth] Creating updatePasswordUseCase...');
+      const updatePasswordUseCase = AuthFactory.createUpdatePasswordUseCase();
+      console.log('[useAuth] Executing updatePasswordUseCase...');
+      await updatePasswordUseCase.execute(newPassword);
+      console.log('[useAuth] updatePasswordUseCase executed successfully');
+      return true;
+    } catch (err) {
+      console.error('[useAuth] updatePassword error:', err);
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('Erreur lors de la mise à jour du mot de passe');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     signIn,
     signUp,
@@ -217,6 +245,7 @@ export function useAuth() {
     signOut,
     getCurrentSession,
     resetPassword,
+    updatePassword,
     isLoading,
     error,
     clearError,

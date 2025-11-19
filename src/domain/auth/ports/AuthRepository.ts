@@ -44,5 +44,10 @@ export interface AuthRepository {
    * Envoie un email de réinitialisation de mot de passe
    */
   resetPassword(email: string): Promise<void>;
+
+  /**
+   * Met à jour le mot de passe de l'utilisateur
+   */
+  updatePassword(newPassword: string): Promise<void>;
 }
 
