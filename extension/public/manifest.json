@@ -3,13 +3,24 @@
   "name": "Unblank Extension",
   "version": "1.0.0",
   "description": "Chrome extension for Unblank application",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
     "tabs"
   ],
-  "action": {},
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"

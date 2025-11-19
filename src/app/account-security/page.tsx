@@ -102,7 +102,7 @@ export default function AccountSecurityPage() {
 
     try {
       const success = await deleteAccount();
-      
+
       if (success) {
         setShowDeleteModal(false);
       }
@@ -249,20 +249,20 @@ export default function AccountSecurityPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 !mt-6">
-              <button
-                type="submit"
-                disabled={isChangingPassword || isLoading}
+            <button
+              type="submit"
+              disabled={isChangingPassword || isLoading}
                 className="flex-1 h-12 sm:h-13 md:h-14 px-4 sm:px-6 md:px-8 rounded-lg sm:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-sm sm:text-base md:text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isChangingPassword ? (
-                  <>
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                    <span>Modification en cours...</span>
-                  </>
-                ) : (
-                  'Modifier le mot de passe'
-                )}
-              </button>
+            >
+              {isChangingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  <span>Modification en cours...</span>
+                </>
+              ) : (
+                'Modifier le mot de passe'
+              )}
+            </button>
 
               <button
                 type="button"
