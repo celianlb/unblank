@@ -84,39 +84,39 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE] p-4 md:p-6 lg:p-10 overscroll-none">
       <Card className="w-full max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-2.5">
-          {/* Left Panel - Blue with Logo and Mascot */}
+        {/* Left Panel - Blue with Logo and Mascot */}
           <Panel
             variant="blue"
             className="w-full lg:w-1/2 py-8 lg:py-[50px] px-2.5 gap-4 lg:gap-2.5 min-h-[400px] lg:min-h-[702px] relative isolate"
           >
-            {/* Logo UnBlank */}
+          {/* Logo UnBlank */}
             <div className="w-full max-w-[412px] mx-auto">
-              <Image
-                src="/unblank-white.svg"
-                alt="UnBlank"
+          <Image
+            src="/unblank-white.svg"
+            alt="UnBlank"
                 width={412}
-                height={72}
-                priority
-                draggable={false}
+            height={72}
+            priority
+            draggable={false}
                 className="w-full h-auto"
-              />
+          />
             </div>
 
-            {/* Mascot */}
+          {/* Mascot */}
             <div className="flex-1 flex items-end justify-center w-full max-w-[384px] mx-auto mt-8 lg:mt-[95px]">
-              <Image
-                src="/mascott.svg"
-                alt="UnBlank Mascot"
-                width={384}
-                height={460}
-                priority
-                draggable={false}
+          <Image
+            src="/mascott.svg"
+            alt="UnBlank Mascot"
+            width={384}
+            height={460}
+            priority
+            draggable={false}
                 className="w-full h-auto max-h-[460px] object-contain"
-              />
-            </div>
+          />
+        </div>
           </Panel>
 
-          {/* Right Panel - Login Form */}
+        {/* Right Panel - Login Form */}
           <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-6 lg:p-8">
             <div className="w-full max-w-[560px] flex flex-col gap-6 md:gap-8">
               {/* Title */}
@@ -124,46 +124,46 @@ export default function LoginPage() {
                 Bienvenue sur UnBlank
               </h1>
 
-              {/* Email Input */}
+            {/* Email Input */}
               <div className="flex flex-col gap-1.5">
-                <Input
-                  type="email"
-                  label="Email"
-                  placeholder="Votre e-mail"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+              <Input
+                type="email"
+                label="Email"
+                placeholder="Votre e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                   disabled={isLoading}
-                />
-              </div>
+              />
+            </div>
 
-              {/* Password Input + Forgot Password */}
+            {/* Password Input + Forgot Password */}
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                  <Input
-                    type="password"
-                    label="Mot de passe"
-                    placeholder="***********"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                <Input
+                  type="password"
+                  label="Mot de passe"
+                  placeholder="***********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                     disabled={isLoading}
-                  />
+                />
                   {error && (
                     <p className="text-sm text-red-600 font-medium">{error}</p>
                   )}
-                </div>
+              </div>
                 <button
                   type="button"
                   onClick={handleForgotPassword}
                   className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D] hover:opacity-70 transition-opacity w-fit cursor-pointer bg-transparent border-none p-0"
                   style={{ textDecoration: "underline" }}
                 >
-                  Mot de passe oublié ?
+                Mot de passe oublié ?
                 </button>
-              </div>
+            </div>
 
-              {/* Login Button */}
+            {/* Login Button */}
               <Button
                 type="submit"
                 variant="primary"
@@ -175,51 +175,51 @@ export default function LoginPage() {
                 {isLoading ? "Connexion en cours..." : "Se connecter"}
               </Button>
 
-              {/* Divider */}
+            {/* Divider */}
               <div className="flex items-center justify-center gap-8 w-full">
                 <div className="flex-1 h-0 border-t border-black" />
                 <span className="text-base leading-[23px] tracking-[-0.03em] text-[#0D0D0D]">
                   ou
                 </span>
                 <div className="flex-1 h-0 border-t border-black" />
-              </div>
+            </div>
 
-              {/* OAuth Buttons */}
+            {/* OAuth Buttons */}
               <div className="flex flex-col gap-3.5 w-full">
                 {/* Sign Up Button */}
-                <Button
-                  variant="outline"
-                  size="md"
+              <Button
+                variant="outline"
+                size="md"
                   onClick={handleRegisterClick}
                   className="w-full h-[54px] bg-[#FEF8EE] shadow-[3px_3px_0px_#000000]"
                   disabled={isLoading}
-                >
+              >
                   S&apos;inscrire
-                </Button>
+              </Button>
 
                 {/* OAuth Buttons Row */}
                 <div className="flex flex-col sm:flex-row gap-2.5 w-full">
-                  <OAuthButton
-                    provider="google"
-                    onClick={handleGoogleLogin}
+                <OAuthButton
+                  provider="google"
+                  onClick={handleGoogleLogin}
                     className="flex-1 min-h-[90px]"
                   >
                     <span className="hidden sm:inline">
-                      Continuer avec Google
+                  Continuer avec Google
                     </span>
                     <span className="sm:hidden">Google</span>
-                  </OAuthButton>
+                </OAuthButton>
 
-                  <OAuthButton
-                    provider="pinterest"
-                    onClick={handlePinterestLogin}
+                <OAuthButton
+                  provider="pinterest"
+                  onClick={handlePinterestLogin}
                     className="flex-1 min-h-[90px]"
                   >
                     <span className="hidden sm:inline">
-                      Se connecter avec Pinterest
+                  Se connecter avec Pinterest
                     </span>
                     <span className="sm:hidden">Pinterest</span>
-                  </OAuthButton>
+                </OAuthButton>
                 </div>
               </div>
             </div>
