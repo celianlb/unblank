@@ -54,5 +54,10 @@ export interface AuthRepository {
    * Met à jour le profil de l'utilisateur
    */
   updateProfile(data: UpdateProfileData): Promise<User>;
+
+  /**
+   * Supprime le compte de l'utilisateur actuellement connecté
+   */
+  deleteAccount(): Promise<void>;
 }
 

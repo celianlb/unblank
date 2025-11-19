@@ -49,7 +49,10 @@ export default function ProfileMenu({ isOpen, onClose }: ProfileMenuProps) {
         >
           Profil
         </button>
-        <button className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-fit">
+        <button
+          onClick={() => handleNavigate("/account-security")}
+          className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-fit"
+        >
           Compte & Sécurité
         </button>
         <button className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-fit">

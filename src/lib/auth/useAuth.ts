@@ -248,10 +248,10 @@ export function useAuth() {
     try {
       const updateProfileUseCase = AuthFactory.createUpdateProfileUseCase();
       const updatedUser = await updateProfileUseCase.execute(data);
-      
+
       // Mettre à jour le state local
       setUser(updatedUser);
-      
+
       return updatedUser;
     } catch (err) {
       if (err instanceof AuthError) {
@@ -265,6 +265,37 @@ export function useAuth() {
     }
   }, []);
 
+  /**
+   * Supprime le compte de l'utilisateur
+   */
+  const deleteAccount = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const deleteAccountUseCase = AuthFactory.createDeleteAccountUseCase();
+      await deleteAccountUseCase.execute();
+
+      // Clear state
+      setSession(null);
+      setUser(null);
+
+      // Redirection après suppression
+      router.push('/login');
+
+      return true;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('Erreur lors de la suppression du compte');
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
   return {
     signIn,
     signUp,
@@ -274,6 +305,7 @@ export function useAuth() {
     resetPassword,
     updatePassword,
     updateProfile,
+    deleteAccount,
     isLoading,
     error,
     clearError,

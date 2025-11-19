@@ -292,11 +292,11 @@ export class SupabaseAuthRepository implements AuthRepository {
     try {
       // Préparer les données pour Supabase
       const updateData: any = {};
-      
+
       if (data.username !== undefined) {
         updateData.username = data.username;
       }
-      
+
       if (data.avatarUrl !== undefined) {
         updateData.avatar_url = data.avatarUrl;
       }
@@ -316,6 +316,38 @@ export class SupabaseAuthRepository implements AuthRepository {
       }
 
       return this.mapSupabaseUserToDomain(userData.user);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      this.handleSupabaseError(error);
+    }
+  }
+
+  async deleteAccount(): Promise<void> {
+    try {
+      // Récupérer l'utilisateur actuel
+      const { data: { user }, error: getUserError } = await this.supabase.auth.getUser();
+
+      if (getUserError) {
+        this.handleSupabaseError(getUserError);
+      }
+
+      if (!user) {
+        throw AuthError.userNotFound();
+      }
+
+      // Supprimer l'utilisateur via l'admin API
+      // Note: Supabase ne permet pas de supprimer directement depuis le client
+      // Il faut utiliser une fonction serveur ou l'API admin
+      const { error } = await this.supabase.rpc('delete_user');
+
+      if (error) {
+        this.handleSupabaseError(error);
+      }
+
+      // Déconnexion après suppression
+      await this.signOut();
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;

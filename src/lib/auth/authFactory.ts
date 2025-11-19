@@ -10,6 +10,7 @@ import {
   ResetPasswordUseCase,
   UpdatePasswordUseCase,
   UpdateProfileUseCase,
+  DeleteAccountUseCase,
 } from '@/domain/auth/usecases';
 
 /**
@@ -94,6 +95,13 @@ class AuthFactory {
    */
   static createUpdateProfileUseCase(): UpdateProfileUseCase {
     return new UpdateProfileUseCase(this.getAuthRepository());
+  }
+
+  /**
+   * Crée une nouvelle instance du use case DeleteAccount
+   */
+  static createDeleteAccountUseCase(): DeleteAccountUseCase {
+    return new DeleteAccountUseCase(this.getAuthService());
   }
 }
 
