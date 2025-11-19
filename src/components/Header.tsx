@@ -1,9 +1,18 @@
 'use client';
 
 import { Search, Plus, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import AddLinkModal from './AddLinkModal';
 
 export default function Header() {
+  const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
+
   return (
+    <>
+      <AddLinkModal
+        isOpen={isAddLinkModalOpen}
+        onClose={() => setIsAddLinkModalOpen(false)}
+      />
     <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
       <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
@@ -19,7 +28,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-6 md:shrink-0">
-            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FEF5E6] transition-colors font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
+            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FEF5E6] active:translate-y-[2px] active:shadow-none transition-all font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
               <span className="hidden sm:inline">Installer l&apos;extension</span>
               <span className="sm:hidden">Extension</span>
             </button>
@@ -36,17 +45,21 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4 pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
-          <button className="h-9 sm:h-10 md:h-10 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 rounded-lg md:rounded-xl bg-[#FF5070] hover:bg-[#FF3D5F] transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 xl:gap-2.5 whitespace-nowrap">
+          <button className="h-9 sm:h-10 md:h-10 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 rounded-lg md:rounded-xl bg-[#FF5070] hover:bg-[#FF3D5F] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 xl:gap-2.5 whitespace-nowrap">
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer</span>
           </button>
 
-          <button className="h-9 sm:h-10 md:h-10 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FEF5E6] transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 xl:gap-2.5 whitespace-nowrap">
+          <button
+            onClick={() => setIsAddLinkModalOpen(true)}
+            className="h-9 sm:h-10 md:h-10 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-5 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FEF5E6] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 xl:gap-2.5 whitespace-nowrap"
+          >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
           </button>
         </div>
       </div>
     </header>
+    </>
   );
 }
