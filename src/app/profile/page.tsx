@@ -117,7 +117,7 @@ export default function ProfilePage() {
     <div className="min-h-screen w-full bg-[#FEF8EE] p-8 flex items-center justify-center">
       <div className="max-w-2xl w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="pb-10">
           <h1 className="text-4xl font-extrabold text-[#0D0D0D]">
             Profil
           </h1>
@@ -139,9 +139,9 @@ export default function ProfilePage() {
 
         {/* Profile Form */}
         <div className="bg-white border-4 border-black rounded-[24px] p-8 shadow-[6px_6px_0px_#000000]">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Avatar Section */}
-            <div className="mb-8">
+            <div className="pb-4">
               <label className="block text-lg font-bold text-[#0D0D0D] mb-4">
                 Photo de profil
               </label>
@@ -179,8 +179,8 @@ export default function ProfilePage() {
             </div>
 
             {/* Username Section */}
-            <div className="mb-8">
-              <label htmlFor="username" className="block text-lg font-bold text-[#0D0D0D] mb-2">
+            <div>
+              <label htmlFor="username" className="block text-lg font-bold text-[#0D0D0D] mb-3">
                 Pseudo
               </label>
               <input
@@ -191,14 +191,14 @@ export default function ProfilePage() {
                 placeholder="Nouveau pseudo"
                 className="w-full h-14 px-4 rounded-xl border-2 border-black bg-white text-[#0D0D0D] placeholder-[#636363] focus:outline-none focus:ring-2 focus:ring-[#202AED] text-lg"
               />
-              <p className="text-sm text-[#636363] mt-2">
+              <p className="text-sm text-[#636363] mt-3 pb-4">
                 Ce nom sera visible par les autres utilisateurs
               </p>
             </div>
 
             {/* Email (non modifiable) */}
-            <div className="mb-8">
-              <label className="block text-lg font-bold text-[#0D0D0D] mb-2">
+            <div>
+              <label className="block text-lg font-bold text-[#0D0D0D] mb-3">
                 Email
               </label>
               <input
@@ -207,17 +207,17 @@ export default function ProfilePage() {
                 disabled
                 className="w-full h-14 px-4 rounded-xl border-2 border-black bg-gray-100 text-[#636363] text-lg cursor-not-allowed"
               />
-              <p className="text-sm text-[#636363] mt-2">
+              <p className="text-sm text-[#636363] mt-3">
                 L'email ne peut pas être modifié
               </p>
             </div>
 
             {/* Submit Button */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={isSaving || isLoading}
-                className="h-14 px-8 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
+                className="h-14 px-8 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
               >
                 {isSaving ? (
                   <>

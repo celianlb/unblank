@@ -56,7 +56,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-6 md:shrink-0">
-            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer">
+            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer">
               <span className="hidden sm:inline">Installer l&apos;extension</span>
               <span className="sm:hidden">Extension</span>
             </button>
@@ -102,7 +102,7 @@ export default function Header() {
             className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
+            <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
           </button>
 
           <button
@@ -110,7 +110,7 @@ export default function Header() {
             className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
+            <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
           </button>
 
           <button
@@ -118,7 +118,7 @@ export default function Header() {
             className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
+            <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
           </button>
         </div>
       </div>
