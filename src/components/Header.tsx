@@ -57,7 +57,7 @@ export default function Header() {
 
           <div className="flex items-center justify-end gap-2 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 shrink-0">
             {/* Bouton Extension - Visible uniquement sur desktop (md et plus) */}
-            <button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
+            <button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
               Installer l&apos;extension
             </button>
 
@@ -110,7 +110,7 @@ export default function Header() {
 
           <button
             onClick={() => setIsCreateGroupModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
+            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-bold text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
@@ -120,7 +120,7 @@ export default function Header() {
 
           <button
             onClick={() => setIsAddLinkModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
+            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
             <span className="text-black font-bold text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
