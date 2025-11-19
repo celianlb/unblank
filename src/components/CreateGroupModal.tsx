@@ -10,7 +10,8 @@ interface CreateGroupModalProps {
 
 export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState('');
+  const [selectedFolder, setSelectedFolder] = useState('Dossiers existants');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -65,20 +66,70 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             <div className="flex flex-col gap-2 w-full">
               <label className="text-base font-medium text-black font-[Heebo]">Ajouter des dossiers existant</label>
               <div className="relative w-full">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                  <FolderOpen className="w-5 h-5 text-black" strokeWidth={2} />
-                  <span className="text-base text-black font-[Heebo] font-normal">Dossiers existants</span>
-                </div>
-                <select
-                  value={selectedFolder}
-                  onChange={(e) => setSelectedFolder(e.target.value)}
-                  className="w-full h-14 pl-4 pr-12 rounded-xl border-2 border-black bg-white text-black focus:outline-none focus:border-black text-base appearance-none cursor-pointer font-[Heebo] font-normal"
-                  style={{ paddingLeft: '160px' }}
+                <div
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full h-14 flex items-center justify-between px-4 bg-white border-2 border-black rounded-xl cursor-pointer"
                 >
-                  <option value=""></option>
-                  {/* TODO: Ajouter les options de dossiers */}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black pointer-events-none" strokeWidth={2} />
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5 text-black" strokeWidth={2} />
+                    <span className="text-base text-black font-[Heebo] font-semibold">{selectedFolder}</span>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-black" strokeWidth={2} />
+                </div>
+                {isDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 max-h-[calc(3*43px)] overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setSelectedFolder('Logos');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
+                    >
+                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
+                      <span className="text-base text-black font-[Heebo] font-semibold">Logos</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        setSelectedFolder('Affiches');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
+                    >
+                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
+                      <span className="text-base text-black font-[Heebo] font-semibold">Affiches</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        setSelectedFolder('Maquettes');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
+                    >
+                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
+                      <span className="text-base text-black font-[Heebo] font-semibold">Maquettes</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        setSelectedFolder('A ranger');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
+                    >
+                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
+                      <span className="text-base text-black font-[Heebo] font-semibold">A ranger</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        setSelectedFolder('Architecture');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
+                    >
+                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
+                      <span className="text-base text-black font-[Heebo] font-semibold">Architecture</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
