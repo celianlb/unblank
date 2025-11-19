@@ -8,6 +8,7 @@ import {
   AuthErrorType,
   OAuthProvider,
   SignUpData,
+  UpdateProfileData,
 } from '@/domain/auth/models';
 
 /**
@@ -24,6 +25,8 @@ export class SupabaseAuthRepository implements AuthRepository {
     return {
       id: supabaseUser.id,
       email: supabaseUser.email!,
+      username: supabaseUser.user_metadata?.username || undefined,
+      avatarUrl: supabaseUser.user_metadata?.avatar_url || undefined,
       createdAt: new Date(supabaseUser.created_at),
       updatedAt: supabaseUser.updated_at
         ? new Date(supabaseUser.updated_at)
@@ -278,6 +281,42 @@ export class SupabaseAuthRepository implements AuthRepository {
       console.log('[SupabaseAuthRepository] Password updated successfully');
     } catch (error) {
       console.error('[SupabaseAuthRepository] updatePassword catch error:', error);
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      this.handleSupabaseError(error);
+    }
+  }
+
+  async updateProfile(data: UpdateProfileData): Promise<User> {
+    try {
+      // Préparer les données pour Supabase
+      const updateData: any = {};
+      
+      if (data.username !== undefined) {
+        updateData.username = data.username;
+      }
+      
+      if (data.avatarUrl !== undefined) {
+        updateData.avatar_url = data.avatarUrl;
+      }
+
+      const { data: userData, error } = await this.supabase.auth.updateUser({
+        data: updateData,
+      });
+
+      if (error) {
+        this.handleSupabaseError(error);
+      }
+
+      if (!userData.user) {
+        throw AuthError.unknown(
+          new Error('No user returned after profile update')
+        );
+      }
+
+      return this.mapSupabaseUserToDomain(userData.user);
+    } catch (error) {
       if (error instanceof AuthError) {
         throw error;
       }

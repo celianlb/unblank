@@ -28,8 +28,8 @@ export default function LoginPage() {
           email: user.email,
         });
       } else {
-        // Regular access: redirect to dashboard
-        router.push('/dashboard');
+        // Regular access: redirect to app
+        router.push('/app');
       }
     }
   }, [fromExtension, user, session, router]);

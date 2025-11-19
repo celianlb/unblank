@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthFactory from './authFactory';
-import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData, User } from '@/domain/auth/models';
+import { AuthCredentials, AuthError, UserSession, OAuthProvider, SignUpData, User, UpdateProfileData } from '@/domain/auth/models';
 
 /**
  * Hook personnalisé pour l'authentification
@@ -57,7 +57,7 @@ export function useAuth() {
         });
 
         // Redirection après connexion réussie
-        router.push('/dashboard');
+        router.push('/app');
 
         return userSession;
       } catch (err) {
@@ -94,7 +94,7 @@ export function useAuth() {
         }
 
         // Redirection après inscription réussie (si session complète)
-        router.push('/dashboard');
+        router.push('/app');
 
         return session;
       } catch (err) {
@@ -238,6 +238,33 @@ export function useAuth() {
     }
   }, []);
 
+  /**
+   * Met à jour le profil de l'utilisateur
+   */
+  const updateProfile = useCallback(async (data: UpdateProfileData): Promise<User | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updateProfileUseCase = AuthFactory.createUpdateProfileUseCase();
+      const updatedUser = await updateProfileUseCase.execute(data);
+      
+      // Mettre à jour le state local
+      setUser(updatedUser);
+      
+      return updatedUser;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('Erreur lors de la mise à jour du profil');
+      }
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     signIn,
     signUp,
@@ -246,6 +273,7 @@ export function useAuth() {
     getCurrentSession,
     resetPassword,
     updatePassword,
+    updateProfile,
     isLoading,
     error,
     clearError,

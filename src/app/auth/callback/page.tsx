@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           // Connexion réussie, redirection vers le dashboard
-          router.push('/dashboard');
+          router.push('/app');
         } else if (event === 'SIGNED_OUT') {
           // Déconnexion, retour au login
           router.push('/login');

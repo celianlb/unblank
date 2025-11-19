@@ -9,6 +9,7 @@ import {
   GetCurrentSessionUseCase,
   ResetPasswordUseCase,
   UpdatePasswordUseCase,
+  UpdateProfileUseCase,
 } from '@/domain/auth/usecases';
 
 /**
@@ -86,6 +87,13 @@ class AuthFactory {
    */
   static createUpdatePasswordUseCase(): UpdatePasswordUseCase {
     return new UpdatePasswordUseCase(this.getAuthRepository(), this.getAuthService());
+  }
+
+  /**
+   * Crée une nouvelle instance du use case UpdateProfile
+   */
+  static createUpdateProfileUseCase(): UpdateProfileUseCase {
+    return new UpdateProfileUseCase(this.getAuthRepository());
   }
 }
 

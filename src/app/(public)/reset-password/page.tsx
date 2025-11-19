@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
       setSuccessMessage("Mot de passe mis à jour avec succès !");
       // Redirection après 2 secondes
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/app");
       }, 2000);
     } else {
       console.error('[Reset Password] Password update failed');

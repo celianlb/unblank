@@ -1,7 +1,9 @@
 'use client';
 
 import { Search, Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth';
+import { User } from '@/domain/auth/models';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
@@ -12,6 +14,18 @@ export default function Header() {
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { getCurrentSession } = useAuth();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const session = await getCurrentSession();
+      if (session) {
+        setCurrentUser(session.user);
+      }
+    };
+    fetchUser();
+  }, [getCurrentSession]);
 
   return (
     <>
@@ -53,7 +67,17 @@ export default function Header() {
                 className="flex items-center gap-1 xl:gap-1.5 cursor-pointer"
               >
                 <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 xl:w-[62px] xl:h-[62px] rounded-full border-2 md:border-[3px] border-black overflow-hidden bg-gray-200 shrink-0">
-                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+                  {currentUser?.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.username || currentUser.email}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-bold text-lg sm:text-xl md:text-2xl">
+                      {currentUser?.username?.charAt(0).toUpperCase() || currentUser?.email?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
                 </div>
                 {isProfileMenuOpen ? (
                   <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />

@@ -79,7 +79,7 @@ export default function ConfirmPage() {
 
         // Redirect to dashboard after 3 seconds
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/app');
         }, 3000);
 
       } catch (err) {
@@ -135,10 +135,10 @@ export default function ConfirmPage() {
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/app')}
                 className="w-full h-[54px] shadow-[3px_3px_0px_#000000]"
               >
-                Accéder au tableau de bord
+                Accéder à l&apos;application
               </Button>
             </>
           )}
