@@ -98,6 +98,9 @@ export class SupabaseAuthRepository implements AuthRepository {
         email: signUpData.email,
         password: signUpData.password,
         options: {
+          emailRedirectTo: typeof window !== 'undefined' 
+            ? `${window.location.origin}/confirm`
+            : undefined,
           data: {
             username: signUpData.username || '',
           },
