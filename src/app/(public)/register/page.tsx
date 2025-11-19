@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/lib/extension/extensionBridge";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,19 +19,24 @@ export default function RegisterPage() {
   const { signUp, isLoading, error, clearError, user, session } = useAuth();
   const fromExtension = isFromExtension();
 
-  // Check if user is already authenticated when coming from extension
+  // Check if user is already authenticated
   useEffect(() => {
-    if (fromExtension && user && session && session.accessToken) {
-      // Send session to extension and close tab
-      sendSessionToExtension({
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        expiresAt: session.expiresAt,
-        userId: user.id,
-        email: user.email,
-      });
+    if (user && session && session.accessToken) {
+      if (fromExtension) {
+        // Coming from extension: send session and close tab
+        sendSessionToExtension({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+          expiresAt: session.expiresAt,
+          userId: user.id,
+          email: user.email,
+        });
+      } else {
+        // Regular access: redirect to dashboard
+        router.push("/dashboard");
+      }
     }
-  }, [fromExtension, user, session]);
+  }, [fromExtension, user, session, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

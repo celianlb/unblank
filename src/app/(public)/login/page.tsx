@@ -15,19 +15,24 @@ export default function LoginPage() {
   const { signIn, signInWithOAuth, isLoading, error, clearError, user, session } = useAuth();
   const fromExtension = isFromExtension();
 
-  // Check if user is already authenticated when coming from extension
+  // Check if user is already authenticated
   useEffect(() => {
-    if (fromExtension && user && session) {
-      // Send session to extension and close tab
-      sendSessionToExtension({
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        expiresAt: session.expiresAt,
-        userId: user.id,
-        email: user.email,
-      });
+    if (user && session) {
+      if (fromExtension) {
+        // Coming from extension: send session and close tab
+        sendSessionToExtension({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+          expiresAt: session.expiresAt,
+          userId: user.id,
+          email: user.email,
+        });
+      } else {
+        // Regular access: redirect to dashboard
+        router.push('/dashboard');
+      }
     }
-  }, [fromExtension, user, session]);
+  }, [fromExtension, user, session, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
