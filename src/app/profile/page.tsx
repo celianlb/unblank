@@ -236,7 +236,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="h-12 sm:h-13 md:h-14 px-4 sm:px-6 md:px-8 rounded-lg sm:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-sm sm:text-base md:text-lg cursor-pointer"
+                className="h-12 sm:h-13 md:h-14 px-4 sm:px-6 md:px-8 rounded-lg sm:rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black text-sm sm:text-base md:text-lg cursor-pointer"
               >
                 {hasChanges ? 'Annuler' : 'Retour'}
               </button>
