@@ -3,6 +3,7 @@
 import Header from '@/components/Header';
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
+import LinkCard from '@/components/LinkCard';
 
 export default function HomePage() {
   return (
@@ -57,6 +58,57 @@ export default function HomePage() {
               title="Grid"
               itemCount={6}
               lastUpdate="Mise à jour il y a 1min"
+            />
+          </div>
+        </section>
+
+        {/* Section Liens */}
+        <section className="flex flex-col items-start gap-[21px] w-full">
+          {/* Titre */}
+          <h1
+            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+          >
+            Liens (9)
+          </h1>
+
+          {/* Contenu des cartes */}
+          <div className="flex flex-row flex-wrap gap-8 w-full">
+            <LinkCard
+              link="https://fr.pinterest.com/pin/123456789/"
+              tags={['mascotte', 'cartoon', 'vert']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/234567890/"
+              tags={['poster', 'minimal']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/345678901/"
+              tags={['design', 'swiss']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/456789012/"
+              tags={['street', 'nyc']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/567890123/"
+              tags={['signage', 'wayfinding']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/678901234/"
+              tags={['branding', 'identity']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/789012345/"
+              tags={['color', 'palette']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/890123456/"
+              tags={['interior', 'decor']}
+            />
+            <LinkCard
+              link="https://fr.pinterest.com/pin/901234567/"
+              tags={['movie', 'poster']}
             />
           </div>
         </section>
