@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2, Copy, ExternalLink, Check } from 'lucide-react';
+import { Trash, Copy, ExternalLink, Check } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
@@ -101,7 +101,7 @@ export default function LinkCard({ imageUrl, link, tags = [], isSelectionMode = 
           }}
           className={`absolute right-3 top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
         >
-          <Trash2 className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          <Trash className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
         </button>
 
         {/* Tags - hidden by default, shown on hover */}

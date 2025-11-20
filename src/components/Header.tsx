@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
 import { useState } from 'react';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
@@ -114,7 +114,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
               onClick={() => setIsDeleteModalOpen(true)}
               className="h-12 px-6 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
             >
-              <Trash2 className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+              <Trash className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
               <span className="text-black font-bold text-base font-[Heebo]">Supprimer</span>
             </button>
           )}

@@ -1,7 +1,8 @@
 'use client';
 
-import { Pencil, Share2, Settings, Trash2 } from 'lucide-react';
+import { Pencil, Share2, Settings, Trash } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
@@ -11,13 +12,20 @@ interface FolderCardProps {
   title: string;
   itemCount: number;
   lastUpdate: string;
+  groupSlug: string;
 }
 
-export default function FolderCard({ title, itemCount, lastUpdate }: FolderCardProps) {
+export default function FolderCard({ title, itemCount, lastUpdate, groupSlug }: FolderCardProps) {
+  const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+
+  const handleCardClick = () => {
+    const folderSlug = title.toLowerCase().replace(/\s+/g, '-');
+    router.push(`/${encodeURIComponent(groupSlug)}/${encodeURIComponent(folderSlug)}`);
+  };
 
   const handleDelete = () => {
     // TODO: Logique de suppression
@@ -32,7 +40,10 @@ export default function FolderCard({ title, itemCount, lastUpdate }: FolderCardP
 
   return (
     <>
-    <div className="w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3">
+    <div
+      onClick={handleCardClick}
+      className="w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3"
+    >
       {/* Frame 187 - Images Grid (2 images side by side) */}
       <div className="flex flex-row gap-2 w-full h-[185px]">
         {/* Frame 185 - Image 1 */}
@@ -106,7 +117,7 @@ export default function FolderCard({ title, itemCount, lastUpdate }: FolderCardP
           }}
           className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer group"
         >
-          <Trash2 className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
         </button>
       </div>
     </div>

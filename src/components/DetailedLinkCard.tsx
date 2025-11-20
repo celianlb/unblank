@@ -1,0 +1,164 @@
+'use client';
+
+import { Copy, ExternalLink, Pencil, Trash } from 'lucide-react';
+import { useState } from 'react';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import EditLinkModal from './EditLinkModal';
+
+interface DetailedLinkCardProps {
+  siteName: string;
+  siteUrl: string;
+  description: string;
+  faviconUrl?: string;
+  link: string;
+  tags?: string[];
+}
+
+export default function DetailedLinkCard({
+  siteName,
+  siteUrl,
+  description,
+  faviconUrl,
+  link,
+  tags = []
+}: DetailedLinkCardProps) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleDelete = () => {
+    // TODO: Logique de suppression
+    console.log('Suppression confirmée');
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(link);
+  };
+
+  const handleOpenLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(link, '_blank');
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (newTitle: string, newUrl: string, newDescription: string, newTags: string[]) => {
+    // TODO: Logique de sauvegarde
+    console.log('Saved:', { newTitle, newUrl, newDescription, newTags });
+  };
+
+  // Truncate link for display
+  const displayLink = link.length > 20 ? link.substring(0, 20) + '...' : link;
+
+  return (
+    <>
+      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border">
+        {/* Header with favicon and site info - Frame 130 */}
+        <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
+          {/* Favicon */}
+          <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center bg-white shrink-0 overflow-hidden">
+            {faviconUrl ? (
+              <img src={faviconUrl} alt={siteName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xs font-normal text-black font-[Heebo]">Favicon</span>
+            )}
+          </div>
+
+          {/* Site name and URL - Frame 129 */}
+          <div className="flex flex-col items-start gap-[10px]">
+            <h3
+              className="text-[28px] leading-[30px] font-extrabold text-[#0D0D0D]"
+              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+            >
+              {siteName}
+            </h3>
+            {/* Frame 27 */}
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs leading-[90%] font-medium text-[#0D0D0D] font-[Heebo]">
+                {siteUrl}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Description - Frame 28 */}
+        <div className="flex flex-col items-start gap-1 w-full">
+          <p className="text-xs leading-[110%] font-normal text-[#0D0D0D] font-[Heebo] line-clamp-3">
+            {description}
+          </p>
+        </div>
+
+        {/* Link bar with actions - Frame 136 */}
+        <div className="flex flex-row items-center gap-[10px] w-full h-[41px]">
+          {/* Link input */}
+          <div className="flex-1 h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex flex-row items-center justify-center px-[10px] gap-[10px]">
+            <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
+              {displayLink}
+            </span>
+            <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
+              <Copy className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />
+            </button>
+            <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
+              <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* Edit button */}
+          <button
+            onClick={handleEdit}
+            className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+          </button>
+
+          {/* Delete button - Frame 73 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDeleteModalOpen(true);
+            }}
+            className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
+          >
+            <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* Tags - Frame 145 */}
+        {tags.length > 0 && (
+          <div className="flex flex-row items-start gap-1.5">
+            {tags.map((tag, index) => (
+              <div
+                key={index}
+                className="flex flex-row justify-center items-center px-2 py-1 h-[29px] bg-[#FEF8EE] border-2 border-black rounded-lg"
+              >
+                <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo]">
+                  #{tag}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
+
+      <EditLinkModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        currentTitle={siteName}
+        currentUrl={link}
+        currentDescription={description}
+        currentTags={tags}
+        onSave={handleSaveEdit}
+      />
+    </>
+  );
+}

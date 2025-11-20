@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Share2, Settings, Trash2 } from 'lucide-react';
+import { Pencil, Share2, Settings, Trash } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -137,7 +137,7 @@ export default function FolderGroupCard({ title, itemCount, lastUpdate, images }
           }}
           className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer group"
         >
-          <Trash2 className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
         </button>
       </div>
     </div>

@@ -42,11 +42,13 @@ export default function GroupPage() {
               title="Fonderies"
               itemCount={6}
               lastUpdate="Mise à jour il y a 1min"
+              groupSlug={slug}
             />
             <FolderCard
               title="Icons"
               itemCount={6}
               lastUpdate="Mise à jour il y a 1min"
+              groupSlug={slug}
             />
           </div>
         </section>
