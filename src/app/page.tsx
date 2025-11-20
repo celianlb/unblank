@@ -15,9 +15,15 @@ export default function HomePage() {
 
   const isSelectionMode = selectedCount > 0;
 
+  const handleDeleteSelected = () => {
+    // TODO: Implement delete logic
+    console.log('Deleting', selectedCount, 'items');
+    setSelectedCount(0);
+  };
+
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header />
+      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}

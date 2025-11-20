@@ -1,17 +1,29 @@
 'use client';
 
-import { Search, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
 import ProfileMenu from './ProfileMenu';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
-export default function Header() {
+interface HeaderProps {
+  selectedCount?: number;
+  onDeleteSelected?: () => void;
+}
+
+export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleDeleteConfirm = () => {
+    onDeleteSelected?.();
+    setIsDeleteModalOpen(false);
+  };
 
   return (
     <>
@@ -26,6 +38,11 @@ export default function Header() {
       <CreateGroupModal
         isOpen={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
+      />
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
       />
     <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
       <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
@@ -72,30 +89,35 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4 pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
-          <button
-            onClick={() => setIsCreateFolderModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
-          </button>
+        <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
+          <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
+            <button
+              onClick={() => setIsCreateFolderModalOpen(true)}
+              className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer</span>
+            </button>
 
-          <button
-            onClick={() => setIsCreateGroupModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
-          </button>
+            <button
+              onClick={() => setIsAddLinkModalOpen(true)}
+              className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setIsAddLinkModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
-          </button>
+          {/* Delete button - appears when items are selected */}
+          {selectedCount > 0 && (
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-12 px-6 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Trash2 className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-bold text-base font-[Heebo]">Supprimer</span>
+            </button>
+          )}
         </div>
       </div>
     </header>
