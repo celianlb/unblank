@@ -2,6 +2,7 @@
 
 import { Pencil, Share2, Settings, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
@@ -16,6 +17,7 @@ interface FolderGroupCardProps {
 }
 
 export default function FolderGroupCard({ title, itemCount, lastUpdate, images }: FolderGroupCardProps) {
+  const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -32,9 +34,18 @@ export default function FolderGroupCard({ title, itemCount, lastUpdate, images }
     console.log('Nouveau nom:', newName);
   };
 
+  const handleCardClick = () => {
+    // Convert title to slug format
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    router.push(`/${encodeURIComponent(slug)}`);
+  };
+
   return (
     <>
-    <div className="w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] shadow-[4px_4px_0px_#000000] flex-none cursor-pointer transition-shadow hover:shadow-[6px_6px_0px_#000000] box-border flex flex-col gap-4 p-3">
+    <div
+      onClick={handleCardClick}
+      className="w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] shadow-[4px_4px_0px_#000000] flex-none cursor-pointer transition-shadow hover:shadow-[6px_6px_0px_#000000] box-border flex flex-col gap-4 p-3"
+    >
       {/* Frame 194 - Images Grid */}
       <div className="flex flex-col gap-1.5 w-full">
         {/* Frame 187 - Top row */}
