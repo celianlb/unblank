@@ -12,10 +12,11 @@ interface FolderCardProps {
   title: string;
   itemCount: number;
   lastUpdate: string;
-  groupSlug: string;
+  groupSlug?: string;
+  slug?: string;
 }
 
-export default function FolderCard({ title, itemCount, lastUpdate, groupSlug }: FolderCardProps) {
+export default function FolderCard({ title, itemCount, lastUpdate, groupSlug, slug }: FolderCardProps) {
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -23,8 +24,12 @@ export default function FolderCard({ title, itemCount, lastUpdate, groupSlug }: 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
   const handleCardClick = () => {
-    const folderSlug = title.toLowerCase().replace(/\s+/g, '-');
-    router.push(`/${encodeURIComponent(groupSlug)}/${encodeURIComponent(folderSlug)}`);
+    const folderSlug = slug || title.toLowerCase().replace(/\s+/g, '-');
+    if (groupSlug) {
+      router.push(`/${groupSlug}/${folderSlug}`);
+    } else {
+      router.push(`/${folderSlug}`);
+    }
   };
 
   const handleDelete = () => {

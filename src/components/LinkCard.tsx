@@ -46,26 +46,26 @@ export default function LinkCard({ imageUrl, link, tags = [], isSelectionMode = 
 
   return (
     <>
-      <div className="group/card w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative">
+      <div className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative">
         {/* Image placeholder */}
-        <div className="absolute inset-0 bg-[#C4C4C4] rounded-[16px]">
+        <div className="absolute inset-0 bg-[#C4C4C4] rounded-xl sm:rounded-[16px]">
           {imageUrl && (
             <img
               src={imageUrl}
               alt=""
-              className="w-full h-full object-cover rounded-[16px]"
+              className="w-full h-full object-cover rounded-xl sm:rounded-[16px]"
             />
           )}
         </div>
 
         {/* Checkbox container - Frame 134: 36x30px to allow checkmark overflow */}
-        <div className={`absolute left-3 top-3 w-[36px] h-[30px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row items-center`}>
+        <div className={`absolute left-2 sm:left-3 top-2 sm:top-3 w-[30px] sm:w-[36px] h-[26px] sm:h-[30px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row items-center`}>
           <div
             onClick={(e) => {
               e.stopPropagation();
               handleCheckChange();
             }}
-            className={`relative w-7 h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-[3px] border-[#0D0D0D] rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
+            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
           >
             {isChecked && (
               <svg

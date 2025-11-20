@@ -61,6 +61,7 @@ export default function HomePage() {
           <div className="flex flex-row flex-wrap gap-8 w-full">
             <FolderCard
               title="Récents"
+              slug="recents"
               itemCount={6}
               lastUpdate="Mise à jour il y a 1min"
             />
