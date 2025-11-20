@@ -1,4 +1,4 @@
-import { AuthCredentials, User, UserSession, OAuthProvider, SignUpData } from '../models';
+import { AuthCredentials, User, UserSession, OAuthProvider, SignUpData, UpdateProfileData } from '../models';
 
 /**
  * Port (interface) pour le repository d'authentification
@@ -49,5 +49,15 @@ export interface AuthRepository {
    * Met à jour le mot de passe de l'utilisateur
    */
   updatePassword(newPassword: string): Promise<void>;
+
+  /**
+   * Met à jour le profil de l'utilisateur
+   */
+  updateProfile(data: UpdateProfileData): Promise<User>;
+
+  /**
+   * Supprime le compte de l'utilisateur actuellement connecté
+   */
+  deleteAccount(): Promise<void>;
 }
 
