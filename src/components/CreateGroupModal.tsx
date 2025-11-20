@@ -1,7 +1,7 @@
 'use client';
 
 import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -15,6 +15,8 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
   const [groupName, setGroupName] = useState('');
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const justClosedDropdownRef = useRef(false);
 
   // Réinitialiser les sélections quand la modale se ferme
   useEffect(() => {
@@ -24,6 +26,37 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
       setIsDropdownOpen(false);
     }
   }, [isOpen]);
+
+  // Fermer le dropdown quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Vérifier si le clic est sur l'overlay
+        const target = event.target as HTMLElement;
+        const isOverlay = target.hasAttribute('data-overlay') || target.closest('[data-overlay="true"]');
+        
+        if (isOverlay) {
+          // Si c'est l'overlay, on ferme juste le dropdown, pas la modale
+          justClosedDropdownRef.current = true;
+          setIsDropdownOpen(false);
+          // Réinitialiser le flag après un court délai pour permettre un nouveau clic
+          setTimeout(() => {
+            justClosedDropdownRef.current = false;
+          }, 200);
+        } else {
+          // Sinon, on ferme le dropdown normalement
+          setIsDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isDropdownOpen]);
 
   if (!isOpen) return null;
 
@@ -42,12 +75,23 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
     onClose();
   };
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Si le dropdown est ouvert, on ne ferme pas la modale
+    // Le useEffect va fermer le dropdown, et il faudra cliquer à nouveau pour fermer la modale
+    if (isDropdownOpen || justClosedDropdownRef.current) {
+      return;
+    }
+    // Sinon, on ferme la modale normalement
+    onClose();
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
+        data-overlay="true"
       />
 
       {/* Modal */}
@@ -85,7 +129,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             {/* Ajouter des dossiers existant */}
             <div className="flex flex-col gap-2 w-full">
               <label className="text-base font-medium text-black font-[Heebo]">Ajouter des dossiers existant</label>
-              <div className="relative w-full">
+              <div className="relative w-full" ref={dropdownRef}>
                 {/* Bouton dropdown fermé avec hover rose */}
                 <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -111,6 +155,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                   <div
                     className="absolute top-full left-0 right-0 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_#000000] z-50 p-4 max-h-[220px] overflow-y-auto"
                     style={{ marginTop: '6px' }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {/* Liste des dossiers */}
                     <div className="flex flex-col gap-3">
