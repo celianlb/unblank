@@ -1,11 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import Header from '@/components/Header';
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
 
 export default function HomePage() {
+  const [selectedCount, setSelectedCount] = useState(0);
+
+  const handleCheckChange = (checked: boolean) => {
+    setSelectedCount(prev => checked ? prev + 1 : prev - 1);
+  };
+
+  const isSelectionMode = selectedCount > 0;
+
   return (
     <div className="min-h-screen w-full bg-white">
       <Header />
@@ -77,38 +86,56 @@ export default function HomePage() {
             <LinkCard
               link="https://fr.pinterest.com/pin/123456789/"
               tags={['mascotte', 'cartoon', 'vert']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/234567890/"
               tags={['poster', 'minimal']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/345678901/"
               tags={['design', 'swiss']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/456789012/"
               tags={['street', 'nyc']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/567890123/"
               tags={['signage', 'wayfinding']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/678901234/"
               tags={['branding', 'identity']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/789012345/"
               tags={['color', 'palette']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/890123456/"
               tags={['interior', 'decor']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
             <LinkCard
               link="https://fr.pinterest.com/pin/901234567/"
               tags={['movie', 'poster']}
+              isSelectionMode={isSelectionMode}
+              onCheckChange={handleCheckChange}
             />
           </div>
         </section>
