@@ -5,6 +5,8 @@
 export interface User {
   id: string;
   email: string;
+  username?: string;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -47,5 +49,13 @@ export type OAuthProvider = 'google' | 'pinterest';
 export interface OAuthOptions {
   provider: OAuthProvider;
   redirectTo?: string;
+}
+
+/**
+ * Données pour mettre à jour le profil utilisateur
+ */
+export interface UpdateProfileData {
+  username?: string;
+  avatarUrl?: string;
 }
 

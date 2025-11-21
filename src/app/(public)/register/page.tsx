@@ -33,7 +33,7 @@ export default function RegisterPage() {
         });
       } else {
         // Regular access: redirect to dashboard
-        router.push("/dashboard");
+        router.push("/app");
       }
     }
   }, [fromExtension, user, session, router]);

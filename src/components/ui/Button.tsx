@@ -86,7 +86,7 @@ export function Button({
     } else if (variant === 'secondary') {
       target.style.backgroundColor = '#F5F5F5';
     } else if (variant === 'outline') {
-      target.style.backgroundColor = '#FFEFD9';
+      target.style.backgroundColor = '#FFE3E8';
     }
   };
 

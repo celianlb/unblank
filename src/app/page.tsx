@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import Header from '@/components/Header';
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
+import { Wrench } from "lucide-react";
 
 export default function HomePage() {
   const [selectedCount, setSelectedCount] = useState(0);

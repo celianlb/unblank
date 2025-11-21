@@ -1,24 +1,87 @@
 'use client';
 
-import { X, FolderOpen, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Liste des dossiers disponibles (mock data - à remplacer par des vraies données)
+const availableFolders = ['Appart Paris', 'Poster', 'Logo', 'Logos', 'Affiches', 'Maquettes'];
+
 export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState('Dossiers existants');
+  const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const justClosedDropdownRef = useRef(false);
+
+  // Réinitialiser les sélections quand la modale se ferme
+  useEffect(() => {
+    if (!isOpen) {
+      setGroupName('');
+      setSelectedFolders([]);
+      setIsDropdownOpen(false);
+    }
+  }, [isOpen]);
+
+  // Fermer le dropdown quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // Vérifier si le clic est sur l'overlay
+        const target = event.target as HTMLElement;
+        const isOverlay = target.hasAttribute('data-overlay') || target.closest('[data-overlay="true"]');
+        
+        if (isOverlay) {
+          // Si c'est l'overlay, on ferme juste le dropdown, pas la modale
+          justClosedDropdownRef.current = true;
+          setIsDropdownOpen(false);
+          // Réinitialiser le flag après un court délai pour permettre un nouveau clic
+          setTimeout(() => {
+            justClosedDropdownRef.current = false;
+          }, 200);
+        } else {
+          // Sinon, on ferme le dropdown normalement
+          setIsDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isDropdownOpen]);
 
   if (!isOpen) return null;
+
+  const toggleFolder = (folder: string) => {
+    setSelectedFolders(prev =>
+      prev.includes(folder)
+        ? prev.filter(f => f !== folder)
+        : [...prev, folder]
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Logique de création du groupe
-    console.log({ groupName, selectedFolder });
+    console.log({ groupName, selectedFolders });
+    onClose();
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Si le dropdown est ouvert, on ne ferme pas la modale
+    // Le useEffect va fermer le dropdown, et il faudra cliquer à nouveau pour fermer la modale
+    if (isDropdownOpen || justClosedDropdownRef.current) {
+      return;
+    }
+    // Sinon, on ferme la modale normalement
     onClose();
   };
 
@@ -27,7 +90,8 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
+        data-overlay="true"
       />
 
       {/* Modal */}
@@ -65,68 +129,70 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             {/* Ajouter des dossiers existant */}
             <div className="flex flex-col gap-2 w-full">
               <label className="text-base font-medium text-black font-[Heebo]">Ajouter des dossiers existant</label>
-              <div className="relative w-full">
+              <div className="relative w-full" ref={dropdownRef}>
+                {/* Bouton dropdown fermé avec hover rose */}
                 <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full h-14 flex items-center justify-between px-4 bg-white border-2 border-black rounded-xl cursor-pointer"
+                  className="w-full h-14 flex items-center justify-between px-4 bg-white border-2 border-black rounded-xl cursor-pointer hover:bg-[#FFE3E8] transition-colors select-none"
                 >
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5 text-black" strokeWidth={2} />
-                    <span className="text-base text-black font-[Heebo] font-semibold">{selectedFolder}</span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <FolderOpen className="w-6 h-6 text-[#636363] shrink-0" strokeWidth={2} />
+                    <span className="text-base text-[#636363] font-[Heebo] font-medium truncate">
+                      {selectedFolders.length > 0
+                        ? selectedFolders.join(', ')
+                        : 'Dossiers existants'}
+                    </span>
                   </div>
-                  <ChevronDown className="w-5 h-5 text-black" strokeWidth={2} />
+                  {isDropdownOpen ? (
+                    <ChevronUp className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+                  ) : (
+                    <ChevronDown className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+                  )}
                 </div>
+
+                {/* Dropdown ouvert avec boutons Ajouter */}
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 max-h-[calc(3*43px)] overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setSelectedFolder('Logos');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
-                    >
-                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
-                      <span className="text-base text-black font-[Heebo] font-semibold">Logos</span>
-                    </div>
-                    <div
-                      onClick={() => {
-                        setSelectedFolder('Affiches');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
-                    >
-                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
-                      <span className="text-base text-black font-[Heebo] font-semibold">Affiches</span>
-                    </div>
-                    <div
-                      onClick={() => {
-                        setSelectedFolder('Maquettes');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
-                    >
-                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
-                      <span className="text-base text-black font-[Heebo] font-semibold">Maquettes</span>
-                    </div>
-                    <div
-                      onClick={() => {
-                        setSelectedFolder('A ranger');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
-                    >
-                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
-                      <span className="text-base text-black font-[Heebo] font-semibold">A ranger</span>
-                    </div>
-                    <div
-                      onClick={() => {
-                        setSelectedFolder('Architecture');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 p-2.5 cursor-pointer transition-colors hover:bg-[#FFE3E8]"
-                    >
-                      <FolderOpen className="w-6 h-6 text-black" strokeWidth={2} />
-                      <span className="text-base text-black font-[Heebo] font-semibold">Architecture</span>
+                  <div
+                    className="absolute top-full left-0 right-0 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_#000000] z-50 p-4 max-h-[220px] overflow-y-auto"
+                    style={{ marginTop: '6px' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Liste des dossiers */}
+                    <div className="flex flex-col gap-3">
+                      {availableFolders.map((folder) => (
+                        <div
+                          key={folder}
+                          className={`flex items-center justify-between cursor-pointer transition-colors rounded-lg p-2 -mx-2 select-none ${
+                            selectedFolders.includes(folder)
+                              ? 'hover:bg-[#FF6080]/10'
+                              : 'hover:bg-[#FFE3E8]'
+                          }`}
+                          onClick={() => toggleFolder(folder)}
+                        >
+                          <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">{folder}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFolder(folder);
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors w-[107px] cursor-pointer ${
+                              selectedFolders.includes(folder)
+                                ? 'bg-[#FF506F]'
+                                : 'bg-transparent'
+                            }`}
+                          >
+                            {selectedFolders.includes(folder) ? (
+                              <X className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
+                            ) : (
+                              <Plus className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
+                            )}
+                            <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">
+                              {selectedFolders.includes(folder) ? 'Ajouté' : 'Ajouter'}
+                            </span>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

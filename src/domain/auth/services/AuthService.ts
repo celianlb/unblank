@@ -142,5 +142,12 @@ export class AuthService {
 
     return await this.authRepository.resetPassword(email);
   }
+
+  /**
+   * Supprime le compte de l'utilisateur actuellement connecté
+   */
+  async deleteAccount(): Promise<void> {
+    return await this.authRepository.deleteAccount();
+  }
 }
 

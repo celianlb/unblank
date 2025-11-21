@@ -1,7 +1,9 @@
 'use client';
 
 import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth';
+import { User } from '@/domain/auth/models';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
@@ -24,6 +26,18 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
     onDeleteSelected?.();
     setIsDeleteModalOpen(false);
   };
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { getCurrentSession } = useAuth();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const session = await getCurrentSession();
+      if (session) {
+        setCurrentUser(session.user);
+      }
+    };
+    fetchUser();
+  }, [getCurrentSession]);
 
   return (
     <>
@@ -54,28 +68,38 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
             <input
               type="text"
               placeholder="Rechercher un dossier, une image, un lien"
-              className="w-full h-11 sm:h-12 md:h-13 lg:h-16 xl:h-20 pl-11 sm:pl-12 md:pl-13 lg:pl-16 xl:pl-[74px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-base md:text-base lg:text-base xl:text-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis"
+              className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-16 xl:pl-[74px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis"
             />
           </div>
 
-          <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-6 md:shrink-0">
-            <button className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-6 xl:px-[27px] rounded-lg md:rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all font-medium text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer">
-              <span className="hidden sm:inline">Installer l&apos;extension</span>
-              <span className="sm:hidden">Extension</span>
+          <div className="flex items-center justify-end gap-2 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 shrink-0">
+            {/* Bouton Extension - Visible uniquement sur desktop (md et plus) */}
+            <button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
+              Installer l&apos;extension
             </button>
 
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-1 xl:gap-1.5 cursor-pointer"
+                className="flex items-center gap-1 sm:gap-1 md:gap-1.5 xl:gap-1.5 cursor-pointer"
               >
                 <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 xl:w-[62px] xl:h-[62px] rounded-full border-2 md:border-[3px] border-black overflow-hidden bg-gray-200 shrink-0">
-                  <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+                  {currentUser?.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.username || currentUser.email}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+                      {currentUser?.username?.charAt(0).toUpperCase() || currentUser?.email?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
                 </div>
                 {isProfileMenuOpen ? (
-                  <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
+                  <ChevronUp className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
                 ) : (
-                  <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
+                  <ChevronDown className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
                 )}
               </button>
 
