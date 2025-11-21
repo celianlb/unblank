@@ -1,153 +1,39 @@
 "use client";
 
-import { useState } from 'react';
-import Header from '@/components/Header';
-import FolderGroupCard from '@/components/FolderGroupCard';
-import FolderCard from '@/components/FolderCard';
-import LinkCard from '@/components/LinkCard';
-import { Wrench } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
-  const [selectedCount, setSelectedCount] = useState(0);
-
-  const handleCheckChange = (checked: boolean) => {
-    setSelectedCount(prev => checked ? prev + 1 : prev - 1);
-  };
-
-  const isSelectionMode = selectedCount > 0;
-
-  const handleDeleteSelected = () => {
-    // TODO: Implement delete logic
-    console.log('Deleting', selectedCount, 'items');
-    setSelectedCount(0);
-  };
-
   return (
-    <div className="min-h-screen w-full bg-white">
-      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
-
-      <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
-        {/* Section Groupe de dossier */}
-        <section className="flex flex-col items-start gap-[21px] w-full">
-          {/* Titre */}
-          <h1
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            Groupe de dossier (1)
-          </h1>
-
-          {/* Contenu des cartes */}
-          <div className="flex flex-row flex-wrap gap-8 w-full">
-            <FolderGroupCard
-              title="Graphic tools"
-              itemCount={6}
-              lastUpdate="Mise à jour il y a 1min"
-              images={['image1', 'image2', 'image3', 'image4']}
+    <div className="min-h-screen bg-[#FEF8EE] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white border-4 border-black rounded-[24px] shadow-[8px_8px_0px_#000000] p-8 sm:p-12">
+          <div className="flex flex-col items-center gap-6 text-center">
+            <Image
+              src="/Mascottt.svg"
+              alt="Mascotte UnBlank"
+              width={160}
+              height={160}
+              className="w-32 h-32 sm:w-40 sm:h-40"
             />
+
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#0D0D0D]">
+                En construction
+              </h1>
+              <p className="text-lg text-[#636363]">
+                Cette page est en cours de développement
+              </p>
+            </div>
+
+            <Link href="/app">
+              <button className="mt-4 px-8 py-4 bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-3 border-black rounded-xl shadow-[4px_4px_0px_#000000] text-black font-bold text-lg cursor-pointer">
+                Accéder à l&apos;app
+              </button>
+            </Link>
           </div>
-        </section>
-
-        {/* Section Dossiers */}
-        <section className="flex flex-col items-start gap-[21px] w-full">
-          {/* Titre */}
-          <h1
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            Dossiers (3)
-          </h1>
-
-          {/* Contenu des cartes */}
-          <div className="flex flex-row flex-wrap gap-8 w-full">
-            <FolderCard
-              title="Récents"
-              slug="recents"
-              itemCount={6}
-              lastUpdate="Mise à jour il y a 1min"
-            />
-            <FolderCard
-              title="Inspis graphique"
-              itemCount={8}
-              lastUpdate="Mise à jour il y a 1min"
-            />
-            <FolderCard
-              title="Grid"
-              itemCount={6}
-              lastUpdate="Mise à jour il y a 1min"
-            />
-          </div>
-        </section>
-
-        {/* Section Liens */}
-        <section className="flex flex-col items-start gap-[21px] w-full">
-          {/* Titre */}
-          <h1
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            Liens (9)
-          </h1>
-
-          {/* Contenu des cartes */}
-          <div className="flex flex-row flex-wrap gap-8 w-full">
-            <LinkCard
-              link="https://fr.pinterest.com/pin/123456789/"
-              tags={['mascotte', 'cartoon', 'vert']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/234567890/"
-              tags={['poster', 'minimal']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/345678901/"
-              tags={['design', 'swiss']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/456789012/"
-              tags={['street', 'nyc']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/567890123/"
-              tags={['signage', 'wayfinding']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/678901234/"
-              tags={['branding', 'identity']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/789012345/"
-              tags={['color', 'palette']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/890123456/"
-              tags={['interior', 'decor']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              link="https://fr.pinterest.com/pin/901234567/"
-              tags={['movie', 'poster']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }

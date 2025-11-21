@@ -13,7 +13,7 @@ export default function Breadcrumb({ groupName, folderName, groupSlug }: Breadcr
   return (
     <div className="flex flex-row items-center gap-6">
       {/* Home Icon */}
-      <Link href="/" className="w-[42px] h-[42px] flex items-center justify-center cursor-pointer group">
+      <Link href="/app" className="w-[42px] h-[42px] flex items-center justify-center cursor-pointer group">
         <Home className="w-[35px] h-[35px] text-[#8B8B8B] group-hover:text-[#0D0D0D] transition-colors" strokeWidth={2} />
       </Link>
 
