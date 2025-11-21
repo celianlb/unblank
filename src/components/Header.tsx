@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { User } from '@/domain/auth/models';
@@ -8,12 +8,24 @@ import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
 import ProfileMenu from './ProfileMenu';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
-export default function Header() {
+interface HeaderProps {
+  selectedCount?: number;
+  onDeleteSelected?: () => void;
+}
+
+export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleDeleteConfirm = () => {
+    onDeleteSelected?.();
+    setIsDeleteModalOpen(false);
+  };
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { getCurrentSession } = useAuth();
 
@@ -41,11 +53,16 @@ export default function Header() {
         isOpen={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
       />
-    <header className="w-full h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
-      <div className="w-full h-full px-4 sm:px-5 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-4 md:py-6 lg:py-7 xl:py-8">
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 sm:mb-3 md:mb-4 lg:mb-6 xl:mb-8">
-          <div className="flex-1 lg:max-w-[700px] xl:max-w-[903px] relative min-w-0">
-            <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8">
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
+    <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
+      <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
+          <div className="w-full md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
+            <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8">
               <Search className="w-full h-full" strokeWidth={2} />
             </div>
             <input
@@ -96,37 +113,35 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Boutons d'action - Layout responsive */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 md:gap-3 lg:gap-3 xl:gap-4 pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
-          <button
-            onClick={() => setIsCreateFolderModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-bold text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
-              <span className="hidden xs:inline sm:inline">Créer un </span>dossier
-            </span>
-          </button>
+        <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
+          <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
+            <button
+              onClick={() => setIsCreateFolderModalOpen(true)}
+              className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer</span>
+            </button>
 
-          <button
-            onClick={() => setIsCreateGroupModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-bold text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
-              <span className="hidden xs:inline sm:inline">Créer un </span>groupe
-            </span>
-          </button>
+            <button
+              onClick={() => setIsAddLinkModalOpen(true)}
+              className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-medium text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setIsAddLinkModalOpen(true)}
-            className="h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-3.5 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 sm:gap-2 xl:gap-2.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-            <span className="text-black font-bold text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base whitespace-nowrap">
-              <span className="hidden xs:inline sm:inline">Ajouter un </span>lien
-            </span>
-          </button>
+          {/* Delete button - appears when items are selected */}
+          {selectedCount > 0 && (
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="h-12 px-6 rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
+            >
+              <Trash className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+              <span className="text-black font-bold text-base font-[Heebo]">Supprimer</span>
+            </button>
+          )}
         </div>
       </div>
     </header>
