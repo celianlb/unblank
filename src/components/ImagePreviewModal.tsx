@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { X, Pencil, Copy, ExternalLink } from 'lucide-react';
+import EditTagsModal from './EditTagsModal';
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -27,12 +29,20 @@ export default function ImagePreviewModal({
   folder,
   tags
 }: ImagePreviewModalProps) {
+  const [isEditTagsOpen, setIsEditTagsOpen] = useState(false);
+  const [currentTags, setCurrentTags] = useState(tags);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
   };
 
   const handleOpenLink = () => {
     window.open(link, '_blank');
+  };
+
+  const handleSaveTags = (newTags: string[]) => {
+    setCurrentTags(newTags);
+    // TODO: Save to backend/database
   };
 
   if (!isOpen) return null;
@@ -63,7 +73,9 @@ export default function ImagePreviewModal({
         <div className="flex-1 flex flex-col p-3 sm:p-4 md:p-6 lg:p-10 pt-0 md:pt-6 lg:pt-10 overflow-y-auto gap-3 sm:gap-4 md:gap-6">
 
           {/* Edit tags button */}
-          <button className="w-full sm:w-auto sm:self-start h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all">
+          <button
+            onClick={() => setIsEditTagsOpen(true)}
+            className="w-full sm:w-auto sm:self-start h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all">
             <Pencil className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0D0D0D]" strokeWidth={2} />
             <span className="text-xs sm:text-sm md:text-base leading-tight font-medium uppercase text-[#0D0D0D] font-[Heebo]">
               Éditer les tags
@@ -144,12 +156,20 @@ export default function ImagePreviewModal({
                 Tags associés :
               </span>
               <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl leading-tight tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo] text-right max-w-[50%] truncate">
-                {tags.map(tag => `#${tag}`).join(', ')}
+                {currentTags.map(tag => `#${tag}`).join(', ')}
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Tags Modal */}
+      <EditTagsModal
+        isOpen={isEditTagsOpen}
+        onClose={() => setIsEditTagsOpen(false)}
+        initialTags={currentTags}
+        onSave={handleSaveTags}
+      />
     </div>
   );
 }
