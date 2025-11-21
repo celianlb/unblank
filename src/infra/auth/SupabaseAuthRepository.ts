@@ -20,26 +20,50 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   /**
    * Convertit un user Supabase en User du domaine
+   * Récupère les données depuis la table public.users
    */
-  private mapSupabaseUserToDomain(supabaseUser: any): User {
+  private async mapSupabaseUserToDomain(supabaseUser: any): Promise<User> {
+    // Récupérer les données depuis public.users
+    const { data: publicUser, error } = await this.supabase
+      .from('users')
+      .select('username, avatar_url, created_at, updated_at')
+      .eq('id', supabaseUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching user from public.users:', error);
+    }
+
+    // Si l'utilisateur n'existe pas dans public.users, utiliser user_metadata comme fallback
+    // Le trigger SQL devrait créer l'entrée automatiquement lors de l'inscription
+    if (!publicUser) {
+      console.warn('User not found in public.users, falling back to user_metadata. This might indicate the trigger did not run.');
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email!,
+        username: supabaseUser.user_metadata?.username || undefined,
+        avatarUrl: supabaseUser.user_metadata?.avatar_url || undefined,
+        createdAt: new Date(supabaseUser.created_at),
+        updatedAt: supabaseUser.updated_at ? new Date(supabaseUser.updated_at) : undefined,
+      };
+    }
+
     return {
       id: supabaseUser.id,
       email: supabaseUser.email!,
-      username: supabaseUser.user_metadata?.username || undefined,
-      avatarUrl: supabaseUser.user_metadata?.avatar_url || undefined,
-      createdAt: new Date(supabaseUser.created_at),
-      updatedAt: supabaseUser.updated_at
-        ? new Date(supabaseUser.updated_at)
-        : undefined,
+      username: publicUser.username || undefined,
+      avatarUrl: publicUser.avatar_url || undefined,
+      createdAt: publicUser.created_at ? new Date(publicUser.created_at) : new Date(supabaseUser.created_at),
+      updatedAt: publicUser.updated_at ? new Date(publicUser.updated_at) : undefined,
     };
   }
 
   /**
    * Convertit une session Supabase en UserSession du domaine
    */
-  private mapSupabaseSessionToDomain(supabaseSession: any): UserSession {
+  private async mapSupabaseSessionToDomain(supabaseSession: any): Promise<UserSession> {
     return {
-      user: this.mapSupabaseUserToDomain(supabaseSession.user),
+      user: await this.mapSupabaseUserToDomain(supabaseSession.user),
       accessToken: supabaseSession.access_token,
       refreshToken: supabaseSession.refresh_token,
       expiresAt: (supabaseSession.expires_at || 0) * 1000, // Convert seconds to milliseconds
@@ -86,7 +110,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         throw AuthError.unknown(new Error('No session returned from Supabase'));
       }
 
-      return this.mapSupabaseSessionToDomain(data.session);
+      return await this.mapSupabaseSessionToDomain(data.session);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -124,14 +148,14 @@ export class SupabaseAuthRepository implements AuthRepository {
       if (!data.session) {
         // Créer une session temporaire pour afficher un message
         return {
-          user: this.mapSupabaseUserToDomain(data.user),
+          user: await this.mapSupabaseUserToDomain(data.user),
           accessToken: '',
           refreshToken: '',
           expiresAt: 0,
         };
       }
 
-      return this.mapSupabaseSessionToDomain(data.session);
+      return await this.mapSupabaseSessionToDomain(data.session);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -192,7 +216,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         return null;
       }
 
-      return this.mapSupabaseSessionToDomain(data.session);
+      return await this.mapSupabaseSessionToDomain(data.session);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -213,7 +237,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         return null;
       }
 
-      return this.mapSupabaseUserToDomain(data.user);
+      return await this.mapSupabaseUserToDomain(data.user);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -236,7 +260,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         );
       }
 
-      return this.mapSupabaseSessionToDomain(data.session);
+      return await this.mapSupabaseSessionToDomain(data.session);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -290,8 +314,25 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   async updateProfile(data: UpdateProfileData): Promise<User> {
     try {
-      // Préparer les données pour Supabase
-      const updateData: any = {};
+      // Récupérer l'utilisateur actuel
+      const { data: { user }, error: getUserError } = await this.supabase.auth.getUser();
+
+      if (getUserError) {
+        this.handleSupabaseError(getUserError);
+      }
+
+      if (!user) {
+        throw AuthError.userNotFound();
+      }
+
+      // Préparer les données pour la table public.users
+      const updateData: {
+        updated_at: string;
+        username?: string;
+        avatar_url?: string;
+      } = {
+        updated_at: new Date().toISOString(),
+      };
 
       if (data.username !== undefined) {
         updateData.username = data.username;
@@ -301,21 +342,18 @@ export class SupabaseAuthRepository implements AuthRepository {
         updateData.avatar_url = data.avatarUrl;
       }
 
-      const { data: userData, error } = await this.supabase.auth.updateUser({
-        data: updateData,
-      });
+      // Mettre à jour dans public.users
+      const { error: updateError } = await this.supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', user.id);
 
-      if (error) {
-        this.handleSupabaseError(error);
+      if (updateError) {
+        this.handleSupabaseError(updateError);
       }
 
-      if (!userData.user) {
-        throw AuthError.unknown(
-          new Error('No user returned after profile update')
-        );
-      }
-
-      return this.mapSupabaseUserToDomain(userData.user);
+      // Retourner l'utilisateur mis à jour
+      return await this.mapSupabaseUserToDomain(user);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
