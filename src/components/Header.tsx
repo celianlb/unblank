@@ -1,9 +1,8 @@
 'use client';
 
 import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth';
-import { User } from '@/domain/auth/models';
+import { useState } from 'react';
+import { useAuthContext } from '@/contexts/AuthContext';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
@@ -26,18 +25,10 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
     onDeleteSelected?.();
     setIsDeleteModalOpen(false);
   };
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const { getCurrentSession } = useAuth();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const session = await getCurrentSession();
-      if (session) {
-        setCurrentUser(session.user);
-      }
-    };
-    fetchUser();
-  }, [getCurrentSession]);
+  // Utiliser le context au lieu de fetcher à chaque fois
+  const { session } = useAuthContext();
+  const currentUser = session?.user || null;
 
   return (
     <>

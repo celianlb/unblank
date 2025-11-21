@@ -2,36 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
-import { UserSession } from "@/domain/auth/models";
 
 export default function AppPage() {
   const router = useRouter();
-  const { getCurrentSession } = useAuth();
-  const [session, setSession] = useState<UserSession | null>(null);
-  const [loadingSession, setLoadingSession] = useState(true);
+  const { session, loading } = useAuthContext();
   const [selectedCount, setSelectedCount] = useState(0);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      setLoadingSession(true);
-      const currentSession = await getCurrentSession();
-
-      if (!currentSession) {
-        // Pas de session, redirection vers login
-        router.push("/login");
-      } else {
-        setSession(currentSession);
-      }
-      setLoadingSession(false);
-    };
-
-    fetchSession();
-  }, [getCurrentSession, router]);
+    if (!loading && !session) {
+      // Pas de session, redirection vers login
+      router.push("/login");
+    }
+  }, [session, loading, router]);
 
   const handleCheckChange = (checked: boolean) => {
     setSelectedCount(prev => checked ? prev + 1 : prev - 1);
@@ -45,7 +32,7 @@ export default function AppPage() {
     setSelectedCount(0);
   };
 
-  if (loadingSession || !session) {
+  if (loading || !session) {
     return null; // Chargement ou redirection en cours
   }
 

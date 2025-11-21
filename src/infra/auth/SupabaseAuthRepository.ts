@@ -10,18 +10,25 @@ import {
   SignUpData,
   UpdateProfileData,
 } from '@/domain/auth/models';
+import { GetUserAvatarUrlUseCase } from '@/application/auth/GetUserAvatarUrlUseCase';
 
 /**
  * Implémentation Supabase du repository d'authentification
  * Adapter entre Supabase et notre domaine métier
  */
 export class SupabaseAuthRepository implements AuthRepository {
-  constructor(private readonly supabase: SupabaseClient) {}
+  private readonly getUserAvatarUrlUseCase: GetUserAvatarUrlUseCase;
+
+  constructor(private readonly supabase: SupabaseClient) {
+    // Injecter le Use Case qui gère le cache (Application layer)
+    this.getUserAvatarUrlUseCase = new GetUserAvatarUrlUseCase(supabase);
+  }
 
   /**
    * Convertit un user Supabase en User du domaine
    * Récupère les données depuis la table public.users
    */
+
   private async mapSupabaseUserToDomain(supabaseUser: any): Promise<User> {
     // Récupérer les données depuis public.users
     const { data: publicUser, error } = await this.supabase
@@ -48,11 +55,19 @@ export class SupabaseAuthRepository implements AuthRepository {
       };
     }
 
+    // Générer une signed URL si l'avatar est dans Storage
+    // Utilise le Use Case (Application layer) qui gère le cache
+    let avatarUrl = publicUser.avatar_url;
+    if (avatarUrl) {
+      const signedUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
+      avatarUrl = signedUrl || avatarUrl;
+    }
+
     return {
       id: supabaseUser.id,
       email: supabaseUser.email!,
       username: publicUser.username || undefined,
-      avatarUrl: publicUser.avatar_url || undefined,
+      avatarUrl: avatarUrl || undefined,
       createdAt: publicUser.created_at ? new Date(publicUser.created_at) : new Date(supabaseUser.created_at),
       updatedAt: publicUser.updated_at ? new Date(publicUser.updated_at) : undefined,
     };
