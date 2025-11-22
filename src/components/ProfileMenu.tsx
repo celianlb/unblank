@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuth } from "@/lib/auth";
 import { sendLogoutToExtension } from "@/lib/extension/extensionBridge";
 
@@ -11,6 +12,7 @@ interface ProfileMenuProps {
 
 export default function ProfileMenu({ isOpen, onClose }: ProfileMenuProps) {
   const router = useRouter();
+  const { refreshSession } = useAuthContext();
   const { signOut } = useAuth();
 
   if (!isOpen) return null;
@@ -23,7 +25,12 @@ export default function ProfileMenu({ isOpen, onClose }: ProfileMenuProps) {
       // Then logout from SaaS
       await signOut();
 
+      // Refresh the AuthContext to clear the session
+      await refreshSession();
+
       onClose();
+
+      // Redirect to login page
       router.push("/login");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);

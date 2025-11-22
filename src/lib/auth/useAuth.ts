@@ -56,8 +56,8 @@ export function useAuth() {
           email: userSession.email,
         });
 
-        // Redirection après connexion réussie
-        router.push('/app');
+        // Note: Redirection is now handled by the calling component
+        // via useAuthContext and useEffect monitoring session state
 
         return userSession;
       } catch (err) {
@@ -93,8 +93,8 @@ export function useAuth() {
           return session;
         }
 
-        // Redirection après inscription réussie (si session complète)
-        router.push('/app');
+        // Note: Redirection is now handled by the calling component
+        // via useAuthContext and useEffect monitoring session state
 
         return session;
       } catch (err) {
@@ -154,8 +154,8 @@ export function useAuth() {
       setSession(null);
       setUser(null);
 
-      // Redirection après déconnexion
-      router.push('/login');
+      // Note: Redirection is now handled by the calling component
+      // via useAuthContext refresh and useEffect monitoring session state
     } catch (err) {
       if (err instanceof AuthError) {
         setError(err.message);
@@ -165,7 +165,7 @@ export function useAuth() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, []);
 
   /**
    * Récupère la session actuelle
@@ -280,8 +280,8 @@ export function useAuth() {
       setSession(null);
       setUser(null);
 
-      // Redirection après suppression
-      router.push('/login');
+      // Note: Redirection is now handled by the calling component
+      // via useAuthContext refresh and useEffect monitoring session state
 
       return true;
     } catch (err) {
@@ -294,7 +294,7 @@ export function useAuth() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, []);
 
   return {
     signIn,

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuth } from "@/lib/auth";
 import { isFromExtension, sendSessionToExtension } from "@/lib/extension/extensionBridge";
 
@@ -12,27 +13,33 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, signInWithOAuth, isLoading, error, clearError, user, session } = useAuth();
+
+  // Session depuis le Context (source de vérité unique)
+  const { session, loading, refreshSession } = useAuthContext();
+
+  // Actions depuis useAuth
+  const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
+
   const fromExtension = isFromExtension();
 
   // Check if user is already authenticated
   useEffect(() => {
-    if (user && session) {
+    if (!loading && session) {
       if (fromExtension) {
         // Coming from extension: send session and close tab
         sendSessionToExtension({
           accessToken: session.accessToken,
           refreshToken: session.refreshToken,
           expiresAt: session.expiresAt,
-          userId: user.id,
-          email: user.email,
+          userId: session.user.id,
+          email: session.user.email,
         });
       } else {
         // Regular access: redirect to app
         router.push('/app');
       }
     }
-  }, [fromExtension, user, session, router]);
+  }, [loading, session, fromExtension, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,16 +51,22 @@ export default function LoginPage() {
     }
 
     const result = await signIn({ email, password });
-    
-    // If login successful and coming from extension, send session
-    if (result && fromExtension) {
-      sendSessionToExtension({
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresAt: result.expiresAt,
-        userId: result.user.id,
-        email: result.user.email,
-      });
+
+    // If login successful, refresh the AuthContext
+    if (result) {
+      await refreshSession();
+
+      // If coming from extension, send session
+      if (fromExtension) {
+        sendSessionToExtension({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresAt: result.expiresAt,
+          userId: result.user.id,
+          email: result.user.email,
+        });
+      }
+      // Note: Redirection is handled by useEffect monitoring session
     }
   };
 

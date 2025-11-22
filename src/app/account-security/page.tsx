@@ -11,7 +11,7 @@ export default function AccountSecurityPage() {
   const router = useRouter();
 
   // Session depuis le Context (déjà chargée, partagée)
-  const { session, loading } = useAuthContext();
+  const { session, loading, refreshSession } = useAuthContext();
 
   // Actions depuis useAuth (updatePassword, deleteAccount, etc.)
   const { updatePassword, deleteAccount, isLoading } = useAuth();
@@ -98,8 +98,13 @@ export default function AccountSecurityPage() {
 
       if (success) {
         setShowDeleteModal(false);
+
+        // Refresh the AuthContext to clear the session
+        await refreshSession();
+
+        // Redirect to login page
+        router.push('/login');
       }
-      // Si succès, la redirection est gérée par le hook useAuth
       return success;
     } catch (error) {
       console.error('Erreur:', error);
