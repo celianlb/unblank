@@ -32,15 +32,17 @@ export default function AppPage() {
     setSelectedCount(0);
   };
 
-  if (loading || !session) {
-    return null; // Chargement ou redirection en cours
-  }
-
   return (
     <div className="min-h-screen w-full bg-white">
       <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
 
-      <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
+      {loading || !session ? (
+        // Loading state - show nothing or a skeleton
+        <div className="w-full px-[22px] py-[22px] flex items-center justify-center min-h-[50vh]">
+          {/* Optional: Add a loading spinner here */}
+        </div>
+      ) : (
+        <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
         <section className="flex flex-col items-start gap-[21px] w-full">
           {/* Titre */}
@@ -162,6 +164,7 @@ export default function AppPage() {
           </div>
         </section>
       </main>
+      )}
     </div>
   );
 }

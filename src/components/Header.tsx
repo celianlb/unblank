@@ -81,11 +81,11 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
                       alt={currentUser.username || currentUser.email}
                       className="w-full h-full object-cover"
                     />
-                  ) : (
+                  ) : currentUser ? (
                     <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl">
-                      {currentUser?.username?.charAt(0).toUpperCase() || currentUser?.email?.charAt(0).toUpperCase() || '?'}
+                      {currentUser.username?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase()}
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 {isProfileMenuOpen ? (
                   <ChevronUp className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
