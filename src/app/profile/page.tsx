@@ -2,19 +2,23 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuth } from '@/lib/auth';
-import { User } from '@/domain/auth/models';
 import { Camera, Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { getCurrentSession, updateProfile, isLoading } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
+
+  // Session depuis le Context (déjà chargée, partagée)
+  const { session, loading } = useAuthContext();
+
+  // Actions depuis useAuth (updateProfile, etc.)
+  const { updateProfile, isLoading } = useAuth();
+
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [initialUsername, setInitialUsername] = useState('');
   const [initialAvatarUrl, setInitialAvatarUrl] = useState('');
-  const [loadingSession, setLoadingSession] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -24,26 +28,17 @@ export default function ProfilePage() {
   const hasChanges = username !== initialUsername || avatarUrl !== initialAvatarUrl;
 
   useEffect(() => {
-    const fetchSession = async () => {
-      setLoadingSession(true);
-      const currentSession = await getCurrentSession();
-      
-      if (!currentSession) {
-        router.push('/login');
-      } else {
-        setUser(currentSession.user);
-        const currentUsername = currentSession.user.username || '';
-        const currentAvatarUrl = currentSession.user.avatarUrl || '';
-        setUsername(currentUsername);
-        setAvatarUrl(currentAvatarUrl);
-        setInitialUsername(currentUsername);
-        setInitialAvatarUrl(currentAvatarUrl);
-      }
-      setLoadingSession(false);
-    };
-
-    fetchSession();
-  }, [getCurrentSession, router]);
+    if (!loading && !session) {
+      router.push('/login');
+    } else if (session) {
+      const currentUsername = session.user.username || '';
+      const currentAvatarUrl = session.user.avatarUrl || '';
+      setUsername(currentUsername);
+      setAvatarUrl(currentAvatarUrl);
+      setInitialUsername(currentUsername);
+      setInitialAvatarUrl(currentAvatarUrl);
+    }
+  }, [session, loading, router]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -75,12 +70,11 @@ export default function ProfilePage() {
       });
 
       if (updatedUser) {
-        setUser(updatedUser);
         // Mettre à jour les valeurs initiales après sauvegarde
         setInitialUsername(updatedUser.username || '');
         setInitialAvatarUrl(updatedUser.avatarUrl || '');
         setSuccessMessage('Profil mis à jour avec succès !');
-        
+
         // Effacer le message après 3 secondes
         setTimeout(() => {
           setSuccessMessage('');
@@ -109,7 +103,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loadingSession || !user) {
+  if (loading || !session) {
     return null;
   }
 
@@ -156,7 +150,7 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl sm:text-3xl md:text-4xl font-bold text-white">
-                        {username.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                        {username.charAt(0).toUpperCase() || session.user.email.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -203,7 +197,7 @@ export default function ProfilePage() {
               </label>
               <input
                 type="email"
-                value={user.email}
+                value={session.user.email}
                 disabled
                 className="w-full h-12 sm:h-13 md:h-14 px-3 sm:px-4 rounded-lg sm:rounded-xl border-2 border-black bg-gray-100 text-[#636363] text-base sm:text-lg cursor-not-allowed"
               />

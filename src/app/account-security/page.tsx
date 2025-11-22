@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuth } from '@/lib/auth';
-import { User } from '@/domain/auth/models';
 import { Loader2, Lock, Eye, EyeOff } from 'lucide-react';
 import DeleteAccountModal from '@/components/DeleteAccountModal';
 
 export default function AccountSecurityPage() {
   const router = useRouter();
-  const { getCurrentSession, updatePassword, deleteAccount, isLoading } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
-  const [loadingSession, setLoadingSession] = useState(true);
+
+  // Session depuis le Context (déjà chargée, partagée)
+  const { session, loading } = useAuthContext();
+
+  // Actions depuis useAuth (updatePassword, deleteAccount, etc.)
+  const { updatePassword, deleteAccount, isLoading } = useAuth();
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -31,20 +34,10 @@ export default function AccountSecurityPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      setLoadingSession(true);
-      const currentSession = await getCurrentSession();
-
-      if (!currentSession) {
-        router.push('/login');
-      } else {
-        setUser(currentSession.user);
-      }
-      setLoadingSession(false);
-    };
-
-    fetchSession();
-  }, [getCurrentSession, router]);
+    if (!loading && !session) {
+      router.push('/login');
+    }
+  }, [session, loading, router]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +109,7 @@ export default function AccountSecurityPage() {
     }
   };
 
-  if (loadingSession || !user) {
+  if (loading || !session) {
     return null;
   }
 
