@@ -4,13 +4,14 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuth } from '@/lib/auth';
+import { SupabaseStorageService } from '@/infra/storage/SupabaseStorageService';
 import { Camera, Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
 
   // Session depuis le Context (déjà chargée, partagée)
-  const { session, loading } = useAuthContext();
+  const { session, loading, refreshSession } = useAuthContext();
 
   // Actions depuis useAuth (updateProfile, etc.)
   const { updateProfile, isLoading } = useAuth();
@@ -23,9 +24,11 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   // Vérifier si des modifications ont été faites
-  const hasChanges = username !== initialUsername || avatarUrl !== initialAvatarUrl;
+  const hasChanges = username !== initialUsername || selectedFile !== null;
 
   useEffect(() => {
     if (!loading && !session) {
@@ -46,15 +49,31 @@ export default function ProfilePage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Pour l'instant, on utilise un URL local
-      // Dans une vraie implémentation, il faudrait uploader le fichier vers un service de stockage
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Veuillez sélectionner une image valide');
+      return;
     }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    setErrorMessage('');
+
+    // Stocker le fichier pour l'upload lors du submit
+    setSelectedFile(file);
+
+    // Créer une preview locale
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,16 +83,32 @@ export default function ProfilePage() {
     setErrorMessage('');
 
     try {
+      let avatarPath: string | undefined;
+
+      // 1. Upload de l'avatar si un nouveau fichier a été sélectionné
+      if (selectedFile && session?.user.id) {
+        avatarPath = await SupabaseStorageService.uploadAvatar(selectedFile, session.user.id);
+      }
+
+      // 2. Mise à jour du profil
       const updatedUser = await updateProfile({
         username: username.trim() || undefined,
-        avatarUrl: avatarUrl || undefined,
+        avatarUrl: avatarPath, // Peut être undefined si pas de nouveau fichier
       });
 
       if (updatedUser) {
-        // Mettre à jour les valeurs initiales après sauvegarde
+        // Mettre à jour les valeurs initiales
         setInitialUsername(updatedUser.username || '');
         setInitialAvatarUrl(updatedUser.avatarUrl || '');
+
+        // Réinitialiser les états temporaires
+        setSelectedFile(null);
+        setPreviewUrl('');
+
         setSuccessMessage('Profil mis à jour avec succès !');
+
+        // Rafraîchir le cache de session pour obtenir la signed URL
+        await refreshSession();
 
         // Effacer le message après 3 secondes
         setTimeout(() => {
@@ -94,7 +129,8 @@ export default function ProfilePage() {
     if (hasChanges) {
       // Annuler : réinitialiser aux valeurs d'origine
       setUsername(initialUsername);
-      setAvatarUrl(initialAvatarUrl);
+      setSelectedFile(null);
+      setPreviewUrl('');
       setSuccessMessage('');
       setErrorMessage('');
     } else {
@@ -142,9 +178,9 @@ export default function ProfilePage() {
               <div className="flex items-center gap-4 sm:gap-5 md:gap-6">
                 <div className="relative cursor-pointer" onClick={handleAvatarClick}>
                   <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-3 md:border-4 border-black overflow-hidden bg-gradient-to-br from-gray-300 to-gray-400">
-                    {avatarUrl ? (
+                    {previewUrl || avatarUrl ? (
                       <img
-                        src={avatarUrl}
+                        src={previewUrl || avatarUrl}
                         alt="Avatar"
                         className="w-full h-full object-cover"
                       />
