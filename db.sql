@@ -1,6 +1,80 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.folders (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  parent_folder_id uuid,
+  is_group boolean DEFAULT false,
+  position integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT folders_pkey PRIMARY KEY (id),
+  CONSTRAINT folders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT folders_parent_folder_id_fkey FOREIGN KEY (parent_folder_id) REFERENCES public.folders(id)
+);
+CREATE TABLE public.link_tags (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  link_id uuid NOT NULL,
+  tag_id uuid NOT NULL,
+  is_auto_generated boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT link_tags_pkey PRIMARY KEY (id),
+  CONSTRAINT link_tags_link_id_fkey FOREIGN KEY (link_id) REFERENCES public.links(id),
+  CONSTRAINT link_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.links (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  folder_id uuid,
+  url text NOT NULL,
+  title text,
+  description text,
+  screenshot_url text,
+  original_image_url text,
+  image_format text,
+  content_type text,
+  is_duplicate boolean DEFAULT false,
+  position integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT links_pkey PRIMARY KEY (id),
+  CONSTRAINT links_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT links_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.folders(id)
+);
+CREATE TABLE public.share_access (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  share_id uuid NOT NULL,
+  accessed_by uuid,
+  accessed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT share_access_pkey PRIMARY KEY (id),
+  CONSTRAINT share_access_share_id_fkey FOREIGN KEY (share_id) REFERENCES public.shares(id),
+  CONSTRAINT share_access_accessed_by_fkey FOREIGN KEY (accessed_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.shares (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  folder_id uuid NOT NULL,
+  shared_by uuid NOT NULL,
+  shared_with_email text,
+  share_token text UNIQUE,
+  permission text NOT NULL DEFAULT 'view'::text CHECK (permission = ANY (ARRAY['view'::text, 'edit'::text])),
+  is_active boolean DEFAULT true,
+  expires_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT shares_pkey PRIMARY KEY (id),
+  CONSTRAINT shares_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.folders(id),
+  CONSTRAINT shares_shared_by_fkey FOREIGN KEY (shared_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.tags (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT tags_pkey PRIMARY KEY (id),
+  CONSTRAINT tags_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
 CREATE TABLE public.users (
   id uuid NOT NULL,
   username text NOT NULL UNIQUE,
