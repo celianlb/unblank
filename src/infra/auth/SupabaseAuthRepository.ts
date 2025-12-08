@@ -55,10 +55,19 @@ export class SupabaseAuthRepository implements AuthRepository {
       };
     }
 
-    // Générer une signed URL si l'avatar est dans Storage
-    // Utilise le Use Case (Application layer) qui gère le cache
+    // Déterminer quelle URL d'avatar utiliser
     let avatarUrl = publicUser.avatar_url;
-    if (avatarUrl) {
+    const externalAvatarUrl = supabaseUser.user_metadata?.avatar_url;
+
+    // Si avatar_url dans public.users pointe vers une URL externe (Google, Pinterest, etc.)
+    // OU si avatar_url est vide/null, utiliser l'URL externe du user_metadata comme fallback
+    if (externalAvatarUrl &&
+        (!avatarUrl ||
+         (avatarUrl.startsWith('http') && !avatarUrl.includes('supabase.co')))) {
+      // Utiliser directement l'URL externe (Google, Pinterest, etc.)
+      avatarUrl = externalAvatarUrl;
+    } else if (avatarUrl && !avatarUrl.startsWith('http')) {
+      // Si c'est un path relatif dans le storage Supabase, générer une signed URL
       const signedUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
       avatarUrl = signedUrl || avatarUrl;
     }
