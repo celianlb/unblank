@@ -40,6 +40,7 @@ END;
 handle_new_user()
 DECLARE
   v_username text;
+  v_avatar_url text;
   v_user_id uuid;
 BEGIN
   -- Extraire username
@@ -53,9 +54,12 @@ BEGIN
     v_username := 'user_' || substr(NEW.id::text, 1, 8);
   END IF;
 
-  -- Créer l'utilisateur dans public.users
-  INSERT INTO public.users (id, username, created_at)
-  VALUES (NEW.id, v_username, now())
+  -- Extraire avatar_url depuis user_metadata (Google, Pinterest, etc.)
+  v_avatar_url := NEW.raw_user_meta_data->>'avatar_url';
+
+  -- Créer l'utilisateur dans public.users avec l'avatar_url externe
+  INSERT INTO public.users (id, username, avatar_url, created_at)
+  VALUES (NEW.id, v_username, v_avatar_url, now())
   RETURNING id INTO v_user_id;
 
   -- Créer le dossier "Récents" directement ici
