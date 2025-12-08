@@ -51,8 +51,8 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
       />
     <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
       <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
-          <div className="w-full md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
+          <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
             <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8">
               <Search className="w-full h-full" strokeWidth={2} />
             </div>
