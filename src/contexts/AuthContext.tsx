@@ -42,18 +42,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Charger depuis le cache d'abord (synchrone, côté client uniquement)
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (cached) {
-        setSession(JSON.parse(cached));
-      }
-    } catch (error) {
-      console.error('Error loading cached session:', error);
-    }
+    const initSession = async () => {
+      let hasCache = false;
 
-    // Puis fetcher la vraie session depuis Supabase
-    fetchSession();
+      // Charger depuis le cache d'abord (synchrone, côté client uniquement)
+      try {
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+          setSession(JSON.parse(cached));
+          hasCache = true;
+        }
+      } catch (error) {
+        console.error('Error loading cached session:', error);
+      }
+
+      // Puis fetcher la vraie session depuis Supabase
+      // Ne pas remettre loading à true si on a déjà un cache
+      try {
+        if (!hasCache) {
+          setLoading(true);
+        }
+        const currentSession = await getCurrentSession();
+        setSession(currentSession);
+
+        // Mettre en cache la session
+        if (currentSession) {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(currentSession));
+        } else {
+          sessionStorage.removeItem(CACHE_KEY);
+        }
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        setSession(null);
+        sessionStorage.removeItem(CACHE_KEY);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
   }, []);
 
   const refreshSession = async () => {
