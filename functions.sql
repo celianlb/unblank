@@ -95,15 +95,16 @@ DECLARE
   function_url TEXT;
   service_role_key TEXT;
 BEGIN
-  -- Vérifier si un avatar_url externe existe
   IF NEW.raw_user_meta_data->>'avatar_url' IS NOT NULL 
      AND NEW.raw_user_meta_data->>'avatar_url' LIKE 'http%' THEN
 
-    -- Configuration (hard-coded here per request)
     function_url := 'https://ysjufgwnyoaidhjhnqqi.supabase.co/functions/v1/sync-avatar';
-    service_role_key := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzanVmZ3dueW9haWRoamhucXFpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzAzNjY4NiwiZXhwIjoyMDc4NjEyNjg2fQ.swXUkp5Tvoj_dZJbaejRGND6WX3EKGZ6ZpdVFpd2wy0';
+    
+    -- Récupérer depuis Vault au lieu de hardcoder
+    SELECT decrypted_secret INTO service_role_key
+    FROM vault.decrypted_secrets
+    WHERE name = 'service_role_key';
 
-    -- Appel asynchrone à l'Edge Function
     PERFORM net.http_post(
       url := function_url,
       headers := jsonb_build_object(
@@ -121,6 +122,7 @@ BEGIN
 
   RETURN NEW;
 END;
+
 
 record_share_access(p_share_token text)
 DECLARE
