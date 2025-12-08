@@ -13,47 +13,58 @@ BEGIN
   LIMIT 1;
 END;
 
-create_default_folders()
-BEGIN
-  INSERT INTO public.folders (user_id, name, is_group, position)
-  VALUES (NEW.id, 'Récents', false, 0);
-  RETURN NEW;
-END;
+
 
 delete_user(p_user_id uuid)
+
+DECLARE
+  v_user_id uuid;
 BEGIN
-  DELETE FROM auth.users WHERE id = p_user_id;
+  -- Si p_user_id n'est pas fourni, utiliser l'utilisateur courant
+  v_user_id := COALESCE(p_user_id, auth.uid());
+
+  -- Vérifier que l'utilisateur supprime bien son propre compte
+  IF v_user_id != auth.uid() THEN
+    RAISE EXCEPTION 'You can only delete your own account';
+  END IF;
+
+  -- Supprimer l'utilisateur de auth.users
+  -- Les CASCADE vont automatiquement tout supprimer :
+  -- auth.users → public.users → folders → links → link_tags
+  --                           → tags → link_tags
+  --                           → shares → share_access
+  DELETE FROM auth.users WHERE id = v_user_id;
 END;
+
 
 handle_new_user()
 DECLARE
   v_username text;
+  v_user_id uuid;
 BEGIN
-  -- If Email/Password : username in raw_user_meta_data
+  -- Extraire username
   IF NEW.raw_user_meta_data ? 'username' THEN
     v_username := NEW.raw_user_meta_data->>'username';
   ELSE
-    -- Otherwise Google : display name
     v_username := NEW.raw_user_meta_data->>'name';
   END IF;
 
-  -- fallback
   IF v_username IS NULL THEN
     v_username := 'user_' || substr(NEW.id::text, 1, 8);
   END IF;
 
-  INSERT INTO public.users (
-    id,
-    username,
-    created_at
-  ) VALUES (
-    NEW.id,
-    v_username,
-    pg_catalog.now()
-  );
+  -- Créer l'utilisateur dans public.users
+  INSERT INTO public.users (id, username, created_at)
+  VALUES (NEW.id, v_username, now())
+  RETURNING id INTO v_user_id;
+
+  -- Créer le dossier "Récents" directement ici
+  INSERT INTO public.folders (user_id, name, is_group, position)
+  VALUES (v_user_id, 'Récents', false, 0);
 
   RETURN NEW;
 END;
+
 
 move_links_to_recents_before_folder_delete()
 DECLARE
@@ -76,15 +87,6 @@ BEGIN
   SET folder_id = v_recents_folder_id
   WHERE folder_id = OLD.id;
   
-  RETURN OLD;
-END;
-
-prevent_recents_folder_deletion()
-BEGIN
-  -- Use fully qualified references where needed (none required here)
-  IF OLD.name = 'Récents' THEN
-    RAISE EXCEPTION 'Cannot delete the "Récents" folder';
-  END IF;
   RETURN OLD;
 END;
 
