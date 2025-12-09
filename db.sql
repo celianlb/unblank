@@ -10,9 +10,10 @@ CREATE TABLE public.folders (
   position integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  slug text NOT NULL,
   CONSTRAINT folders_pkey PRIMARY KEY (id),
-  CONSTRAINT folders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
-  CONSTRAINT folders_parent_folder_id_fkey FOREIGN KEY (parent_folder_id) REFERENCES public.folders(id)
+  CONSTRAINT folders_parent_folder_id_fkey FOREIGN KEY (parent_folder_id) REFERENCES public.folders(id),
+  CONSTRAINT folders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.link_tags (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -64,8 +65,8 @@ CREATE TABLE public.shares (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT shares_pkey PRIMARY KEY (id),
-  CONSTRAINT shares_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.folders(id),
-  CONSTRAINT shares_shared_by_fkey FOREIGN KEY (shared_by) REFERENCES public.users(id)
+  CONSTRAINT shares_shared_by_fkey FOREIGN KEY (shared_by) REFERENCES public.users(id),
+  CONSTRAINT shares_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.folders(id)
 );
 CREATE TABLE public.tags (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
