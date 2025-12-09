@@ -5,21 +5,24 @@ import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 interface LinkCardProps {
+  id?: string;
   imageUrl?: string;
   link: string;
   tags?: string[];
   isSelectionMode?: boolean;
-  onCheckChange?: (checked: boolean) => void;
+  onCheckChange?: (id: string, checked: boolean) => void;
 }
 
-export default function LinkCard({ imageUrl, link, tags = [], isSelectionMode = false, onCheckChange }: LinkCardProps) {
+export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMode = false, onCheckChange }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
   const handleCheckChange = () => {
     const newValue = !isChecked;
     setIsChecked(newValue);
-    onCheckChange?.(newValue);
+    if (id) {
+      onCheckChange?.(id, newValue);
+    }
   };
 
   // Show hover elements if in selection mode or hovering

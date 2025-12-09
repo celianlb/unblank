@@ -2,30 +2,47 @@
 
 import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { FolderService, type Folder } from '@/domain/folders/services/FolderService';
+import { useRouter } from 'next/navigation';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Liste des dossiers disponibles (mock data - à remplacer par des vraies données)
-const availableFolders = ['Appart Paris', 'Poster', 'Logo', 'Logos', 'Affiches', 'Maquettes'];
-
 export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState('');
-  const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
+  const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [availableFolders, setAvailableFolders] = useState<Folder[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justClosedDropdownRef = useRef(false);
+  const { session } = useAuthContext();
+  const router = useRouter();
 
-  // Réinitialiser les sélections quand la modale se ferme
+  // Charger les dossiers disponibles quand la modale s'ouvre
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && session?.user?.id) {
+      loadAvailableFolders();
+    } else if (!isOpen) {
       setGroupName('');
-      setSelectedFolders([]);
+      setSelectedFolderIds([]);
       setIsDropdownOpen(false);
     }
-  }, [isOpen]);
+  }, [isOpen, session?.user?.id]);
+
+  const loadAvailableFolders = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const folders = await FolderService.getUserFolders(session.user.id);
+      setAvailableFolders(folders);
+    } catch (error) {
+      console.error('Error loading folders:', error);
+    }
+  };
 
   // Fermer le dropdown quand on clique en dehors
   useEffect(() => {
@@ -60,19 +77,54 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
 
   if (!isOpen) return null;
 
-  const toggleFolder = (folder: string) => {
-    setSelectedFolders(prev =>
-      prev.includes(folder)
-        ? prev.filter(f => f !== folder)
-        : [...prev, folder]
+  const toggleFolder = (folderId: string) => {
+    setSelectedFolderIds(prev =>
+      prev.includes(folderId)
+        ? prev.filter(id => id !== folderId)
+        : [...prev, folderId]
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Logique de création du groupe
-    console.log({ groupName, selectedFolders });
-    onClose();
+
+    if (!session?.user?.id || !groupName.trim()) return;
+
+    setIsLoading(true);
+    try {
+      // 1. Créer le groupe
+      const group = await FolderService.createFolder(
+        session.user.id,
+        groupName.trim(),
+        true // is_group = true
+      );
+
+      if (!group) {
+        alert('Erreur lors de la création du groupe');
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Déplacer les dossiers sélectionnés dans le groupe
+      if (selectedFolderIds.length > 0) {
+        await Promise.all(
+          selectedFolderIds.map(folderId =>
+            FolderService.moveFolderToGroup(folderId, group.id)
+          )
+        );
+      }
+
+      // 3. Fermer le modal et rafraîchir
+      onClose();
+      setGroupName('');
+      setSelectedFolderIds([]);
+      router.refresh();
+    } catch (error) {
+      console.error('Error creating group:', error);
+      alert('Erreur lors de la création du groupe');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -138,8 +190,11 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <FolderOpen className="w-6 h-6 text-[#636363] shrink-0" strokeWidth={2} />
                     <span className="text-base text-[#636363] font-[Heebo] font-medium truncate">
-                      {selectedFolders.length > 0
-                        ? selectedFolders.join(', ')
+                      {selectedFolderIds.length > 0
+                        ? availableFolders
+                            .filter(f => selectedFolderIds.includes(f.id))
+                            .map(f => f.name)
+                            .join(', ')
                         : 'Dossiers existants'}
                     </span>
                   </div>
@@ -159,40 +214,44 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                   >
                     {/* Liste des dossiers */}
                     <div className="flex flex-col gap-3">
-                      {availableFolders.map((folder) => (
-                        <div
-                          key={folder}
-                          className={`flex items-center justify-between cursor-pointer transition-colors rounded-lg p-2 -mx-2 select-none ${
-                            selectedFolders.includes(folder)
-                              ? 'hover:bg-[#FF6080]/10'
-                              : 'hover:bg-[#FFE3E8]'
-                          }`}
-                          onClick={() => toggleFolder(folder)}
-                        >
-                          <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">{folder}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFolder(folder);
-                            }}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors w-[107px] cursor-pointer ${
-                              selectedFolders.includes(folder)
-                                ? 'bg-[#FF506F]'
-                                : 'bg-transparent'
+                      {availableFolders.length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-2">Aucun dossier disponible</p>
+                      ) : (
+                        availableFolders.map((folder) => (
+                          <div
+                            key={folder.id}
+                            className={`flex items-center justify-between cursor-pointer transition-colors rounded-lg p-2 -mx-2 select-none ${
+                              selectedFolderIds.includes(folder.id)
+                                ? 'hover:bg-[#FF6080]/10'
+                                : 'hover:bg-[#FFE3E8]'
                             }`}
+                            onClick={() => toggleFolder(folder.id)}
                           >
-                            {selectedFolders.includes(folder) ? (
-                              <X className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
-                            ) : (
-                              <Plus className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
-                            )}
-                            <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">
-                              {selectedFolders.includes(folder) ? 'Ajouté' : 'Ajouter'}
-                            </span>
-                          </button>
-                        </div>
-                      ))}
+                            <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">{folder.name}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFolder(folder.id);
+                              }}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors w-[107px] cursor-pointer ${
+                                selectedFolderIds.includes(folder.id)
+                                  ? 'bg-[#FF506F]'
+                                  : 'bg-transparent'
+                              }`}
+                            >
+                              {selectedFolderIds.includes(folder.id) ? (
+                                <X className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
+                              ) : (
+                                <Plus className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
+                              )}
+                              <span className="text-base text-[#0D0D0D] font-[Heebo] font-medium">
+                                {selectedFolderIds.includes(folder.id) ? 'Ajouté' : 'Ajouter'}
+                              </span>
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -202,9 +261,10 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base mt-4 cursor-pointer font-[Heebo]"
+              disabled={isLoading || !groupName.trim()}
+              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base mt-4 cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Créer le groupe
+              {isLoading ? 'Création...' : 'Créer le groupe'}
             </button>
           </form>
         </div>

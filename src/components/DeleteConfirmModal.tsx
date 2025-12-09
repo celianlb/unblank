@@ -45,7 +45,7 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title =
               {/* Annuler Button */}
               <button
                 onClick={onClose}
-                className="flex-1 h-[54px] rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] transition-colors border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] flex items-center justify-center px-[27px] py-2.5 gap-2.5 cursor-pointer"
+                className="flex-1 h-[54px] rounded-xl bg-[#FEF8EE] hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none transition-all border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] flex items-center justify-center px-[27px] py-2.5 gap-2.5 cursor-pointer"
               >
                 <span className="text-base leading-[23px] font-bold text-[#0D0D0D] font-[Heebo]">
                   Annuler
@@ -55,7 +55,7 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title =
               {/* Supprimer Button */}
               <button
                 onClick={onConfirm}
-                className="flex-1 h-[54px] rounded-xl bg-[#FF506F] hover:bg-[#FF6080] transition-colors border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] flex items-center justify-center px-[27px] py-2.5 gap-2.5 cursor-pointer"
+                className="flex-1 h-[54px] rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] flex items-center justify-center px-[27px] py-2.5 gap-2.5 cursor-pointer"
               >
                 <span className="text-base leading-[23px] font-bold text-[#0D0D0D] font-[Heebo] text-center">
                   Supprimer

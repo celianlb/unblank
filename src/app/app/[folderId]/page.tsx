@@ -15,12 +15,10 @@ export default function FolderPage() {
   const params = useParams();
   const router = useRouter();
   const { session, loading } = useAuthContext();
-  const groupSlug = params.slug as string;
-  const folderSlug = params.folder as string;
+  const folderId = params.folderId as string;
   const [selectedCount, setSelectedCount] = useState(0);
   const [links, setLinks] = useState<Link[]>([]);
   const [folder, setFolder] = useState<Folder | null>(null);
-  const [group, setGroup] = useState<Folder | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -30,22 +28,18 @@ export default function FolderPage() {
   }, [session, loading, router]);
 
   useEffect(() => {
-    if (session?.user?.id && folderSlug) {
+    if (session?.user?.id && folderId) {
       loadFolderData();
     }
-  }, [session?.user?.id, folderSlug]);
+  }, [session?.user?.id, folderId]);
 
   const loadFolderData = async () => {
     if (!session?.user?.id) return;
 
     setLoadingData(true);
     try {
-      // Chercher le groupe par son slug
-      const groupData = await FolderService.getGroupBySlug(session.user.id, groupSlug);
-      if (groupData) setGroup(groupData);
-
       // Chercher le dossier par son slug
-      const folderData = await FolderService.getFolderBySlug(session.user.id, folderSlug);
+      const folderData = await FolderService.getFolderBySlug(session.user.id, folderId);
 
       if (!folderData) {
         setFolder(null);
@@ -109,11 +103,7 @@ export default function FolderPage() {
 
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb
-          groupName={group?.name || ''}
-          folderName={folder.name}
-          groupSlug={groupSlug}
-        />
+        <Breadcrumb folderName={folder.name} />
 
         {/* Section Images */}
         {imageLinks.length > 0 && (

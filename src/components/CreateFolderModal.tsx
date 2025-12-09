@@ -2,6 +2,9 @@
 
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { FolderService } from '@/domain/folders/services/FolderService';
+import { useRouter } from 'next/navigation';
 
 interface CreateFolderModalProps {
   isOpen: boolean;
@@ -10,14 +13,41 @@ interface CreateFolderModalProps {
 
 export default function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
   const [folderName, setFolderName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { session } = useAuthContext();
+  const router = useRouter();
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Logique de création du dossier
-    console.log({ folderName });
-    onClose();
+
+    if (!session?.user?.id || !folderName.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const folder = await FolderService.createFolder(
+        session.user.id,
+        folderName.trim(),
+        false // is_group = false pour un dossier simple
+      );
+
+      if (folder) {
+        // Fermer le modal
+        onClose();
+        // Réinitialiser le champ
+        setFolderName('');
+        // Rafraîchir la page pour voir le nouveau dossier
+        router.refresh();
+      } else {
+        alert('Erreur lors de la création du dossier');
+      }
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      alert('Erreur lors de la création du dossier');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,9 +93,10 @@ export default function CreateFolderModal({ isOpen, onClose }: CreateFolderModal
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo]"
+              disabled={isLoading || !folderName.trim()}
+              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Créer le dossier
+              {isLoading ? 'Création...' : 'Créer le dossier'}
             </button>
           </form>
         </div>

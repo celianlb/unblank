@@ -8,25 +8,38 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
 import RenameFolderModal from './RenameFolderModal';
+import { FolderService } from '@/domain/folders/services/FolderService';
 
 interface FolderGroupCardProps {
+  id: string;
   title: string;
   itemCount: number;
   lastUpdate: string;
   images: string[];
+  slug?: string;
 }
 
-export default function FolderGroupCard({ title, itemCount, lastUpdate, images }: FolderGroupCardProps) {
+export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug }: FolderGroupCardProps) {
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
-  const handleDelete = () => {
-    // TODO: Logique de suppression
-    console.log('Suppression confirmée');
-    setIsDeleteModalOpen(false);
+  const handleDelete = async () => {
+    try {
+      const success = await FolderService.deleteFolders([id]);
+
+      if (success) {
+        setIsDeleteModalOpen(false);
+        router.refresh();
+      } else {
+        alert('Erreur lors de la suppression du groupe');
+      }
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      alert('Erreur lors de la suppression du groupe');
+    }
   };
 
   const handleRename = (newName: string) => {
@@ -35,9 +48,9 @@ export default function FolderGroupCard({ title, itemCount, lastUpdate, images }
   };
 
   const handleCardClick = () => {
-    // Convert title to slug format
-    const slug = title.toLowerCase().replace(/\s+/g, '-');
-    router.push(`/${encodeURIComponent(slug)}`);
+    // Utiliser l'ID du groupe si disponible, sinon générer un slug depuis le titre
+    const groupSlug = slug || title.toLowerCase().replace(/\s+/g, '-');
+    router.push(`/${groupSlug}`);
   };
 
   return (
