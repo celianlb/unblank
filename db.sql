@@ -7,11 +7,11 @@ CREATE TABLE public.folders (
   name text NOT NULL,
   parent_folder_id uuid,
   is_group boolean DEFAULT false,
-  is_system boolean DEFAULT false,
   position integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   slug text NOT NULL,
+  is_system boolean DEFAULT false,
   CONSTRAINT folders_pkey PRIMARY KEY (id),
   CONSTRAINT folders_parent_folder_id_fkey FOREIGN KEY (parent_folder_id) REFERENCES public.folders(id),
   CONSTRAINT folders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)

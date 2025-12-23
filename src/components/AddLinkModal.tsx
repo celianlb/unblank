@@ -1,27 +1,82 @@
 'use client';
 
 import { X, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useCreateLink } from '@/domain/links/hooks/useLinks';
+import { LinkService } from '@/domain/links/services/LinkService';
 
 interface AddLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
+  folderId?: string; // Dossier dans lequel ajouter le lien
 }
 
-export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
+export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModalProps) {
+  const { session } = useAuthContext();
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const [metadata, setMetadata] = useState<any>(null);
+
+  // Mutation React Query
+  const createLink = useCreateLink(session?.user?.id || '', folderId);
+
+  // Réinitialiser le formulaire quand la modale s'ouvre/ferme
+  useEffect(() => {
+    if (!isOpen) {
+      setUrl('');
+      setTitle('');
+      setDescription('');
+      setTags([]);
+      setTagInput('');
+      setMetadata(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Extraction automatique des métadonnées quand l'URL change (avec debounce)
+  const handleUrlBlur = async () => {
+    if (url && url.startsWith('http') && !metadata) {
+      setIsLoadingMetadata(true);
+      const meta = await LinkService.extractMetadata(url);
+      setIsLoadingMetadata(false);
+
+      if (meta) {
+        setMetadata(meta);
+        if (!title) setTitle(meta.title || '');
+        if (!description) setDescription(meta.description || '');
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Logique d'ajout du lien
-    console.log({ url, title, description, tags });
-    onClose();
+
+    if (!session?.user?.id || !url.trim()) return;
+
+    try {
+      await createLink.mutateAsync({
+        url: url.trim(),
+        title: title.trim() || undefined,
+        description: description.trim() || undefined,
+        folderId: folderId,
+        originalImageUrl: metadata?.image || undefined,
+        imageFormat: metadata?.imageFormat || undefined,
+        contentType: metadata?.contentType || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+      });
+
+      // Fermer la modale
+      onClose();
+    } catch (error) {
+      console.error('Error creating link:', error);
+      alert('Erreur lors de l\'ajout du lien');
+    }
   };
 
   const handleAddTag = () => {
@@ -64,12 +119,15 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
 
             {/* Lien (URL) */}
             <div className="flex flex-col gap-2">
-              <label className="text-base font-medium text-black font-[Heebo]">Lien</label>
+              <label className="text-base font-medium text-black font-[Heebo]">
+                Lien {isLoadingMetadata && <span className="text-sm text-gray-500">(Extraction des métadonnées...)</span>}
+              </label>
               <input
                 type="url"
                 placeholder="URL"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+                onBlur={handleUrlBlur}
                 className="w-full h-12 px-4 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
                 required
                 autoFocus
@@ -152,9 +210,10 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo]"
+              disabled={createLink.isPending || !url.trim()}
+              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Ajouter le lien
+              {createLink.isPending ? 'Ajout en cours...' : 'Ajouter le lien'}
             </button>
           </form>
         </div>

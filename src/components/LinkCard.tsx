@@ -11,9 +11,10 @@ interface LinkCardProps {
   tags?: string[];
   isSelectionMode?: boolean;
   onCheckChange?: (id: string, checked: boolean) => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMode = false, onCheckChange }: LinkCardProps) {
+export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMode = false, onCheckChange, onDelete }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
@@ -28,10 +29,40 @@ export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMod
   // Show hover elements if in selection mode or hovering
   const showHoverElements = isSelectionMode || isChecked;
 
-  const handleDelete = () => {
-    // TODO: Logique de suppression
-    console.log('Suppression confirmée');
-    setIsDeleteModalOpen(false);
+  const handleDelete = async () => {
+    if (!id) {
+      console.log('No ID, aborting delete');
+      return;
+    }
+
+    console.log('handleDelete called for ID:', id);
+    console.log('onDelete callback exists?', !!onDelete);
+
+    try {
+      setIsDeleteModalOpen(false);
+
+      // Si un callback onDelete est fourni, l'utiliser (React Query)
+      if (onDelete) {
+        console.log('Calling onDelete callback with ID:', id);
+        onDelete(id);
+      } else {
+        console.log('No callback, calling API directly');
+        // Sinon, appeler l'API directement
+        const response = await fetch(`/api/links/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete link');
+        }
+
+        // Rafraîchir la page pour voir les changements
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error deleting link:', error);
+      alert('Erreur lors de la suppression du lien');
+    }
   };
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -49,7 +80,10 @@ export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMod
 
   return (
     <>
-      <div className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative">
+      <div
+        onClick={() => window.open(link, '_blank')}
+        className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative"
+      >
         {/* Image placeholder */}
         <div className="absolute inset-0 bg-[#C4C4C4] rounded-xl sm:rounded-[16px]">
           {imageUrl && (

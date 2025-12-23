@@ -9,7 +9,8 @@ import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
 import { FolderService } from '@/domain/folders/services/FolderService';
 import { useFolders, useGroups } from '@/domain/folders/hooks/useFolders';
-import { useDeleteLinks } from '@/domain/links/hooks/useLinks';
+import { useDeleteLinks, useDeleteLink, useUserLinks } from '@/domain/links/hooks/useLinks';
+import { LinkService } from '@/domain/links/services/LinkService';
 
 export default function AppPage() {
   const router = useRouter();
@@ -19,7 +20,9 @@ export default function AppPage() {
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
+  const { data: userLinks = [], isLoading: loadingLinks } = useUserLinks(session?.user?.id);
   const deleteLinks = useDeleteLinks();
+  const deleteLink = useDeleteLink(session?.user?.id);
 
   const loadingData = loadingFolders || loadingGroups;
 
@@ -149,83 +152,37 @@ export default function AppPage() {
           </section>
         ) : null}
 
-        {/* Section Liens */}
-        <section className="flex flex-col items-start gap-[21px] w-full">
-          {/* Titre */}
-          <h1
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            Liens (9)
-          </h1>
-
-          {/* Contenu des cartes */}
-          <div className="flex flex-row flex-wrap gap-8 w-full">
-            <LinkCard
-              id="mock-1"
-              link="https://fr.pinterest.com/pin/123456789/"
-              tags={['mascotte', 'cartoon', 'vert']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-2"
-              link="https://fr.pinterest.com/pin/234567890/"
-              tags={['poster', 'minimal']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-3"
-              link="https://fr.pinterest.com/pin/345678901/"
-              tags={['design', 'swiss']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-4"
-              link="https://fr.pinterest.com/pin/456789012/"
-              tags={['street', 'nyc']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-5"
-              link="https://fr.pinterest.com/pin/567890123/"
-              tags={['signage', 'wayfinding']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-6"
-              link="https://fr.pinterest.com/pin/678901234/"
-              tags={['branding', 'identity']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-7"
-              link="https://fr.pinterest.com/pin/789012345/"
-              tags={['color', 'palette']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-8"
-              link="https://fr.pinterest.com/pin/890123456/"
-              tags={['interior', 'decor']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
-            <LinkCard
-              id="mock-9"
-              link="https://fr.pinterest.com/pin/901234567/"
-              tags={['movie', 'poster']}
-              isSelectionMode={isSelectionMode}
-              onCheckChange={handleCheckChange}
-            />
+        {/* Section Liens récents */}
+        {loadingLinks ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-500">Chargement des liens...</p>
           </div>
-        </section>
+        ) : userLinks.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
+            {/* Titre */}
+            <h1
+              className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+            >
+              Liens récents ({userLinks.length})
+            </h1>
+
+            {/* Contenu des cartes */}
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {userLinks.slice(0, 12).map((link) => (
+                <LinkCard
+                  key={link.id}
+                  id={link.id}
+                  link={link.url}
+                  tags={link.tags?.map(t => t.name) || []}
+                  isSelectionMode={isSelectionMode}
+                  onCheckChange={handleCheckChange}
+                  onDelete={(id) => deleteLink.mutate(id)}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   );
