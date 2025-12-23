@@ -1,6 +1,7 @@
 public :
 
 before_folder_delete_move_links : move_links_to_recents_before_folder_delete()
+before_folder_update_check_system : prevent_system_folder_grouping()
 trigger_auto_generate_folder_slug : auto_generate_folder_slug()
 update_folders_updated_at : update_updated_at()
 update_links_updated_at : update_updated_at()

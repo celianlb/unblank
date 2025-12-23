@@ -7,6 +7,7 @@ export interface Folder {
   user_id: string;
   parent_folder_id: string | null;
   is_group: boolean;
+  is_system: boolean;
   position: number;
   created_at: string;
   updated_at: string;
@@ -28,33 +29,24 @@ export class FolderService {
 
   /**
    * Récupère un dossier par son slug (nom normalisé)
+   * ✅ OPTIMISÉ : Utilise une fonction SQL pour 1 seule requête au lieu de 2
    */
   static async getFolderBySlug(userId: string, slug: string): Promise<Folder | null> {
-    // Requête optimisée : utilise la colonne slug avec index
     const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('slug', slug)
-      .single();
+      .rpc('get_folder_by_slug_with_count', {
+        p_user_id: userId,
+        p_slug: slug
+      });
 
-    if (error || !data) {
-      if (error?.code !== 'PGRST116') { // Ignore "not found" errors
+    if (error) {
+      if (error.code !== 'PGRST116') { // Ignore "not found" errors
         console.error('Error fetching folder:', error);
       }
       return null;
     }
 
-    // Compter les liens
-    const { count } = await supabase
-      .from('links')
-      .select('*', { count: 'exact', head: true })
-      .eq('folder_id', data.id);
-
-    return {
-      ...data,
-      link_count: count || 0,
-    };
+    // La fonction RPC retourne un tableau, on prend le premier élément
+    return data?.[0] || null;
   }
 
   /**
@@ -82,116 +74,50 @@ export class FolderService {
 
   /**
    * Récupère tous les dossiers d'un utilisateur (non-groupes)
+   * ✅ OPTIMISÉ : 1 seule requête au lieu de N+1 grâce à la fonction SQL
    */
   static async getUserFolders(userId: string): Promise<Folder[]> {
     const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_group', false)
-      .is('parent_folder_id', null)
-      .order('position', { ascending: true });
+      .rpc('get_user_folders_with_counts', { p_user_id: userId });
 
     if (error) {
       console.error('Error fetching folders:', error);
       throw error;
     }
 
-    // Récupérer le count de liens pour chaque dossier
-    const foldersWithCounts = await Promise.all(
-      (data || []).map(async (folder: any) => {
-        const { count } = await supabase
-          .from('links')
-          .select('*', { count: 'exact', head: true })
-          .eq('folder_id', folder.id);
-
-        return {
-          ...folder,
-          link_count: count || 0,
-        };
-      })
-    );
-
-    return foldersWithCounts;
+    return data || [];
   }
 
   /**
    * Récupère tous les groupes de dossiers d'un utilisateur
+   * ✅ OPTIMISÉ : 1 seule requête au lieu de N×2 grâce à la fonction SQL
    */
   static async getUserGroups(userId: string): Promise<Folder[]> {
     const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_group', true)
-      .is('parent_folder_id', null)
-      .order('position', { ascending: true });
+      .rpc('get_user_groups_with_counts', { p_user_id: userId });
 
     if (error) {
       console.error('Error fetching groups:', error);
       throw error;
     }
 
-    // Récupérer le count de liens pour chaque groupe (somme des liens de tous ses sous-dossiers)
-    const groupsWithCounts = await Promise.all(
-      (data || []).map(async (group: any) => {
-        // Compter les liens dans tous les sous-dossiers du groupe
-        const { data: subFolders } = await supabase
-          .from('folders')
-          .select('id')
-          .eq('parent_folder_id', group.id);
-
-        let totalLinks = 0;
-        if (subFolders && subFolders.length > 0) {
-          const folderIds = subFolders.map((f: any) => f.id);
-          const { count } = await supabase
-            .from('links')
-            .select('*', { count: 'exact', head: true })
-            .in('folder_id', folderIds);
-          totalLinks = count || 0;
-        }
-
-        return {
-          ...group,
-          link_count: totalLinks,
-        };
-      })
-    );
-
-    return groupsWithCounts;
+    return data || [];
   }
 
   /**
    * Récupère les dossiers d'un groupe spécifique
+   * ✅ OPTIMISÉ : 1 seule requête au lieu de N+1 grâce à la fonction SQL
    */
   static async getGroupFolders(groupId: string): Promise<Folder[]> {
     const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('parent_folder_id', groupId)
-      .order('position', { ascending: true });
+      .rpc('get_group_folders_with_counts', { p_group_id: groupId });
 
     if (error) {
       console.error('Error fetching group folders:', error);
       throw error;
     }
 
-    // Récupérer le count de liens pour chaque dossier
-    const foldersWithCounts = await Promise.all(
-      (data || []).map(async (folder: any) => {
-        const { count } = await supabase
-          .from('links')
-          .select('*', { count: 'exact', head: true })
-          .eq('folder_id', folder.id);
-
-        return {
-          ...folder,
-          link_count: count || 0,
-        };
-      })
-    );
-
-    return foldersWithCounts;
+    return data || [];
   }
 
   /**
@@ -235,7 +161,8 @@ export class FolderService {
       const { error } = await supabase
         .from('folders')
         .update({ parent_folder_id: groupId })
-        .eq('id', folderId);
+        .eq('id', folderId)
+        .eq('is_system', false); // Empêche le groupement des dossiers système
 
       if (error) {
         console.error('Error moving folder to group:', error);
@@ -258,7 +185,8 @@ export class FolderService {
       const { error } = await supabase
         .from('folders')
         .delete()
-        .in('id', folderIds);
+        .in('id', folderIds)
+        .eq('is_system', false); // Empêche la suppression des dossiers système
 
       if (error) {
         console.error('Error deleting folders:', error);

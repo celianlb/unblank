@@ -7,9 +7,10 @@ interface BreadcrumbProps {
   groupName?: string;
   folderName?: string;
   groupSlug?: string;
+  isLoading?: boolean;
 }
 
-export default function Breadcrumb({ groupName, folderName, groupSlug }: BreadcrumbProps) {
+export default function Breadcrumb({ groupName, folderName, groupSlug, isLoading = false }: BreadcrumbProps) {
   return (
     <div className="flex flex-row items-center gap-6">
       {/* Home Icon */}
@@ -17,8 +18,15 @@ export default function Breadcrumb({ groupName, folderName, groupSlug }: Breadcr
         <Home className="w-[35px] h-[35px] text-[#8B8B8B] group-hover:text-[#0D0D0D] transition-colors" strokeWidth={2} />
       </Link>
 
-      {/* Group Name - only show if groupName is provided */}
-      {groupName && (
+      {/* Loading skeleton or Group Name */}
+      {isLoading ? (
+        <>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
+          </div>
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+        </>
+      ) : groupName && (
         <>
           {/* Chevron */}
           <div className="w-8 h-8 flex items-center justify-center">
@@ -52,8 +60,15 @@ export default function Breadcrumb({ groupName, folderName, groupSlug }: Breadcr
         </>
       )}
 
-      {/* Folder level */}
-      {folderName && (
+      {/* Folder level or loading skeleton */}
+      {isLoading && !groupName ? (
+        <>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
+          </div>
+          <div className="h-10 w-40 bg-gray-200 rounded animate-pulse" />
+        </>
+      ) : folderName && (
         <>
           {/* Chevron - always show before folder name */}
           <div className="w-8 h-8 flex items-center justify-center">

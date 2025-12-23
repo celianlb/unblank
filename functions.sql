@@ -63,8 +63,8 @@ BEGIN
   RETURNING id INTO v_user_id;
 
   -- Créer le dossier "Récents" directement ici
-  INSERT INTO public.folders (user_id, name, is_group, position)
-  VALUES (v_user_id, 'Récents', false, 0);
+  INSERT INTO public.folders (user_id, name, is_group, is_system, position)
+  VALUES (v_user_id, 'Récents', false, true, 0);
 
   RETURN NEW;
 END;
@@ -74,6 +74,11 @@ move_links_to_recents_before_folder_delete()
 DECLARE
   v_recents_folder_id uuid;
 BEGIN
+  -- Empêcher la suppression des dossiers système
+  IF OLD.is_system = true THEN
+    RAISE EXCEPTION 'Cannot delete system folder';
+  END IF;
+  
   -- your function body (keep public.* qualifiers)
   SELECT id INTO v_recents_folder_id
   FROM public.folders
@@ -82,8 +87,8 @@ BEGIN
   LIMIT 1;
   
   IF v_recents_folder_id IS NULL THEN
-    INSERT INTO public.folders (user_id, name, is_group, position)
-    VALUES (OLD.user_id, 'Récents', false, 0)
+    INSERT INTO public.folders (user_id, name, is_group, is_system, position)
+    VALUES (OLD.user_id, 'Récents', false, true, 0)
     RETURNING id INTO v_recents_folder_id;
   END IF;
   
@@ -92,6 +97,22 @@ BEGIN
   WHERE folder_id = OLD.id;
   
   RETURN OLD;
+END;
+
+
+prevent_system_folder_grouping()
+BEGIN
+  -- Empêcher le groupement des dossiers système
+  IF NEW.is_system = true AND NEW.parent_folder_id IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot move system folder to a group';
+  END IF;
+  
+  -- Empêcher la modification de is_system sur un dossier existant
+  IF OLD.is_system = true AND NEW.is_system = false THEN
+    RAISE EXCEPTION 'Cannot change system folder flag';
+  END IF;
+  
+  RETURN NEW;
 END;
 
 queue_avatar_sync()

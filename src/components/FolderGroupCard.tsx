@@ -8,7 +8,8 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
 import RenameFolderModal from './RenameFolderModal';
-import { FolderService } from '@/domain/folders/services/FolderService';
+import { useDeleteFolders } from '@/domain/folders/hooks/useFolders';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface FolderGroupCardProps {
   id: string;
@@ -21,21 +22,21 @@ interface FolderGroupCardProps {
 
 export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug }: FolderGroupCardProps) {
   const router = useRouter();
+  const { session } = useAuthContext();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
+  // ✅ Mutation React Query pour la suppression
+  const deleteFolders = useDeleteFolders(session?.user?.id || '');
+
   const handleDelete = async () => {
     try {
-      const success = await FolderService.deleteFolders([id]);
-
-      if (success) {
-        setIsDeleteModalOpen(false);
-        router.refresh();
-      } else {
-        alert('Erreur lors de la suppression du groupe');
-      }
+      // ✅ Utilise la mutation React Query qui invalide automatiquement le cache
+      await deleteFolders.mutateAsync([id]);
+      setIsDeleteModalOpen(false);
+      // Plus besoin de router.refresh() !
     } catch (error) {
       console.error('Error deleting group:', error);
       alert('Erreur lors de la suppression du groupe');

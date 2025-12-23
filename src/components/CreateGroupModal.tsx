@@ -3,8 +3,7 @@
 import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { FolderService, type Folder } from '@/domain/folders/services/FolderService';
-import { useRouter } from 'next/navigation';
+import { useFolders, useCreateFolder, useMoveFolderToGroup } from '@/domain/folders/hooks/useFolders';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -15,34 +14,26 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
   const [groupName, setGroupName] = useState('');
   const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [availableFolders, setAvailableFolders] = useState<Folder[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justClosedDropdownRef = useRef(false);
   const { session } = useAuthContext();
-  const router = useRouter();
 
-  // Charger les dossiers disponibles quand la modale s'ouvre
+  // ✅ Utilisation de React Query pour charger les dossiers
+  const { data: allFolders = [] } = useFolders(session?.user?.id);
+  const availableFolders = allFolders.filter(folder => !folder.is_system);
+
+  // ✅ Mutations React Query
+  const createFolder = useCreateFolder(session?.user?.id || '');
+  const moveFolderToGroup = useMoveFolderToGroup(session?.user?.id || '');
+
+  // Réinitialiser les champs quand la modale se ferme
   useEffect(() => {
-    if (isOpen && session?.user?.id) {
-      loadAvailableFolders();
-    } else if (!isOpen) {
+    if (!isOpen) {
       setGroupName('');
       setSelectedFolderIds([]);
       setIsDropdownOpen(false);
     }
-  }, [isOpen, session?.user?.id]);
-
-  const loadAvailableFolders = async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      const folders = await FolderService.getUserFolders(session.user.id);
-      setAvailableFolders(folders);
-    } catch (error) {
-      console.error('Error loading folders:', error);
-    }
-  };
+  }, [isOpen]);
 
   // Fermer le dropdown quand on clique en dehors
   useEffect(() => {
@@ -90,40 +81,36 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
 
     if (!session?.user?.id || !groupName.trim()) return;
 
-    setIsLoading(true);
     try {
-      // 1. Créer le groupe
-      const group = await FolderService.createFolder(
-        session.user.id,
-        groupName.trim(),
-        true // is_group = true
-      );
+      // ✅ 1. Créer le groupe avec React Query (invalide automatiquement le cache)
+      const group = await createFolder.mutateAsync({
+        name: groupName.trim(),
+        isGroup: true,
+        parentFolderId: null,
+      });
 
       if (!group) {
         alert('Erreur lors de la création du groupe');
-        setIsLoading(false);
         return;
       }
 
-      // 2. Déplacer les dossiers sélectionnés dans le groupe
+      // ✅ 2. Déplacer les dossiers sélectionnés dans le groupe
       if (selectedFolderIds.length > 0) {
         await Promise.all(
           selectedFolderIds.map(folderId =>
-            FolderService.moveFolderToGroup(folderId, group.id)
+            moveFolderToGroup.mutateAsync({ folderId, groupId: group.id })
           )
         );
       }
 
-      // 3. Fermer le modal et rafraîchir
+      // ✅ 3. Fermer le modal (le cache est déjà invalidé automatiquement !)
       onClose();
       setGroupName('');
       setSelectedFolderIds([]);
-      router.refresh();
+      // Plus besoin de router.refresh() !
     } catch (error) {
       console.error('Error creating group:', error);
       alert('Erreur lors de la création du groupe');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -261,10 +248,10 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || !groupName.trim()}
+              disabled={createFolder.isPending || !groupName.trim()}
               className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base mt-4 cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Création...' : 'Créer le groupe'}
+              {createFolder.isPending ? 'Création...' : 'Créer le groupe'}
             </button>
           </form>
         </div>

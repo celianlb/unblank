@@ -7,16 +7,21 @@ import Header from "@/components/Header";
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
-import { FolderService, type Folder } from '@/domain/folders/services/FolderService';
-import { LinkService } from '@/domain/links/services/LinkService';
+import { FolderService } from '@/domain/folders/services/FolderService';
+import { useFolders, useGroups } from '@/domain/folders/hooks/useFolders';
+import { useDeleteLinks } from '@/domain/links/hooks/useLinks';
 
 export default function AppPage() {
   const router = useRouter();
   const { session, loading } = useAuthContext();
   const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set());
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [groups, setGroups] = useState<Folder[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+
+  // ✅ Utilisation de React Query pour le cache et auto-refresh
+  const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
+  const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
+  const deleteLinks = useDeleteLinks();
+
+  const loadingData = loadingFolders || loadingGroups;
 
   useEffect(() => {
     if (!loading && !session) {
@@ -24,31 +29,6 @@ export default function AppPage() {
       router.push("/login");
     }
   }, [session, loading, router]);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      loadFoldersData();
-    }
-  }, [session?.user?.id]);
-
-  const loadFoldersData = async () => {
-    if (!session?.user?.id) return;
-
-    setLoadingData(true);
-    try {
-      const [foldersData, groupsData] = await Promise.all([
-        FolderService.getUserFolders(session.user.id),
-        FolderService.getUserGroups(session.user.id),
-      ]);
-
-      setFolders(foldersData);
-      setGroups(groupsData);
-    } catch (error) {
-      console.error('Error loading folders:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
 
   const handleCheckChange = (id: string, checked: boolean) => {
     setSelectedLinkIds(prev => {
@@ -68,23 +48,19 @@ export default function AppPage() {
     if (selectedLinkIds.size === 0) return;
 
     try {
-      const success = await LinkService.deleteLinks(Array.from(selectedLinkIds));
+      // ✅ Utilise la mutation React Query qui invalide automatiquement le cache
+      await deleteLinks.mutateAsync(Array.from(selectedLinkIds));
 
-      if (success) {
-        // Réinitialiser la sélection
-        setSelectedLinkIds(new Set());
-        // Rafraîchir la page pour voir les changements
-        router.refresh();
-      } else {
-        alert('Erreur lors de la suppression des liens');
-      }
+      // Réinitialiser la sélection
+      setSelectedLinkIds(new Set());
+      // Plus besoin de router.refresh() - React Query invalide automatiquement le cache !
     } catch (error) {
       console.error('Error deleting links:', error);
       alert('Erreur lors de la suppression des liens');
     }
   };
 
-  if (loading || loadingData) {
+  if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} />
@@ -101,7 +77,11 @@ export default function AppPage() {
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
-        {groups.length > 0 && (
+        {loadingGroups ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-500">Chargement des groupes...</p>
+          </div>
+        ) : groups.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
@@ -126,10 +106,14 @@ export default function AppPage() {
               ))}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Section Dossiers */}
-        {folders.length > 0 && (
+        {loadingFolders ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-500">Chargement des dossiers...</p>
+          </div>
+        ) : folders.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
@@ -149,11 +133,12 @@ export default function AppPage() {
                   slug={folder.slug}
                   itemCount={folder.link_count || 0}
                   lastUpdate={FolderService.formatLastUpdate(folder.updated_at)}
+                  isSystem={folder.is_system}
                 />
               ))}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Section Liens */}
         <section className="flex flex-col items-start gap-[21px] w-full">

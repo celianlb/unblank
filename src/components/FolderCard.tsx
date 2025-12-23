@@ -8,6 +8,8 @@ import FolderSettingsModal from "./FolderSettingsModal";
 import ShareLinkModal from "./ShareLinkModal";
 import RenameFolderModal from "./RenameFolderModal";
 import { FolderService } from "@/domain/folders/services/FolderService";
+import { useDeleteFolders } from "@/domain/folders/hooks/useFolders";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 interface FolderCardProps {
   id: string;
@@ -16,6 +18,7 @@ interface FolderCardProps {
   lastUpdate: string;
   groupSlug?: string;
   slug?: string;
+  isSystem?: boolean;
 }
 
 export default function FolderCard({
@@ -25,12 +28,17 @@ export default function FolderCard({
   lastUpdate,
   groupSlug,
   slug,
+  isSystem = false,
 }: FolderCardProps) {
   const router = useRouter();
+  const { session } = useAuthContext();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+
+  // ✅ Mutation React Query pour la suppression
+  const deleteFolders = useDeleteFolders(session?.user?.id || '');
 
   const handleCardClick = () => {
     const folderSlug = slug || title.toLowerCase().replace(/\s+/g, "-");
@@ -45,14 +53,10 @@ export default function FolderCard({
 
   const handleDelete = async () => {
     try {
-      const success = await FolderService.deleteFolders([id]);
-
-      if (success) {
-        setIsDeleteModalOpen(false);
-        router.refresh();
-      } else {
-        alert("Erreur lors de la suppression du dossier");
-      }
+      // ✅ Utilise la mutation React Query qui invalide automatiquement le cache
+      await deleteFolders.mutateAsync([id]);
+      setIsDeleteModalOpen(false);
+      // Plus besoin de router.refresh() !
     } catch (error) {
       console.error("Error deleting folder:", error);
       alert("Erreur lors de la suppression du dossier");
@@ -103,9 +107,14 @@ export default function FolderCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsRenameModalOpen(true);
+                if (!isSystem) setIsRenameModalOpen(true);
               }}
-              className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+              disabled={isSystem}
+              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                isSystem
+                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+              }`}
             >
               <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
             </button>
@@ -114,20 +123,30 @@ export default function FolderCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsShareModalOpen(true);
+                if (!isSystem) setIsShareModalOpen(true);
               }}
-              className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+              disabled={isSystem}
+              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                isSystem
+                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+              }`}
             >
               <Share2 className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
             </button>
 
-            {/* Frame 170 - Settings Button */}
+            {/* Frame 170 - Settings Button (Groupement) */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsSettingsModalOpen(true);
+                if (!isSystem) setIsSettingsModalOpen(true);
               }}
-              className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+              disabled={isSystem}
+              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                isSystem
+                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+              }`}
             >
               <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
             </button>
@@ -137,12 +156,21 @@ export default function FolderCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsDeleteModalOpen(true);
+              if (!isSystem) setIsDeleteModalOpen(true);
             }}
-            className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer group"
+            disabled={isSystem}
+            className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
+              isSystem
+                ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                : 'bg-[#C5C5C5] cursor-pointer'
+            }`}
           >
             <Trash
-              className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
+              className={`w-5 h-5 transition-colors ${
+                isSystem
+                  ? 'text-gray-400'
+                  : 'text-black group-hover:text-[#FF5070]'
+              }`}
               strokeWidth={2}
             />
           </button>

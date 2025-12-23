@@ -7,9 +7,9 @@ import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
 import DetailedLinkCard from '@/components/DetailedLinkCard';
 import ImageCard from '@/components/ImageCard';
-import { LinkService, type Link } from '@/domain/links/services/LinkService';
-import { FolderService, type Folder } from '@/domain/folders/services/FolderService';
-import { supabase } from '@/infra/db/supabase';
+import { LinkService } from '@/domain/links/services/LinkService';
+import { useFolderBySlug, useGroupBySlug } from '@/domain/folders/hooks/useFolders';
+import { useFolderLinks } from '@/domain/links/hooks/useLinks';
 
 export default function FolderPage() {
   const params = useParams();
@@ -18,52 +18,19 @@ export default function FolderPage() {
   const groupSlug = params.slug as string;
   const folderSlug = params.folder as string;
   const [selectedCount, setSelectedCount] = useState(0);
-  const [links, setLinks] = useState<Link[]>([]);
-  const [folder, setFolder] = useState<Folder | null>(null);
-  const [group, setGroup] = useState<Folder | null>(null);
-  const [loadingData, setLoadingData] = useState(true);
+
+  // ✅ Utilisation de React Query
+  const { data: group } = useGroupBySlug(session?.user?.id, groupSlug);
+  const { data: folder, isLoading: loadingFolder } = useFolderBySlug(session?.user?.id, folderSlug);
+  const { data: links = [], isLoading: loadingLinks } = useFolderLinks(folder?.id);
+
+  const loadingData = loadingFolder || loadingLinks;
 
   useEffect(() => {
     if (!loading && !session) {
       router.push("/login");
     }
   }, [session, loading, router]);
-
-  useEffect(() => {
-    if (session?.user?.id && folderSlug) {
-      loadFolderData();
-    }
-  }, [session?.user?.id, folderSlug]);
-
-  const loadFolderData = async () => {
-    if (!session?.user?.id) return;
-
-    setLoadingData(true);
-    try {
-      // Chercher le groupe par son slug
-      const groupData = await FolderService.getGroupBySlug(session.user.id, groupSlug);
-      if (groupData) setGroup(groupData);
-
-      // Chercher le dossier par son slug
-      const folderData = await FolderService.getFolderBySlug(session.user.id, folderSlug);
-
-      if (!folderData) {
-        setFolder(null);
-        setLoadingData(false);
-        return;
-      }
-
-      setFolder(folderData);
-
-      // Récupérer les liens du dossier
-      const linksData = await LinkService.getFolderLinks(folderData.id);
-      setLinks(linksData);
-    } catch (error) {
-      console.error('Error loading folder data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
 
   const handleCheckChange = (checked: boolean) => {
     setSelectedCount(prev => checked ? prev + 1 : prev - 1);
@@ -81,23 +48,12 @@ export default function FolderPage() {
   const imageLinks = links.filter(link => LinkService.getContentType(link) === 'image');
   const regularLinks = links.filter(link => LinkService.getContentType(link) === 'link');
 
-  if (loading || loadingData) {
+  if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
         <main className="w-full px-[64px] py-[40px] flex items-center justify-center">
           <p className="text-gray-500">Chargement...</p>
-        </main>
-      </div>
-    );
-  }
-
-  if (!folder) {
-    return (
-      <div className="min-h-screen w-full bg-white">
-        <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
-        <main className="w-full px-[64px] py-[40px] flex items-center justify-center">
-          <p className="text-gray-500">Dossier introuvable</p>
         </main>
       </div>
     );
@@ -110,10 +66,26 @@ export default function FolderPage() {
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
         <Breadcrumb
-          groupName={group?.name || ''}
-          folderName={folder.name}
+          groupName={group?.name}
+          folderName={folder?.name}
           groupSlug={groupSlug}
+          isLoading={loadingData}
         />
+
+        {!folder && !loadingData && (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500">Dossier introuvable</p>
+          </div>
+        )}
+
+        {loadingData && (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500">Chargement...</p>
+          </div>
+        )}
+
+        {folder && !loadingData && (
+          <>
 
         {/* Section Images */}
         {imageLinks.length > 0 && (
@@ -186,6 +158,8 @@ export default function FolderPage() {
           <div className="flex items-center justify-center py-16">
             <p className="text-gray-500">Aucun lien dans ce dossier</p>
           </div>
+        )}
+        </>
         )}
       </main>
     </div>
