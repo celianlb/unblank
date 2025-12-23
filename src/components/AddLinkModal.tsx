@@ -72,6 +72,7 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
                 onChange={(e) => setUrl(e.target.value)}
                 className="w-full h-12 px-4 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
                 required
+                autoFocus
               />
             </div>
 

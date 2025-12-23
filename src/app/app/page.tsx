@@ -23,6 +23,15 @@ export default function AppPage() {
 
   const loadingData = loadingFolders || loadingGroups;
 
+  // ✅ Trier les dossiers : dossiers système (Récents) en premier, puis les autres
+  const sortedFolders = [...folders].sort((a, b) => {
+    // Les dossiers système (is_system = true) viennent en premier
+    if (a.is_system && !b.is_system) return -1;
+    if (!a.is_system && b.is_system) return 1;
+    // Pour les autres, garder l'ordre par position
+    return (a.position || 0) - (b.position || 0);
+  });
+
   useEffect(() => {
     if (!loading && !session) {
       // Pas de session, redirection vers login
@@ -113,19 +122,19 @@ export default function AppPage() {
           <div className="flex items-center justify-center py-8">
             <p className="text-gray-500">Chargement des dossiers...</p>
           </div>
-        ) : folders.length > 0 ? (
+        ) : sortedFolders.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: 'Area Inktrap, sans-serif' }}
             >
-              Dossiers ({folders.length})
+              Dossiers ({sortedFolders.length})
             </h1>
 
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
-              {folders.map((folder) => (
+              {sortedFolders.map((folder) => (
                 <FolderCard
                   key={folder.id}
                   id={folder.id}

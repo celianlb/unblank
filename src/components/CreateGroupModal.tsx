@@ -162,6 +162,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                 onChange={(e) => setGroupName(e.target.value)}
                 className="w-full h-14 px-4 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
                 required
+                autoFocus
               />
             </div>
 
