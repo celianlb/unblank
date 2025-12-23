@@ -58,7 +58,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     <>
     <div
       onClick={handleCardClick}
-      className="w-[272px] h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] shadow-[4px_4px_0px_#000000] flex-none cursor-pointer transition-shadow hover:shadow-[6px_6px_0px_#000000] box-border flex flex-col gap-4 p-3"
+      className="w-[272px] min-h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] shadow-[4px_4px_0px_#000000] flex-none cursor-pointer transition-shadow hover:shadow-[6px_6px_0px_#000000] box-border flex flex-col gap-4 p-3"
     >
       {/* Frame 194 - Images Grid */}
       <div className="flex flex-col gap-1.5 w-full">
@@ -85,7 +85,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
 
       {/* Title */}
       <h3
-        className="text-2xl leading-[30px] font-extrabold text-[#0D0D0D]"
+        className="text-2xl leading-[30px] font-extrabold text-[#0D0D0D] break-words"
         style={{ fontFamily: 'Area Inktrap, sans-serif' }}
       >
         {title}
