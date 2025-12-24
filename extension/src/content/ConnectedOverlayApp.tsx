@@ -1,7 +1,8 @@
 import { X, WandSparkles, Folder, ChevronDown, Plus } from "lucide-react";
 import { Button } from "../components/Button";
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { motion } from "framer-motion";
+import { extractMetadata, createLink, getFolders, type Metadata, type Folder as FolderType } from "../utils/api";
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -10,13 +11,39 @@ interface ConnectedOverlayAppProps {
 function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [url, setUrl] = useState("");
   const [autoTagging, setAutoTagging] = useState(false);
-  const [selectedDestination, setSelectedDestination] = useState("Récents");
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [inputWidth, setInputWidth] = useState(130);
+  const [metadata, setMetadata] = useState<Metadata | null>(null);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const [folders, setFolders] = useState<FolderType[]>([]);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const spanRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load folders on mount
+  useEffect(() => {
+    loadFolders();
+  }, []);
+
+  const loadFolders = async () => {
+    setIsLoadingFolders(true);
+    try {
+      const userFolders = await getFolders();
+      setFolders(userFolders);
+      // Set first folder as default if available
+      if (userFolders.length > 0 && !selectedDestination) {
+        setSelectedDestination(userFolders[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading folders:', error);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  };
 
   useLayoutEffect(() => {
     if (spanRef.current) {
@@ -37,14 +64,56 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     onClose();
   };
 
-  const handleSave = () => {
-    // TODO: Implement save logic
-    console.log("Save clicked", {
-      url,
-      autoTagging,
-      selectedDestination,
-      tags,
-    });
+  // Extract metadata when URL is entered
+  const handleUrlBlur = async () => {
+    if (url && url.startsWith('http') && !metadata) {
+      setIsLoadingMetadata(true);
+      try {
+        const meta = await extractMetadata(url);
+        if (meta) {
+          setMetadata(meta);
+        }
+      } catch (error) {
+        console.error('Error extracting metadata:', error);
+      } finally {
+        setIsLoadingMetadata(false);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    if (!url.trim()) {
+      alert('Veuillez entrer une URL');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const result = await createLink({
+        url: url.trim(),
+        title: metadata?.title,
+        description: metadata?.description,
+        folderId: selectedDestination || undefined,
+        originalImageUrl: metadata?.image || undefined,
+        imageFormat: metadata?.imageFormat,
+        contentType: metadata?.contentType,
+        tags: autoTagging ? undefined : (tags.length > 0 ? tags : undefined),
+      });
+
+      if (result.success) {
+        // Show success message
+        console.log('Link saved successfully!');
+        // Close the overlay
+        onClose();
+      } else {
+        alert(`Erreur: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving link:', error);
+      alert('Erreur lors de l\'enregistrement du lien');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddTag = () => {
@@ -368,11 +437,17 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           placeholder="Coller l'URL de l'élément à sauvegarder"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          onBlur={handleUrlBlur}
           style={{
             ...inputStyle,
             color: url ? "#0D0D0D" : "rgba(13, 13, 13, 0.5)",
           }}
         />
+        {isLoadingMetadata && (
+          <div style={{ padding: "0 12px", color: "#8B8B8B", fontSize: "14px" }}>
+            Chargement...
+          </div>
+        )}
       </div>
 
       {/* Auto Tagging Toggle */}
@@ -419,92 +494,44 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           >
             <div style={dropdownContentStyle}>
               <Folder size={24} color="#000000" strokeWidth={2} />
-              <span>{selectedDestination}</span>
+              <span>
+                {isLoadingFolders 
+                  ? "Chargement..." 
+                  : selectedDestination 
+                    ? folders.find(f => f.id === selectedDestination)?.name || "Sélectionner un dossier"
+                    : "Sélectionner un dossier"
+                }
+              </span>
             </div>
             <ChevronDown size={24} color="#000000" strokeWidth={2} />
           </div>
-          {isDropdownOpen && (
+          {isDropdownOpen && !isLoadingFolders && (
             <div style={dropdownMenuStyle}>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  setSelectedDestination("Logos");
-                  setIsDropdownOpen(false);
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#FFE3E8")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FFFFFF")
-                }
-              >
-                <Folder size={24} color="#000000" strokeWidth={2} />
-                <span>Logos</span>
-              </div>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  setSelectedDestination("Affiches");
-                  setIsDropdownOpen(false);
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#FFE3E8")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FFFFFF")
-                }
-              >
-                <Folder size={24} color="#000000" strokeWidth={2} />
-                <span>Affiches</span>
-              </div>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  setSelectedDestination("Maquettes");
-                  setIsDropdownOpen(false);
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#FFE3E8")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FFFFFF")
-                }
-              >
-                <Folder size={24} color="#000000" strokeWidth={2} />
-                <span>Maquettes</span>
-              </div>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  setSelectedDestination("A ranger");
-                  setIsDropdownOpen(false);
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#FFE3E8")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FFFFFF")
-                }
-              >
-                <Folder size={24} color="#000000" strokeWidth={2} />
-                <span>A ranger</span>
-              </div>
-              <div
-                style={dropdownItemStyle}
-                onClick={() => {
-                  setSelectedDestination("Architecture");
-                  setIsDropdownOpen(false);
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#FFE3E8")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FFFFFF")
-                }
-              >
-                <Folder size={24} color="#000000" strokeWidth={2} />
-                <span>Architecture</span>
-              </div>
+              {folders.length === 0 ? (
+                <div style={{ ...dropdownItemStyle, cursor: "default" }}>
+                  <span>Aucun dossier disponible</span>
+                </div>
+              ) : (
+                folders.map((folder) => (
+                  <div
+                    key={folder.id}
+                    style={dropdownItemStyle}
+                    onClick={() => {
+                      setSelectedDestination(folder.id);
+                      setIsDropdownOpen(false);
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#FFE3E8")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "#FFFFFF")
+                    }
+                  >
+                    <Folder size={24} color="#000000" strokeWidth={2} />
+                    <span>{folder.name}</span>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -586,8 +613,13 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       </motion.div>
 
       {/* Save Button */}
-      <Button variant="primary" size="md" onClick={handleSave}>
-        Enregistrer
+      <Button 
+        variant="primary" 
+        size="md" 
+        onClick={handleSave}
+        disabled={isSaving || !url.trim()}
+      >
+        {isSaving ? "Enregistrement..." : "Enregistrer"}
       </Button>
     </div>
   );

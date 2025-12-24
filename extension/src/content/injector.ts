@@ -41,7 +41,7 @@ if (isUnblankDomain) {
       }).then(() => {
         console.log('[Unblank Extension] Auth session forwarded successfully');
       }).catch((error) => {
-        console.error('[Unblank Extension] Error forwarding auth session:', error);
+        console.error('[Unblank Extension] Error forwarding auth session');
       });
     }
     
@@ -52,7 +52,7 @@ if (isUnblankDomain) {
       }).then(() => {
         console.log('[Unblank Extension] Logout forwarded successfully');
       }).catch((error) => {
-        console.error('[Unblank Extension] Error forwarding logout:', error);
+        console.error('[Unblank Extension] Error forwarding logout');
       });
     }
   });

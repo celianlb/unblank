@@ -58,12 +58,12 @@ extension/
 npm install
 ```
 
-2. Copy environment variables:
+2. (Optional) Set API URL for production:
 ```bash
-cp .env.example .env
+export VITE_API_URL=https://unblank.app
 ```
 
-3. Update `.env` with your configuration
+By default, the extension uses `http://localhost:3000` for development.
 
 ### Development
 

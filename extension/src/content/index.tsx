@@ -14,7 +14,6 @@ let isConnected = false;
 // Initialize auth status
 (async () => {
   isConnected = await isAuthenticated();
-  console.log('[UNBLANK] Auth status:', isConnected);
 })();
 
 // Load Heebo font from Google Fonts
@@ -90,7 +89,6 @@ function applyOverlayStyles(container: HTMLDivElement) {
 async function showOverlay() {
   // Check auth status before showing overlay
   isConnected = await isAuthenticated();
-  console.log('[UNBLANK] Auth status check:', isConnected);
 
   if (overlayContainer) {
     // Overlay already exists, update it and show it
