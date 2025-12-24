@@ -65,6 +65,7 @@ export default function ImagePreviewModal({
           <img
             src={imageUrl}
             alt="Preview"
+            loading="lazy"
             className="w-full h-full object-contain rounded-lg"
           />
         </div>

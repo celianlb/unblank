@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
@@ -9,21 +9,33 @@ import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
 import { FolderService } from '@/domain/folders/services/FolderService';
 import { useFolders, useGroups } from '@/domain/folders/hooks/useFolders';
-import { useDeleteLinks, useDeleteLink, useUserLinks } from '@/domain/links/hooks/useLinks';
+import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/domain/links/hooks/useLinks';
 import { LinkService } from '@/domain/links/services/LinkService';
 
 export default function AppPage() {
   const router = useRouter();
   const { session, loading } = useAuthContext();
   const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set());
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
-  // ✅ Limite à 12 liens pour la homepage (optimisation performance)
-  const { data: userLinks = [], isLoading: loadingLinks } = useUserLinks(session?.user?.id, 12);
+
+  // ✅ Infinite scroll avec pagination
+  const {
+    data: linksData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: loadingLinks,
+  } = useInfiniteUserLinks(session?.user?.id, 12);
+
   const deleteLinks = useDeleteLinks();
   const deleteLink = useDeleteLink(session?.user?.id);
+
+  // Flatten les pages en un seul array
+  const userLinks = linksData?.pages.flatMap(page => page.links) || [];
 
   const loadingData = loadingFolders || loadingGroups;
 
@@ -42,6 +54,24 @@ export default function AppPage() {
       router.push("/login");
     }
   }, [session, loading, router]);
+
+  // ✅ Infinite scroll: charger plus au scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleCheckChange = (id: string, checked: boolean) => {
     setSelectedLinkIds(prev => {
@@ -187,6 +217,15 @@ export default function AppPage() {
                 />
               ))}
             </div>
+
+            {/* Infinite scroll trigger */}
+            {hasNextPage && (
+              <div ref={loadMoreRef} className="w-full flex items-center justify-center py-8">
+                {isFetchingNextPage ? (
+                  <p className="text-gray-500">Chargement de plus de liens...</p>
+                ) : null}
+              </div>
+            )}
           </section>
         ) : null}
       </main>

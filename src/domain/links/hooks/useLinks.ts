@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { LinkService, type Link } from '../services/LinkService';
 
 /**
@@ -27,6 +27,29 @@ export function useUserLinks(userId: string | undefined, limit?: number) {
 }
 
 /**
+ * Hook pour récupérer les liens d'un utilisateur avec pagination infinie
+ * @param pageSize - Nombre de liens par page (défaut: 12)
+ */
+export function useInfiniteUserLinks(userId: string | undefined, pageSize: number = 12) {
+  return useInfiniteQuery({
+    queryKey: ['links', 'user', 'infinite', userId, pageSize],
+    queryFn: async ({ pageParam = 0 }) => {
+      const offset = pageParam * pageSize;
+      const links = await LinkService.getUserLinks(userId!, pageSize, offset);
+
+      return {
+        links,
+        nextPage: links.length === pageSize ? pageParam + 1 : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    initialPageParam: 0,
+  });
+}
+
+/**
  * Hook pour supprimer des liens
  * Invalide automatiquement le cache des dossiers (pour mettre à jour les compteurs)
  */
@@ -42,7 +65,7 @@ export function useDeleteLinks(folderId?: string) {
         queryClient.invalidateQueries({ queryKey: ['links', folderId] });
       }
 
-      // Invalider les liens de tous les utilisateurs
+      // Invalider les liens de tous les utilisateurs (incluant infinite)
       queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
       // Invalider tous les dossiers pour mettre à jour les compteurs

@@ -64,7 +64,7 @@ export class LinkService {
   /**
    * Récupère tous les liens d'un utilisateur (tous dossiers confondus)
    */
-  static async getUserLinks(userId: string, limit?: number): Promise<Link[]> {
+  static async getUserLinks(userId: string, limit?: number, offset?: number): Promise<Link[]> {
     let query = supabase
       .from('links')
       .select(`
@@ -84,6 +84,11 @@ export class LinkService {
     // Ajouter la limite si fournie
     if (limit) {
       query = query.limit(limit);
+    }
+
+    // Ajouter l'offset si fourni (pour pagination)
+    if (offset) {
+      query = query.range(offset, offset + (limit || 10) - 1);
     }
 
     const { data, error } = await query;
