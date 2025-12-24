@@ -16,13 +16,13 @@ export default function AppPage() {
   const router = useRouter();
   const { session, loading } = useAuthContext();
   const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set());
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [loadMoreElement, setLoadMoreElement] = useState<HTMLDivElement | null>(null);
 
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
 
-  // ✅ Infinite scroll avec pagination
+  // ✅ Infinite scroll avec pagination (12 liens par page)
   const {
     data: linksData,
     fetchNextPage,
@@ -57,21 +57,51 @@ export default function AppPage() {
 
   // ✅ Infinite scroll: charger plus au scroll
   useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+    console.log('🔄 useEffect triggered:', {
+      hasElement: !!loadMoreElement,
+      hasNextPage,
+      isFetchingNextPage,
+      linksCount: userLinks.length
+    });
+
+    if (!loadMoreElement) {
+      console.log('❌ Pas d\'élément ref');
+      return;
+    }
+    if (!hasNextPage) {
+      console.log('❌ Pas de page suivante');
+      return;
+    }
+    if (isFetchingNextPage) {
+      console.log('⏳ Déjà en train de charger');
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
+        console.log('👁️ Observer callback:', {
+          isIntersecting: entries[0].isIntersecting,
+          intersectionRatio: entries[0].intersectionRatio
+        });
         if (entries[0].isIntersecting) {
+          console.log('🔍 Intersection détectée, chargement de la page suivante...');
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      {
+        threshold: 0.1,
+        rootMargin: '100px' // Déclenche 100px avant d'atteindre l'élément
+      }
     );
 
-    observer.observe(loadMoreRef.current);
+    console.log('👀 Observer attaché, hasNextPage:', hasNextPage);
+    observer.observe(loadMoreElement);
 
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    return () => {
+      console.log('🧹 Observer détaché');
+      observer.disconnect();
+    };
+  }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, userLinks.length]);
 
   const handleCheckChange = (id: string, checked: boolean) => {
     setSelectedLinkIds(prev => {
@@ -220,9 +250,12 @@ export default function AppPage() {
 
             {/* Infinite scroll trigger */}
             {hasNextPage && (
-              <div ref={loadMoreRef} className="w-full flex items-center justify-center py-8">
+              <div ref={setLoadMoreElement} className="w-full flex items-center justify-center py-8 min-h-[100px]">
                 {isFetchingNextPage ? (
-                  <p className="text-gray-500">Chargement de plus de liens...</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 border-3 border-[#FF506F] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-500">Chargement...</p>
+                  </div>
                 ) : null}
               </div>
             )}

@@ -35,11 +35,16 @@ export function useInfiniteUserLinks(userId: string | undefined, pageSize: numbe
     queryKey: ['links', 'user', 'infinite', userId, pageSize],
     queryFn: async ({ pageParam = 0 }) => {
       const offset = pageParam * pageSize;
-      const links = await LinkService.getUserLinks(userId!, pageSize, offset);
+      // On demande pageSize + 1 pour savoir s'il y a une page suivante
+      const links = await LinkService.getUserLinks(userId!, pageSize + 1, offset);
+
+      // S'il y a plus de pageSize résultats, il y a une page suivante
+      const hasMore = links.length > pageSize;
+      const resultLinks = hasMore ? links.slice(0, pageSize) : links;
 
       return {
-        links,
-        nextPage: links.length === pageSize ? pageParam + 1 : undefined,
+        links: resultLinks,
+        nextPage: hasMore ? pageParam + 1 : undefined,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
@@ -92,10 +97,8 @@ export function useDeleteLink(userId?: string, folderId?: string) {
         queryClient.invalidateQueries({ queryKey: ['links', folderId] });
       }
 
-      // Invalider les liens de l'utilisateur
-      if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['links', 'user', userId] });
-      }
+      // Invalider TOUS les liens de l'utilisateur (incluant infinite scroll)
+      queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
       // Invalider tous les dossiers pour mettre à jour les compteurs
       queryClient.invalidateQueries({ queryKey: ['folders'] });
@@ -132,8 +135,8 @@ export function useCreateLink(userId: string, folderId?: string) {
         queryClient.invalidateQueries({ queryKey: ['links', folderId || newLink.folder_id] });
       }
 
-      // Invalider les liens de l'utilisateur
-      queryClient.invalidateQueries({ queryKey: ['links', 'user', userId] });
+      // Invalider TOUS les liens de l'utilisateur (incluant infinite scroll)
+      queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
       // Invalider tous les dossiers pour mettre à jour les compteurs
       queryClient.invalidateQueries({ queryKey: ['folders'] });
