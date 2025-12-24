@@ -174,6 +174,8 @@ export default function AppPage() {
                   key={link.id}
                   id={link.id}
                   link={link.url}
+                  title={link.title || ''}
+                  description={link.description || ''}
                   tags={link.tags?.map(t => t.name) || []}
                   isSelectionMode={isSelectionMode}
                   onCheckChange={handleCheckChange}

@@ -3,19 +3,43 @@
 import { Trash, Copy, ExternalLink, Check } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import ImagePreviewModal from './ImagePreviewModal';
 
 interface LinkCardProps {
   id?: string;
   imageUrl?: string;
   link: string;
+  title?: string;
+  description?: string;
   tags?: string[];
+  fileType?: string;
+  dimensions?: string;
+  fileSize?: string;
+  dateAdded?: string;
+  folder?: string;
   isSelectionMode?: boolean;
   onCheckChange?: (id: string, checked: boolean) => void;
   onDelete?: (id: string) => void;
 }
 
-export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMode = false, onCheckChange, onDelete }: LinkCardProps) {
+export default function LinkCard({
+  id,
+  imageUrl,
+  link,
+  title = '',
+  description = '',
+  tags = [],
+  fileType = 'JPG',
+  dimensions = '615×856 px',
+  fileSize = '2,3 Mo',
+  dateAdded = new Date().toLocaleDateString('fr-FR'),
+  folder = 'Affiche horreur',
+  isSelectionMode = false,
+  onCheckChange,
+  onDelete
+}: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
   const handleCheckChange = () => {
@@ -30,34 +54,14 @@ export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMod
   const showHoverElements = isSelectionMode || isChecked;
 
   const handleDelete = async () => {
-    if (!id) {
-      console.log('No ID, aborting delete');
-      return;
-    }
-
-    console.log('handleDelete called for ID:', id);
-    console.log('onDelete callback exists?', !!onDelete);
+    if (!id) return;
 
     try {
       setIsDeleteModalOpen(false);
 
       // Si un callback onDelete est fourni, l'utiliser (React Query)
       if (onDelete) {
-        console.log('Calling onDelete callback with ID:', id);
         onDelete(id);
-      } else {
-        console.log('No callback, calling API directly');
-        // Sinon, appeler l'API directement
-        const response = await fetch(`/api/links/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete link');
-        }
-
-        // Rafraîchir la page pour voir les changements
-        window.location.reload();
       }
     } catch (error) {
       console.error('Error deleting link:', error);
@@ -81,7 +85,7 @@ export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMod
   return (
     <>
       <div
-        onClick={() => window.open(link, '_blank')}
+        onClick={() => setIsPreviewModalOpen(true)}
         className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative"
       >
         {/* Image placeholder */}
@@ -175,6 +179,19 @@ export default function LinkCard({ id, imageUrl, link, tags = [], isSelectionMod
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
+      />
+
+      <ImagePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        imageUrl={imageUrl || 'https://via.placeholder.com/600'}
+        link={link}
+        fileType={fileType}
+        dimensions={dimensions}
+        fileSize={fileSize}
+        dateAdded={dateAdded}
+        folder={folder}
+        tags={tags}
       />
     </>
   );
