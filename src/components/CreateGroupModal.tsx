@@ -139,9 +139,9 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
           className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[479px] pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <form onSubmit={handleSubmit} className="flex flex-col p-8 gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col p-8 gap-6">
             {/* Header */}
-            <div className="flex items-center justify-center w-full mb-4 relative">
+            <div className="flex items-center justify-center w-full mb-2 relative">
               <h2 className="text-3xl font-bold text-black">Créer un groupe</h2>
               <button
                 type="button"
@@ -250,7 +250,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             <button
               type="submit"
               disabled={createFolder.isPending || !groupName.trim()}
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base mt-4 cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createFolder.isPending ? 'Création...' : 'Créer le groupe'}
             </button>
