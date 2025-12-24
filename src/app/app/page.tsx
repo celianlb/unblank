@@ -38,6 +38,7 @@ export default function AppPage() {
   const userLinks = linksData?.pages.flatMap(page => page.links) || [];
 
   const loadingData = loadingFolders || loadingGroups;
+  const isSelectionMode = selectedLinkIds.size > 0;
 
   // ✅ Trier les dossiers : dossiers système (Récents) en premier, puis les autres
   const sortedFolders = [...folders].sort((a, b) => {
@@ -80,6 +81,24 @@ export default function AppPage() {
     };
   }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, userLinks.length]);
 
+  // ✅ Désélectionner en cliquant hors des cartes
+  useEffect(() => {
+    if (!isSelectionMode) return;
+
+    const handleClickOutsideCards = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Si on ne clique pas sur une carte (LinkCard), désélectionner
+      if (!target.closest('.group\\/card')) {
+        setSelectedLinkIds(new Set());
+      }
+    };
+
+    document.addEventListener('click', handleClickOutsideCards);
+    return () => {
+      document.removeEventListener('click', handleClickOutsideCards);
+    };
+  }, [isSelectionMode]);
+
   const handleCheckChange = (id: string, checked: boolean) => {
     setSelectedLinkIds(prev => {
       const newSet = new Set(prev);
@@ -91,8 +110,6 @@ export default function AppPage() {
       return newSet;
     });
   };
-
-  const isSelectionMode = selectedLinkIds.size > 0;
 
   const handleDeleteSelected = async () => {
     if (selectedLinkIds.size === 0) return;
@@ -219,6 +236,7 @@ export default function AppPage() {
                   fileType={link.image_format || 'JPG'}
                   dateAdded={LinkService.formatDateAdded(link.created_at)}
                   isSelectionMode={isSelectionMode}
+                  isSelected={selectedLinkIds.has(link.id)}
                   onCheckChange={handleCheckChange}
                   onDelete={(id) => deleteLink.mutate(id)}
                 />

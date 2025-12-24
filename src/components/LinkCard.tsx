@@ -18,6 +18,7 @@ interface LinkCardProps {
   dateAdded?: string;
   folder?: string;
   isSelectionMode?: boolean;
+  isSelected?: boolean;
   onCheckChange?: (id: string, checked: boolean) => void;
   onDelete?: (id: string) => void;
 }
@@ -35,23 +36,22 @@ export default function LinkCard({
   dateAdded = new Date().toLocaleDateString('fr-FR'),
   folder = 'Affiche horreur',
   isSelectionMode = false,
+  isSelected = false,
   onCheckChange,
   onDelete
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
 
   const handleCheckChange = () => {
-    const newValue = !isChecked;
-    setIsChecked(newValue);
+    const newValue = !isSelected;
     if (id) {
       onCheckChange?.(id, newValue);
     }
   };
 
   // Show hover elements if in selection mode or hovering
-  const showHoverElements = isSelectionMode || isChecked;
+  const showHoverElements = isSelectionMode || isSelected;
 
   const handleDelete = async () => {
     if (!id) return;
@@ -82,10 +82,20 @@ export default function LinkCard({
   // Truncate link for display
   const displayLink = link.length > 25 ? link.substring(0, 25) + '...' : link;
 
+  const handleCardClick = () => {
+    if (isSelectionMode) {
+      // En mode sélection, cliquer sur la carte toggle la checkbox
+      handleCheckChange();
+    } else {
+      // Sinon, ouvrir la preview
+      setIsPreviewModalOpen(true);
+    }
+  };
+
   return (
     <>
       <div
-        onClick={() => setIsPreviewModalOpen(true)}
+        onClick={handleCardClick}
         className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] flex-none cursor-pointer box-border relative"
       >
         {/* Image placeholder */}
@@ -107,9 +117,9 @@ export default function LinkCard({
               e.stopPropagation();
               handleCheckChange();
             }}
-            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
+            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${isSelected ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
           >
-            {isChecked && (
+            {isSelected && (
               <svg
                 className="absolute w-[28px] h-[22px] left-[2px] top-px z-0"
                 viewBox="0 0 25 20"
