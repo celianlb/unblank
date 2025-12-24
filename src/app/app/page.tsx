@@ -20,7 +20,8 @@ export default function AppPage() {
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
-  const { data: userLinks = [], isLoading: loadingLinks } = useUserLinks(session?.user?.id);
+  // ✅ Limite à 12 liens pour la homepage (optimisation performance)
+  const { data: userLinks = [], isLoading: loadingLinks } = useUserLinks(session?.user?.id, 12);
   const deleteLinks = useDeleteLinks();
   const deleteLink = useDeleteLink(session?.user?.id);
 
@@ -169,7 +170,7 @@ export default function AppPage() {
 
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
-              {userLinks.slice(0, 12).map((link) => (
+              {userLinks.map((link) => (
                 <LinkCard
                   key={link.id}
                   id={link.id}

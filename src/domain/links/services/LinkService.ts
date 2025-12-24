@@ -64,8 +64,8 @@ export class LinkService {
   /**
    * Récupère tous les liens d'un utilisateur (tous dossiers confondus)
    */
-  static async getUserLinks(userId: string): Promise<Link[]> {
-    const { data, error } = await supabase
+  static async getUserLinks(userId: string, limit?: number): Promise<Link[]> {
+    let query = supabase
       .from('links')
       .select(`
         *,
@@ -80,6 +80,13 @@ export class LinkService {
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
+
+    // Ajouter la limite si fournie
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching user links:', error);

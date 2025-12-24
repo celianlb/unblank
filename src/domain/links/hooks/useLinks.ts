@@ -15,11 +15,12 @@ export function useFolderLinks(folderId: string | undefined) {
 
 /**
  * Hook pour récupérer tous les liens d'un utilisateur
+ * @param limit - Nombre maximum de liens à récupérer (optionnel)
  */
-export function useUserLinks(userId: string | undefined) {
+export function useUserLinks(userId: string | undefined, limit?: number) {
   return useQuery({
-    queryKey: ['links', 'user', userId],
-    queryFn: () => LinkService.getUserLinks(userId!),
+    queryKey: ['links', 'user', userId, limit],
+    queryFn: () => LinkService.getUserLinks(userId!, limit),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });

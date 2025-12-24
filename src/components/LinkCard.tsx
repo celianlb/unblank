@@ -94,6 +94,7 @@ export default function LinkCard({
             <img
               src={imageUrl}
               alt=""
+              loading="lazy"
               className="w-full h-full object-cover rounded-xl sm:rounded-[16px]"
             />
           )}
