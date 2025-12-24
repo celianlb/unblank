@@ -60,53 +60,23 @@ export function useDeleteLink(userId?: string, folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (linkId: string) => {
-      console.log('useDeleteLink mutation called with ID:', linkId);
-      const response = await fetch(`/api/links/${linkId}`, {
-        method: 'DELETE',
-      });
-
-      console.log('Delete response status:', response.status);
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Delete failed:', error);
-        throw new Error('Failed to delete link');
-      }
-
-      const result = await response.json();
-      console.log('Delete successful:', result);
-      return result;
-    },
+    mutationFn: (linkId: string) => LinkService.deleteLink(linkId),
 
     onSuccess: () => {
-      console.log('Delete mutation onSuccess called');
-      console.log('Invalidating queries...');
-
       // Invalider les liens du dossier
       if (folderId) {
         queryClient.invalidateQueries({ queryKey: ['links', folderId] });
       }
 
-      // Invalider les liens de l'utilisateur avec le bon userId
+      // Invalider les liens de l'utilisateur
       if (userId) {
-        console.log('Invalidating user links for userId:', userId);
         queryClient.invalidateQueries({ queryKey: ['links', 'user', userId] });
       }
-
-      // Invalider tous les liens user (au cas où)
-      queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
       // Invalider tous les dossiers pour mettre à jour les compteurs
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
-
-      console.log('Queries invalidated');
-    },
-
-    onError: (error) => {
-      console.error('Delete mutation onError called:', error);
     },
   });
 }

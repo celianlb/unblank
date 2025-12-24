@@ -142,6 +142,28 @@ export class LinkService {
   }
 
   /**
+   * Supprime un seul lien
+   */
+  static async deleteLink(linkId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('links')
+        .delete()
+        .eq('id', linkId);
+
+      if (error) {
+        console.error('Error deleting link:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting link:', error);
+      return false;
+    }
+  }
+
+  /**
    * Supprime plusieurs liens
    */
   static async deleteLinks(linkIds: string[]): Promise<boolean> {
