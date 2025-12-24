@@ -8,7 +8,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
 import RenameFolderModal from './RenameFolderModal';
-import { useDeleteFolders } from '@/domain/folders/hooks/useFolders';
+import { useDeleteFolders, useRenameFolder } from '@/domain/folders/hooks/useFolders';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 interface FolderGroupCardProps {
@@ -28,8 +28,9 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
-  // ✅ Mutation React Query pour la suppression
+  // ✅ Mutations React Query
   const deleteFolders = useDeleteFolders(session?.user?.id || '');
+  const renameFolder = useRenameFolder(session?.user?.id || '');
 
   const handleDelete = async () => {
     try {
@@ -43,9 +44,14 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     }
   };
 
-  const handleRename = (newName: string) => {
-    // TODO: Logique de renommage
-    console.log('Nouveau nom:', newName);
+  const handleRename = async (newName: string) => {
+    try {
+      await renameFolder.mutateAsync({ folderId: id, newName });
+      setIsRenameModalOpen(false);
+    } catch (error) {
+      console.error('Error renaming group:', error);
+      alert('Erreur lors du renommage du groupe');
+    }
   };
 
   const handleCardClick = () => {

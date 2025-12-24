@@ -108,6 +108,28 @@ export function useDeleteFolders(userId: string) {
 }
 
 /**
+ * Hook pour renommer un dossier
+ * Invalide automatiquement le cache après renommage
+ */
+export function useRenameFolder(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ folderId, newName }: { folderId: string; newName: string }) =>
+      FolderService.renameFolder(folderId, newName),
+
+    onSuccess: () => {
+      // Invalider toutes les queries de dossiers et groupes
+      queryClient.invalidateQueries({ queryKey: ['folders', userId] });
+      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
+      queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['group'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] });
+    },
+  });
+}
+
+/**
  * Hook pour déplacer un dossier vers un groupe
  */
 export function useMoveFolderToGroup(userId: string) {

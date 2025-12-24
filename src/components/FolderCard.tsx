@@ -8,7 +8,7 @@ import FolderSettingsModal from "./FolderSettingsModal";
 import ShareLinkModal from "./ShareLinkModal";
 import RenameFolderModal from "./RenameFolderModal";
 import { FolderService } from "@/domain/folders/services/FolderService";
-import { useDeleteFolders } from "@/domain/folders/hooks/useFolders";
+import { useDeleteFolders, useRenameFolder } from "@/domain/folders/hooks/useFolders";
 import { useAuthContext } from "@/contexts/AuthContext";
 
 interface FolderCardProps {
@@ -37,8 +37,9 @@ export default function FolderCard({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
-  // ✅ Mutation React Query pour la suppression
+  // ✅ Mutations React Query
   const deleteFolders = useDeleteFolders(session?.user?.id || '');
+  const renameFolder = useRenameFolder(session?.user?.id || '');
 
   const handleCardClick = () => {
     const folderSlug = slug || title.toLowerCase().replace(/\s+/g, "-");
@@ -63,9 +64,14 @@ export default function FolderCard({
     }
   };
 
-  const handleRename = (newName: string) => {
-    // TODO: Logique de renommage
-    console.log("Nouveau nom:", newName);
+  const handleRename = async (newName: string) => {
+    try {
+      await renameFolder.mutateAsync({ folderId: id, newName });
+      setIsRenameModalOpen(false);
+    } catch (error) {
+      console.error("Error renaming folder:", error);
+      alert("Erreur lors du renommage du dossier");
+    }
   };
 
   return (

@@ -177,6 +177,31 @@ export class FolderService {
   }
 
   /**
+   * Renomme un dossier
+   */
+  static async renameFolder(folderId: string, newName: string): Promise<Folder | null> {
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .update({ name: newName })
+        .eq('id', folderId)
+        .eq('is_system', false) // Empêche le renommage des dossiers système
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error renaming folder:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error renaming folder:', error);
+      return null;
+    }
+  }
+
+  /**
    * Supprime un ou plusieurs dossiers
    * Les liens seront automatiquement déplacés vers "Récents" par le trigger SQL
    */
