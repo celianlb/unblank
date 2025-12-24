@@ -55,9 +55,9 @@ export default function ImagePreviewModal({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 lg:top-10 lg:right-10 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-white rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center cursor-pointer z-10"
+          className="absolute top-8 right-8 hover:text-[#FF506F] transition-colors cursor-pointer z-10"
         >
-          <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-[21px] md:h-[21px] text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          <X className="w-8 h-8" strokeWidth={2} />
         </button>
 
         {/* Image preview - Takes more space on larger screens */}
