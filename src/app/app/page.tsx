@@ -57,48 +57,25 @@ export default function AppPage() {
 
   // ✅ Infinite scroll: charger plus au scroll
   useEffect(() => {
-    console.log('🔄 useEffect triggered:', {
-      hasElement: !!loadMoreElement,
-      hasNextPage,
-      isFetchingNextPage,
-      linksCount: userLinks.length
-    });
-
-    if (!loadMoreElement) {
-      console.log('❌ Pas d\'élément ref');
-      return;
-    }
-    if (!hasNextPage) {
-      console.log('❌ Pas de page suivante');
-      return;
-    }
-    if (isFetchingNextPage) {
-      console.log('⏳ Déjà en train de charger');
+    if (!loadMoreElement || !hasNextPage || isFetchingNextPage) {
       return;
     }
 
     const observer = new IntersectionObserver(
       (entries) => {
-        console.log('👁️ Observer callback:', {
-          isIntersecting: entries[0].isIntersecting,
-          intersectionRatio: entries[0].intersectionRatio
-        });
         if (entries[0].isIntersecting) {
-          console.log('🔍 Intersection détectée, chargement de la page suivante...');
           fetchNextPage();
         }
       },
       {
         threshold: 0.1,
-        rootMargin: '100px' // Déclenche 100px avant d'atteindre l'élément
+        rootMargin: '100px'
       }
     );
 
-    console.log('👀 Observer attaché, hasNextPage:', hasNextPage);
     observer.observe(loadMoreElement);
 
     return () => {
-      console.log('🧹 Observer détaché');
       observer.disconnect();
     };
   }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, userLinks.length]);
