@@ -173,10 +173,13 @@ export default function AppPage() {
                 <LinkCard
                   key={link.id}
                   id={link.id}
+                  imageUrl={link.screenshot_url || link.original_image_url || undefined}
                   link={link.url}
                   title={link.title || ''}
                   description={link.description || ''}
                   tags={link.tags?.map(t => t.name) || []}
+                  fileType={link.image_format || 'JPG'}
+                  dateAdded={LinkService.formatDateAdded(link.created_at)}
                   isSelectionMode={isSelectionMode}
                   onCheckChange={handleCheckChange}
                   onDelete={(id) => deleteLink.mutate(id)}
