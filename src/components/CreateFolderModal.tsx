@@ -28,7 +28,6 @@ export default function CreateFolderModal({ isOpen, onClose }: CreateFolderModal
       // ✅ Créer le dossier avec React Query (invalide automatiquement le cache)
       await createFolder.mutateAsync({
         name: folderName.trim(),
-        isGroup: false, // Dossier simple, pas un groupe
         parentFolderId: null,
       });
 

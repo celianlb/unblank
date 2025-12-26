@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import LinkFactory from '@/lib/links/linkFactory';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -39,15 +40,15 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { 
-      url, 
-      title, 
-      description, 
-      folderId, 
-      originalImageUrl, 
-      imageFormat, 
-      contentType, 
-      tags 
+    const {
+      url,
+      title,
+      description,
+      folderId,
+      originalImageUrl,
+      imageFormat,
+      contentType,
+      tags
     } = body;
 
     if (!url) {
@@ -57,51 +58,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create link
-    const { data: link, error: linkError } = await supabase
-      .from('links')
-      .insert({
-        user_id: user.id,
-        folder_id: folderId || null,
-        url,
-        title: title || null,
-        description: description || null,
-        original_image_url: originalImageUrl || null,
-        image_format: imageFormat || null,
-        content_type: contentType || null,
-        position: 0,
-      })
-      .select()
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
+    const linkService = LinkFactory.createLinkService(supabase);
 
-    if (linkError || !link) {
-      console.error('Error creating link:', linkError);
+    // Create link using the domain service
+    const link = await linkService.createLink(user.id, {
+      url,
+      title,
+      description,
+      folderId,
+      originalImageUrl,
+      imageFormat,
+      contentType,
+      tags
+    });
+
+    if (!link) {
       return NextResponse.json(
         { error: 'Failed to create link' },
         { status: 500 }
       );
     }
 
-    // Add tags if provided
-    if (tags && tags.length > 0) {
-      const tagInserts = tags.map((tag: string) => ({
-        link_id: link.id,
-        tag: tag.trim(),
-      }));
-
-      const { error: tagsError } = await supabase
-        .from('link_tags')
-        .insert(tagInserts);
-
-      if (tagsError) {
-        console.error('Error adding tags:', tagsError);
-        // Don't fail the request if tags fail, just log it
-      }
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      link 
+    return NextResponse.json({
+      success: true,
+      link
     });
   } catch (error) {
     console.error('Error in links API:', error);

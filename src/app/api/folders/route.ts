@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import FolderFactory from '@/lib/folders/folderFactory';
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,24 +38,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user's folders and groups using RPC functions (aligned with SaaS)
-    const [foldersResult, groupsResult] = await Promise.all([
-      supabase.rpc('get_user_folders_with_counts', { p_user_id: user.id }),
-      supabase.rpc('get_user_groups_with_counts', { p_user_id: user.id })
+    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
+    const folderService = FolderFactory.createFolderService(supabase);
+
+    // Fetch user's folders and groups using the domain service
+    const [folders, groups] = await Promise.all([
+      folderService.getUserFolders(user.id),
+      folderService.getUserGroups(user.id)
     ]);
-
-    if (foldersResult.error) {
-      console.error('Error fetching folders:', foldersResult.error);
-      throw foldersResult.error;
-    }
-
-    if (groupsResult.error) {
-      console.error('Error fetching groups:', groupsResult.error);
-      throw groupsResult.error;
-    }
-
-    const folders = foldersResult.data || [];
-    const groups = groupsResult.data || [];
 
     return NextResponse.json({
       folders,

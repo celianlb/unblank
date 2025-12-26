@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { LinkService } from '@/domain/links/services/LinkService';
+import LinkFactory from '@/lib/links/linkFactory';
 
 export async function PUT(
   request: NextRequest,
@@ -51,8 +51,9 @@ export async function PUT(
       );
     }
 
-    // Use LinkService to update tags (respects clean architecture)
-    const success = await LinkService.updateTags(supabase, linkId, user.id, tags);
+    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
+    const linkService = LinkFactory.createLinkService(supabase);
+    const success = await linkService.updateTags(linkId, user.id, tags);
 
     if (!success) {
       return NextResponse.json(
