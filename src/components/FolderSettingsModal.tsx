@@ -1,38 +1,68 @@
 'use client';
 
-import { X, Search, Copy } from 'lucide-react';
-import { useState } from 'react';
-import Image from 'next/image';
+import { X, Search, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+interface InvitedUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  permission: 'view' | 'edit';
+}
 
 interface FolderSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   folderName?: string;
-  shareUrl?: string;
 }
 
 export default function FolderSettingsModal({
   isOpen,
   onClose,
-  folderName = "Graphic tools",
-  shareUrl = "https://www.googlefont.com/"
+  folderName = "Graphic tools"
 }: FolderSettingsModalProps) {
-  const [selectedPermission, setSelectedPermission] = useState<'read' | 'edit'>('read');
   const [searchQuery, setSearchQuery] = useState('');
-  const [invitedUsers] = useState([
-    { name: 'Lise', avatar: '/avatars/lise.jpg' },
-    { name: 'Théo', avatar: '/avatars/theo.jpg' }
+  const [invitedUsers, setInvitedUsers] = useState<InvitedUser[]>([
+    { id: '1', name: 'Lise', email: 'lise@example.com', avatar: '/avatars/lise.jpg', permission: 'view' },
+    { id: '2', name: 'Théo', email: 'theo@example.com', avatar: '/avatars/theo.jpg', permission: 'edit' }
   ]);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenDropdownId(null);
+    };
+
+    if (openDropdownId) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdownId]);
 
   if (!isOpen) return null;
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+  const handleChangePermission = (userId: string, newPermission: 'view' | 'edit') => {
+    // TODO: API call to update permission
+    setInvitedUsers(invitedUsers.map(user =>
+      user.id === userId ? { ...user, permission: newPermission } : user
+    ));
+    setOpenDropdownId(null);
   };
 
-  const handleRemoveAccess = (userName: string) => {
-    // TODO: Logique pour retirer l'accès
-    console.log(`Retirer l'accès pour ${userName}`);
+  const handleRemoveAccess = (userId: string) => {
+    // TODO: API call to revoke access
+    setInvitedUsers(invitedUsers.filter(user => user.id !== userId));
+    setOpenDropdownId(null);
+  };
+
+  const toggleDropdown = (userId: string) => {
+    setOpenDropdownId(openDropdownId === userId ? null : userId);
+  };
+
+  const getPermissionLabel = (permission: 'view' | 'edit') => {
+    return permission === 'view' ? 'Lecture seule' : 'Lecture et édition';
   };
 
   return (
@@ -58,7 +88,7 @@ export default function FolderSettingsModal({
           </button>
 
           {/* Frame 61 */}
-          <div className="flex flex-col items-start gap-8 w-full">
+          <div className="flex flex-col items-start gap-6 w-full">
             {/* Title */}
             <h2
               className="text-[32px] leading-[90%] font-extrabold text-[#0D0D0D]"
@@ -67,59 +97,9 @@ export default function FolderSettingsModal({
               Paramètre du dossier
             </h2>
 
-            {/* Radio Buttons */}
-            <div className="flex flex-col items-start gap-2 w-full">
-              {/* Lecture seul */}
-              <div className="flex flex-row items-center gap-2 w-full">
-                <div
-                  onClick={() => setSelectedPermission('read')}
-                  className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                >
-                  <div className="relative w-[25px] h-[25px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                    {selectedPermission === 'read' && (
-                      <div className="w-[17px] h-[17px] bg-[#0D0D0D] rounded-full" />
-                    )}
-                  </div>
-                </div>
-                <span className="text-[21px] leading-[31px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                  Lecture seul
-                </span>
-              </div>
-
-              {/* Lecture et édition */}
-              <div className="flex flex-row items-center gap-2 w-full">
-                <div
-                  onClick={() => setSelectedPermission('edit')}
-                  className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                >
-                  <div className="relative w-[25px] h-[25px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                    {selectedPermission === 'edit' && (
-                      <div className="w-[17px] h-[17px] bg-[#0D0D0D] rounded-full" />
-                    )}
-                  </div>
-                </div>
-                <span className="text-[21px] leading-[31px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                  Lecture et édition
-                </span>
-              </div>
-            </div>
-
-            {/* Share Link */}
-            <div className="flex flex-row items-center justify-center px-2.5 gap-2.5 w-full h-[46px] bg-[#FEF8EE] border-2 border-black rounded-xl">
-              <span className="flex-1 text-lg leading-[26px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
-                {shareUrl}
-              </span>
-              <button
-                onClick={handleCopyLink}
-                className="flex-shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                <Copy className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
-              </button>
-            </div>
-
             {/* Liste d'invité Title */}
-            <h3 className="text-2xl leading-[90%] font-bold text-[#0D0D0D] font-[Heebo]">
-              Liste d&apos;invité
+            <h3 className="text-lg leading-[90%] font-bold text-[#0D0D0D] font-[Heebo]">
+              Personnes ayant accès ({invitedUsers.length})
             </h3>
 
             {/* Search Input */}
@@ -135,35 +115,90 @@ export default function FolderSettingsModal({
             </div>
 
             {/* Invited Users List */}
-            <div className="flex flex-col items-start gap-2 w-full">
-              {invitedUsers.map((user, index) => (
-                <div
-                  key={index}
-                  className="flex flex-row justify-between items-center w-full h-16"
-                >
-                  {/* User Info */}
-                  <div className="flex flex-row items-center gap-3">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-[3px] border-black bg-gray-200 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-gray-600">
-                        {user.name.charAt(0)}
-                      </span>
-                    </div>
-                    <span className="text-[21px] leading-[31px] font-medium text-[#0D0D0D] font-[Heebo]">
-                      {user.name}
-                    </span>
-                  </div>
-
-                  {/* Remove Access Button */}
-                  <button
-                    onClick={() => handleRemoveAccess(user.name)}
-                    className="flex flex-row items-center px-3 py-1.5 rounded-lg cursor-pointer hover:bg-red-50 transition-colors"
+            <div className="flex flex-col items-start gap-3 w-full min-h-[320px] max-h-[400px] overflow-y-auto">
+              {invitedUsers
+                .filter(user =>
+                  user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  user.email.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex flex-row justify-between items-center w-full min-h-[64px] p-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-[21px] leading-[31px] font-medium text-[#FF2F2F] font-[Heebo]">
-                      Désactiver l&apos;accès
-                    </span>
-                  </button>
+                    {/* User Info */}
+                    <div className="flex flex-col gap-1 flex-1">
+                      <div className="flex flex-row items-center gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border-[3px] border-black bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xl font-bold text-gray-600">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[18px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
+                            {user.name}
+                          </span>
+                          <span className="text-[14px] leading-[20px] font-normal text-[#A8A8A8] font-[Heebo]">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Permission Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDropdown(user.id);
+                        }}
+                        className="flex flex-row items-center gap-2 px-3 py-2 border-2 border-black rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                      >
+                        <span className="text-[16px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
+                          {getPermissionLabel(user.permission)}
+                        </span>
+                        <ChevronDown className="w-4 h-4 text-[#0D0D0D]" strokeWidth={2} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {openDropdownId === user.id && (
+                        <div className="absolute right-0 top-full mt-1 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-10 overflow-hidden">
+                          <button
+                            onClick={() => handleChangePermission(user.id, 'view')}
+                            className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors ${
+                              user.permission === 'view' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
+                            }`}
+                          >
+                            Lecture seule
+                          </button>
+                          <button
+                            onClick={() => handleChangePermission(user.id, 'edit')}
+                            className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors ${
+                              user.permission === 'edit' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
+                            }`}
+                          >
+                            Lecture et édition
+                          </button>
+                          <div className="border-t-2 border-black" />
+                          <button
+                            onClick={() => handleRemoveAccess(user.id)}
+                            className="w-full px-4 py-2.5 text-left text-[16px] font-medium text-[#FF2F2F] font-[Heebo] hover:bg-red-50 transition-colors"
+                          >
+                            Retirer l&apos;accès
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+              {invitedUsers.length === 0 && (
+                <div className="w-full py-8 text-center">
+                  <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
+                    Aucune personne n&apos;a accès à ce dossier
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
