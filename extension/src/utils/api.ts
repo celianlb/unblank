@@ -14,8 +14,15 @@ export interface Metadata {
 export interface Folder {
   id: string;
   name: string;
+  slug: string;
   user_id: string;
-  group_id?: string;
+  parent_folder_id: string | null;
+  is_group: boolean;
+  is_system: boolean;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  link_count?: number;
 }
 
 /**
@@ -43,9 +50,9 @@ export async function extractMetadata(url: string): Promise<Metadata | null> {
 }
 
 /**
- * Get user folders
+ * Get user folders and groups (aligned with SaaS implementation)
  */
-export async function getFolders(): Promise<Folder[]> {
+export async function getFolders(): Promise<{ folders: Folder[]; groups: Folder[]; all: Folder[] }> {
   try {
     const token = await getAccessToken();
     if (!token) {
@@ -61,14 +68,19 @@ export async function getFolders(): Promise<Folder[]> {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch folders');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || 'Failed to fetch folders');
     }
 
     const data = await response.json();
-    return data.folders || [];
+    return {
+      folders: data.folders || [],
+      groups: data.groups || [],
+      all: data.all || []
+    };
   } catch (error) {
     console.error('Error fetching folders:', error);
-    return [];
+    throw error; // Propagate error instead of silently returning empty array
   }
 }
 

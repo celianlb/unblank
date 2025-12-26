@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -37,19 +37,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user's folders
-    const { data: folders, error } = await supabase
-      .from('folders')
-      .select('id, name, user_id, group_id')
-      .eq('user_id', user.id)
-      .order('name');
+    // Fetch user's folders and groups using RPC functions (aligned with SaaS)
+    const [foldersResult, groupsResult] = await Promise.all([
+      supabase.rpc('get_user_folders_with_counts', { p_user_id: user.id }),
+      supabase.rpc('get_user_groups_with_counts', { p_user_id: user.id })
+    ]);
 
-    if (error) {
-      console.error('Error fetching folders:', error);
-      throw error;
+    if (foldersResult.error) {
+      console.error('Error fetching folders:', foldersResult.error);
+      throw foldersResult.error;
     }
 
-    return NextResponse.json({ folders: folders || [] });
+    if (groupsResult.error) {
+      console.error('Error fetching groups:', groupsResult.error);
+      throw groupsResult.error;
+    }
+
+    const folders = foldersResult.data || [];
+    const groups = groupsResult.data || [];
+
+    return NextResponse.json({
+      folders,
+      groups,
+      all: [...groups, ...folders] // Combined list for convenience
+    });
   } catch (error) {
     console.error('Error in folders API:', error);
     return NextResponse.json(

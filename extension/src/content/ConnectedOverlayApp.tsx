@@ -19,6 +19,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [metadata, setMetadata] = useState<Metadata | null>(null);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [folders, setFolders] = useState<FolderType[]>([]);
+  const [groups, setGroups] = useState<FolderType[]>([]);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -32,11 +33,12 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const loadFolders = async () => {
     setIsLoadingFolders(true);
     try {
-      const userFolders = await getFolders();
+      const { folders: userFolders, groups: userGroups, all } = await getFolders();
+      setGroups(userGroups);
       setFolders(userFolders);
-      // Set first folder as default if available
-      if (userFolders.length > 0 && !selectedDestination) {
-        setSelectedDestination(userFolders[0].id);
+      // Set first item from combined list as default if available
+      if (all.length > 0 && !selectedDestination) {
+        setSelectedDestination(all[0].id);
       }
     } catch (error) {
       console.error('Error loading folders:', error);
@@ -44,6 +46,9 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       setIsLoadingFolders(false);
     }
   };
+
+  // Combined list for dropdown (groups first, then folders)
+  const allDestinations = [...groups, ...folders];
 
   useLayoutEffect(() => {
     if (spanRef.current) {
@@ -495,10 +500,10 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             <div style={dropdownContentStyle}>
               <Folder size={24} color="#000000" strokeWidth={2} />
               <span>
-                {isLoadingFolders 
-                  ? "Chargement..." 
-                  : selectedDestination 
-                    ? folders.find(f => f.id === selectedDestination)?.name || "Sélectionner un dossier"
+                {isLoadingFolders
+                  ? "Chargement..."
+                  : selectedDestination
+                    ? allDestinations.find(f => f.id === selectedDestination)?.name || "Sélectionner un dossier"
                     : "Sélectionner un dossier"
                 }
               </span>
@@ -507,17 +512,17 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           </div>
           {isDropdownOpen && !isLoadingFolders && (
             <div style={dropdownMenuStyle}>
-              {folders.length === 0 ? (
+              {allDestinations.length === 0 ? (
                 <div style={{ ...dropdownItemStyle, cursor: "default" }}>
                   <span>Aucun dossier disponible</span>
                 </div>
               ) : (
-                folders.map((folder) => (
+                allDestinations.map((destination) => (
                   <div
-                    key={folder.id}
+                    key={destination.id}
                     style={dropdownItemStyle}
                     onClick={() => {
-                      setSelectedDestination(folder.id);
+                      setSelectedDestination(destination.id);
                       setIsDropdownOpen(false);
                     }}
                     onMouseEnter={(e) =>
@@ -528,7 +533,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
                     }
                   >
                     <Folder size={24} color="#000000" strokeWidth={2} />
-                    <span>{folder.name}</span>
+                    <span>{destination.name}</span>
                   </div>
                 ))
               )}
