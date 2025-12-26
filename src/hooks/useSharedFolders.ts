@@ -1,14 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/infra/db/supabase';
+import { Folder } from '@/domain/folders/models/Folder';
+
+interface SharedFoldersResponse {
+  folders: Folder[];
+  groups: Folder[];
+  all: Folder[];
+}
 
 /**
- * Hook to fetch folders shared with the current user
+ * Hook to fetch folders and groups shared with the current user
  */
 export function useSharedFolders(userId: string | null) {
-  return useQuery({
+  return useQuery<SharedFoldersResponse>({
     queryKey: ['shared-folders', userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId) return { folders: [], groups: [], all: [] };
 
       // Get auth token
       const { data: { session } } = await supabase.auth.getSession();

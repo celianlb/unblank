@@ -22,7 +22,11 @@ export default function AppPage() {
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
-  const { data: sharedFolders = [], isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id);
+  const { data: sharedData, isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id);
+
+  // Extraire les groupes et dossiers partagés
+  const sharedFolders = sharedData?.folders || [];
+  const sharedGroups = sharedData?.groups || [];
 
   // ✅ Infinite scroll avec pagination (12 liens par page)
   const {
@@ -204,6 +208,35 @@ export default function AppPage() {
           </section>
         ) : null}
 
+        {/* Section Groupes partagés */}
+        {loadingSharedFolders ? null : sharedGroups.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
+            {/* Titre */}
+            <h1
+              className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+            >
+              Groupes partagés ({sharedGroups.length})
+            </h1>
+
+            {/* Contenu des cartes */}
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {sharedGroups.map((group) => (
+                <FolderGroupCard
+                  key={group.id}
+                  id={group.id}
+                  title={group.name}
+                  slug={group.slug}
+                  itemCount={group.link_count || 0}
+                  lastUpdate={formatLastUpdate(group.updated_at)}
+                  images={group.preview_images || []}
+                  isShared={true}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {/* Section Dossiers partagés */}
         {loadingSharedFolders ? null : sharedFolders.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
@@ -227,6 +260,7 @@ export default function AppPage() {
                   lastUpdate={formatLastUpdate(folder.updated_at)}
                   isSystem={false}
                   previewImages={folder.preview_images}
+                  isShared={true}
                 />
               ))}
             </div>

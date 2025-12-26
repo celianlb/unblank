@@ -36,10 +36,32 @@ export async function GET(request: NextRequest) {
 
     // Get folders shared with this user
     console.log('[SHARED FOLDERS] Fetching for email:', user.email);
-    const sharedFolders = await shareService.getSharedFolders(user.email!);
-    console.log('[SHARED FOLDERS] Found:', sharedFolders.length, 'folders');
+    const allShared = await shareService.getSharedFolders(user.email!);
+    console.log('[SHARED FOLDERS] Found:', allShared.length, 'total shared items');
 
-    return NextResponse.json(sharedFolders);
+    // Séparer les groupes et les dossiers
+    const sharedGroups = allShared.filter(item => item.is_group === true);
+
+    // Pour les dossiers partagés, exclure ceux dont le groupe parent est AUSSI partagé
+    // (ils seront accessibles via le groupe)
+    const sharedGroupIds = new Set(sharedGroups.map(g => g.id));
+    const sharedFolders = allShared.filter(item => {
+      if (item.is_group) return false; // Pas un dossier
+
+      // Si le dossier n'a pas de parent, toujours l'inclure
+      if (!item.parent_folder_id) return true;
+
+      // Si le dossier a un parent, l'inclure SEULEMENT si le parent n'est PAS partagé
+      return !sharedGroupIds.has(item.parent_folder_id);
+    });
+
+    console.log('[SHARED FOLDERS] Groups:', sharedGroups.length, 'Folders:', sharedFolders.length);
+
+    return NextResponse.json({
+      folders: sharedFolders,
+      groups: sharedGroups,
+      all: allShared
+    });
   } catch (error) {
     console.error('Error fetching shared folders:', error);
     return NextResponse.json(

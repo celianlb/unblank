@@ -28,7 +28,8 @@ export class SupabaseFolderRepository implements FolderRepository {
   }
 
   async getGroupBySlug(userId: string, slug: string): Promise<Folder | null> {
-    const { data, error } = await this.supabase
+    // D'abord essayer de récupérer comme groupe personnel
+    const { data: ownGroup, error: ownError } = await this.supabase
       .from('folders')
       .select('*')
       .eq('user_id', userId)
@@ -36,14 +37,33 @@ export class SupabaseFolderRepository implements FolderRepository {
       .eq('slug', slug)
       .maybeSingle();
 
-    if (error || !data) {
-      if (error?.code !== 'PGRST116') { // Ignore "not found" errors
-        console.error('Error fetching group:', error);
-      }
+    if (ownGroup) {
+      return ownGroup;
+    }
+
+    // Si non trouvé, vérifier si c'est un groupe partagé
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user?.email) {
       return null;
     }
 
-    return data;
+    const { data: sharedGroup, error: sharedError } = await this.supabase
+      .from('folders')
+      .select(`
+        *,
+        shares!inner(*)
+      `)
+      .eq('is_group', true)
+      .eq('slug', slug)
+      .eq('shares.shared_with_email', user.email)
+      .eq('shares.is_active', true)
+      .maybeSingle();
+
+    if (sharedError && sharedError.code !== 'PGRST116') {
+      console.error('Error fetching shared group:', sharedError);
+    }
+
+    return sharedGroup || null;
   }
 
   async getUserFolders(userId: string): Promise<Folder[]> {
