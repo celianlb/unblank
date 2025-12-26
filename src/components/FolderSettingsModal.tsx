@@ -189,12 +189,17 @@ export default function FolderSettingsModal({
                                 <span className="text-[16px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
                                   {getPermissionLabel(share.permission)}
                                 </span>
-                                <ChevronDown className="w-4 h-4 text-[#0D0D0D]" strokeWidth={2} />
+                                <ChevronDown
+                                  className={`w-4 h-4 text-[#0D0D0D] transition-transform duration-200 ${
+                                    openDropdownId === share.id ? 'rotate-180' : ''
+                                  }`}
+                                  strokeWidth={2}
+                                />
                               </button>
 
                               {/* Dropdown Menu */}
                               {openDropdownId === share.id && (
-                                <div className="absolute right-0 top-full mt-1 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-10 overflow-hidden">
+                                <div className="absolute right-0 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-10 overflow-hidden" style={{ top: 'calc(100% + 8px)' }}>
                                   <button
                                     onClick={() => handleChangePermission(share.id, 'view')}
                                     className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${
