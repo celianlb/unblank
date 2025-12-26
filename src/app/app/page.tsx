@@ -87,6 +87,10 @@ export default function AppPage() {
 
     const handleClickOutsideCards = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      // Ne pas désélectionner si on clique sur le header ou dans une modale
+      if (target.closest('header') || target.closest('[role="dialog"]') || target.closest('.fixed')) {
+        return;
+      }
       // Si on ne clique pas sur une carte (LinkCard), désélectionner
       if (!target.closest('.group\\/card')) {
         setSelectedLinkIds(new Set());

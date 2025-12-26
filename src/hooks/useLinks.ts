@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import type { Link, CreateLinkData } from '@/domain/links/models';
 import LinkFactory from '@/lib/links/linkFactory';
+import { supabase } from '@/infra/db/supabase';
 
 // ✅ CLEAN ARCHITECTURE: Utilisation du singleton via la factory
 const linkService = LinkFactory.getLinkService();
@@ -66,7 +67,31 @@ export function useDeleteLinks(folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (linkIds: string[]) => linkService.deleteLinks(linkIds),
+    mutationFn: async (linkIds: string[]) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch('/api/links', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ linkIds }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete links');
+      }
+
+      return response.json();
+    },
 
     onSuccess: () => {
       // Invalider les liens du dossier

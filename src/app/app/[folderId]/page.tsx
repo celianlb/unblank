@@ -9,7 +9,7 @@ import DetailedLinkCard from '@/components/DetailedLinkCard';
 import ImageCard from '@/components/ImageCard';
 import { getContentType } from '@/utils/linkUtils';
 import { useFolderBySlug } from '@/hooks/useFolders';
-import { useFolderLinks } from '@/hooks/useLinks';
+import { useFolderLinks, useDeleteLinks, useDeleteLink } from '@/hooks/useLinks';
 import { formatDateAdded } from '@/utils/formatters';
 
 export default function FolderPage() {
@@ -17,13 +17,19 @@ export default function FolderPage() {
   const router = useRouter();
   const { session, loading } = useAuthContext();
   const folderId = params.folderId as string;
-  const [selectedCount, setSelectedCount] = useState(0);
+  const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set());
 
   // ✅ Utilisation de React Query
   const { data: folder, isLoading: loadingFolder } = useFolderBySlug(session?.user?.id, folderId);
   const { data: links = [], isLoading: loadingLinks } = useFolderLinks(folder?.id);
 
+  // Mutations pour la suppression
+  const deleteLinks = useDeleteLinks(folder?.id);
+  const deleteLink = useDeleteLink(session?.user?.id, folder?.id);
+
   const loadingData = loadingFolder || loadingLinks;
+  const selectedCount = selectedLinkIds.size;
+  const isSelectionMode = selectedCount > 0;
 
   useEffect(() => {
     if (!loading && !session) {
@@ -31,16 +37,59 @@ export default function FolderPage() {
     }
   }, [session, loading, router]);
 
-  const handleCheckChange = (checked: boolean) => {
-    setSelectedCount(prev => checked ? prev + 1 : prev - 1);
+  // ✅ Désélectionner en cliquant hors des cartes
+  useEffect(() => {
+    if (!isSelectionMode) return;
+
+    const handleClickOutsideCards = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Ne pas désélectionner si on clique sur le header ou dans une modale
+      if (target.closest('header') || target.closest('[role="dialog"]') || target.closest('.fixed')) {
+        return;
+      }
+      // Si on ne clique pas sur une carte, désélectionner
+      if (!target.closest('[class*="border-[3px]"]') && !target.closest('[class*="border-3"]')) {
+        setSelectedLinkIds(new Set());
+      }
+    };
+
+    document.addEventListener('click', handleClickOutsideCards);
+    return () => {
+      document.removeEventListener('click', handleClickOutsideCards);
+    };
+  }, [isSelectionMode]);
+
+  const handleCheckChange = (linkId: string, checked: boolean) => {
+    setSelectedLinkIds(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(linkId);
+      } else {
+        newSet.delete(linkId);
+      }
+      return newSet;
+    });
   };
 
-  const isSelectionMode = selectedCount > 0;
+  const handleDeleteSingle = async (linkId: string) => {
+    try {
+      await deleteLink.mutateAsync(linkId);
+    } catch (error) {
+      console.error('Error deleting link:', error);
+      alert('Erreur lors de la suppression du lien');
+    }
+  };
 
-  const handleDeleteSelected = () => {
-    // TODO: Implement delete logic
-    console.log('Deleting', selectedCount, 'items');
-    setSelectedCount(0);
+  const handleDeleteSelected = async () => {
+    if (selectedLinkIds.size === 0) return;
+
+    try {
+      await deleteLinks.mutateAsync(Array.from(selectedLinkIds));
+      setSelectedLinkIds(new Set());
+    } catch (error) {
+      console.error('Error deleting links:', error);
+      alert('Erreur lors de la suppression des liens');
+    }
   };
 
   // Séparer les liens en images et liens classiques
@@ -97,6 +146,7 @@ export default function FolderPage() {
               {imageLinks.map((link) => (
                 <ImageCard
                   key={link.id}
+                  linkId={link.id}
                   imageUrl={link.original_image_url || link.screenshot_url || ''}
                   link={link.url}
                   fileType={link.image_format?.toUpperCase() || 'IMG'}
@@ -107,6 +157,7 @@ export default function FolderPage() {
                   tags={link.tags?.map(t => t.name) || []}
                   isSelectionMode={isSelectionMode}
                   onCheckChange={handleCheckChange}
+                  onDelete={handleDeleteSingle}
                 />
               ))}
             </div>
@@ -135,11 +186,15 @@ export default function FolderPage() {
                 return (
                   <DetailedLinkCard
                     key={link.id}
+                    linkId={link.id}
                     siteName={siteName}
                     siteUrl={siteUrl}
                     description={link.description || ''}
                     link={link.url}
                     tags={link.tags?.map(t => t.name) || []}
+                    isSelectionMode={isSelectionMode}
+                    onCheckChange={handleCheckChange}
+                    onDelete={handleDeleteSingle}
                   />
                 );
               })}

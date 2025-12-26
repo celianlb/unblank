@@ -21,8 +21,14 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const handleDeleteConfirm = () => {
-    onDeleteSelected?.();
+  const handleDeleteConfirm = async () => {
+    if (onDeleteSelected) {
+      try {
+        await onDeleteSelected();
+      } catch (error) {
+        console.error('Error calling onDeleteSelected:', error);
+      }
+    }
     setIsDeleteModalOpen(false);
   };
 

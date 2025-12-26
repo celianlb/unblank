@@ -6,6 +6,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import ImagePreviewModal from './ImagePreviewModal';
 
 interface ImageCardProps {
+  linkId: string;
   imageUrl: string;
   link: string;
   fileType: string;
@@ -15,10 +16,12 @@ interface ImageCardProps {
   folder: string;
   tags?: string[];
   isSelectionMode?: boolean;
-  onCheckChange?: (checked: boolean) => void;
+  onCheckChange?: (linkId: string, checked: boolean) => void;
+  onDelete?: (linkId: string) => void;
 }
 
 export default function ImageCard({
+  linkId,
   imageUrl,
   link,
   fileType,
@@ -28,7 +31,8 @@ export default function ImageCard({
   folder,
   tags = [],
   isSelectionMode = false,
-  onCheckChange
+  onCheckChange,
+  onDelete
 }: ImageCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -57,15 +61,14 @@ export default function ImageCard({
   const handleCheckChange = () => {
     const newValue = !isChecked;
     setIsChecked(newValue);
-    onCheckChange?.(newValue);
+    onCheckChange?.(linkId, newValue);
   };
 
   // Show hover elements if in selection mode or checked
   const showHoverElements = isSelectionMode || isChecked;
 
   const handleDelete = () => {
-    // TODO: Logique de suppression
-    console.log('Suppression confirmée');
+    onDelete?.(linkId);
     setIsDeleteModalOpen(false);
   };
 

@@ -6,30 +6,47 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditLinkModal from './EditLinkModal';
 
 interface DetailedLinkCardProps {
+  linkId: string;
   siteName: string;
   siteUrl: string;
   description: string;
   faviconUrl?: string;
   link: string;
   tags?: string[];
+  isSelectionMode?: boolean;
+  onCheckChange?: (linkId: string, checked: boolean) => void;
+  onDelete?: (linkId: string) => void;
 }
 
 export default function DetailedLinkCard({
+  linkId,
   siteName,
   siteUrl,
   description,
   faviconUrl,
   link,
-  tags = []
+  tags = [],
+  isSelectionMode = false,
+  onCheckChange,
+  onDelete
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
 
   const handleDelete = () => {
-    // TODO: Logique de suppression
-    console.log('Suppression confirmée');
+    onDelete?.(linkId);
     setIsDeleteModalOpen(false);
   };
+
+  const handleCheckChange = () => {
+    const newValue = !isChecked;
+    setIsChecked(newValue);
+    onCheckChange?.(linkId, newValue);
+  };
+
+  // Show checkbox if in selection mode or checked
+  const showCheckbox = isSelectionMode || isChecked;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -56,7 +73,41 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border">
+      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative">
+        {/* Checkbox - shown when in selection mode */}
+        {showCheckbox && (
+          <div className="absolute left-3 top-3 z-10">
+            <div
+              onClick={handleCheckChange}
+              className={`relative w-7 h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-[3px] border-[#0D0D0D] rounded-lg flex items-center justify-center cursor-pointer transition-colors`}
+            >
+              {isChecked && (
+                <svg
+                  className="absolute w-[28px] h-[22px] left-[2px] top-px z-0"
+                  viewBox="0 0 25 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 10L9 17L23 3"
+                    stroke="#FEF8EE"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M2 10L9 17L23 3"
+                    stroke="#0D0D0D"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header with favicon and site info - Frame 130 */}
         <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
           {/* Favicon */}
