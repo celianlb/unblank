@@ -17,7 +17,7 @@ export default function GroupPage() {
 
   // ✅ Utilisation de React Query
   const { data: group, isLoading: loadingGroup } = useGroupBySlug(session?.user?.id, slug);
-  const { data: folders = [], isLoading: loadingFolders } = useGroupFolders(group?.id);
+  const { data: folders = [], isLoading: loadingFolders } = useGroupFolders(session?.user?.id, group?.id);
 
   const loadingData = loadingGroup || loadingFolders;
 

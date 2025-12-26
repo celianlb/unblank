@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { LinkService, type Link } from '../services/LinkService';
+import { supabase } from '@/infra/db/supabase';
 
 /**
  * Hook pour récupérer les liens d'un dossier
@@ -7,7 +8,7 @@ import { LinkService, type Link } from '../services/LinkService';
 export function useFolderLinks(folderId: string | undefined) {
   return useQuery({
     queryKey: ['links', folderId],
-    queryFn: () => LinkService.getFolderLinks(folderId!),
+    queryFn: () => LinkService.getFolderLinks(supabase, folderId!),
     enabled: !!folderId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -20,7 +21,7 @@ export function useFolderLinks(folderId: string | undefined) {
 export function useUserLinks(userId: string | undefined, limit?: number) {
   return useQuery({
     queryKey: ['links', 'user', userId, limit],
-    queryFn: () => LinkService.getUserLinks(userId!, limit),
+    queryFn: () => LinkService.getUserLinks(supabase, userId!, limit),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
@@ -36,7 +37,7 @@ export function useInfiniteUserLinks(userId: string | undefined, pageSize: numbe
     queryFn: async ({ pageParam = 0 }) => {
       const offset = pageParam * pageSize;
       // On demande pageSize + 1 pour savoir s'il y a une page suivante
-      const links = await LinkService.getUserLinks(userId!, pageSize + 1, offset);
+      const links = await LinkService.getUserLinks(supabase, userId!, pageSize + 1, offset);
 
       // S'il y a plus de pageSize résultats, il y a une page suivante
       const hasMore = links.length > pageSize;
@@ -62,7 +63,7 @@ export function useDeleteLinks(folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (linkIds: string[]) => LinkService.deleteLinks(linkIds),
+    mutationFn: (linkIds: string[]) => LinkService.deleteLinks(supabase, linkIds),
 
     onSuccess: () => {
       // Invalider les liens du dossier
@@ -89,7 +90,7 @@ export function useDeleteLink(userId?: string, folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (linkId: string) => LinkService.deleteLink(linkId),
+    mutationFn: (linkId: string) => LinkService.deleteLink(supabase, linkId),
 
     onSuccess: () => {
       // Invalider les liens du dossier
@@ -125,7 +126,7 @@ export function useCreateLink(userId: string, folderId?: string) {
       imageFormat?: string;
       contentType?: string;
       tags?: string[];
-    }) => LinkService.createLink(userId, data),
+    }) => LinkService.createLink(supabase, userId, data),
 
     onSuccess: (newLink) => {
       if (!newLink) return;

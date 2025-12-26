@@ -1,5 +1,3 @@
-import { supabase } from '@/infra/db/supabase';
-
 export interface Folder {
   id: string;
   name: string;
@@ -30,9 +28,10 @@ export class FolderService {
   /**
    * Récupère un dossier par son slug (nom normalisé)
    * ✅ OPTIMISÉ : Utilise une fonction SQL pour 1 seule requête au lieu de 2
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getFolderBySlug(userId: string, slug: string): Promise<Folder | null> {
-    const { data, error } = await supabase
+  static async getFolderBySlug(supabaseClient: any, userId: string, slug: string): Promise<Folder | null> {
+    const { data, error } = await supabaseClient
       .rpc('get_folder_by_slug_with_count', {
         p_user_id: userId,
         p_slug: slug
@@ -51,16 +50,17 @@ export class FolderService {
 
   /**
    * Récupère un groupe par son slug
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getGroupBySlug(userId: string, slug: string): Promise<Folder | null> {
+  static async getGroupBySlug(supabaseClient: any, userId: string, slug: string): Promise<Folder | null> {
     // Requête optimisée : utilise la colonne slug avec index
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('folders')
       .select('*')
       .eq('user_id', userId)
       .eq('is_group', true)
       .eq('slug', slug)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       if (error?.code !== 'PGRST116') { // Ignore "not found" errors
@@ -75,9 +75,10 @@ export class FolderService {
   /**
    * Récupère tous les dossiers d'un utilisateur (non-groupes)
    * ✅ OPTIMISÉ : 1 seule requête au lieu de N+1 grâce à la fonction SQL
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getUserFolders(userId: string): Promise<Folder[]> {
-    const { data, error } = await supabase
+  static async getUserFolders(supabaseClient: any, userId: string): Promise<Folder[]> {
+    const { data, error } = await supabaseClient
       .rpc('get_user_folders_with_counts', { p_user_id: userId });
 
     if (error) {
@@ -91,9 +92,10 @@ export class FolderService {
   /**
    * Récupère tous les groupes de dossiers d'un utilisateur
    * ✅ OPTIMISÉ : 1 seule requête au lieu de N×2 grâce à la fonction SQL
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getUserGroups(userId: string): Promise<Folder[]> {
-    const { data, error } = await supabase
+  static async getUserGroups(supabaseClient: any, userId: string): Promise<Folder[]> {
+    const { data, error } = await supabaseClient
       .rpc('get_user_groups_with_counts', { p_user_id: userId });
 
     if (error) {
@@ -107,9 +109,10 @@ export class FolderService {
   /**
    * Récupère les dossiers d'un groupe spécifique
    * ✅ OPTIMISÉ : 1 seule requête au lieu de N+1 grâce à la fonction SQL
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getGroupFolders(groupId: string): Promise<Folder[]> {
-    const { data, error } = await supabase
+  static async getGroupFolders(supabaseClient: any, userId: string, groupId: string): Promise<Folder[]> {
+    const { data, error } = await supabaseClient
       .rpc('get_group_folders_with_counts', { p_group_id: groupId });
 
     if (error) {
@@ -122,21 +125,22 @@ export class FolderService {
 
   /**
    * Crée un nouveau dossier
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async createFolder(userId: string, name: string, isGroup: boolean = false, parentFolderId: string | null = null): Promise<Folder | null> {
+  static async createFolder(supabaseClient: any, userId: string, name: string, parentFolderId?: string | null): Promise<Folder | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('folders')
         .insert({
           user_id: userId,
           name: name,
-          is_group: isGroup,
+          is_group: false,
           parent_folder_id: parentFolderId,
           position: 0
           // Le slug sera auto-généré par le trigger SQL
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error creating folder:', error);
@@ -155,10 +159,11 @@ export class FolderService {
 
   /**
    * Déplace un dossier dans un groupe
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async moveFolderToGroup(folderId: string, groupId: string): Promise<boolean> {
+  static async moveFolderToGroup(supabaseClient: any, folderId: string, groupId: string | null): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('folders')
         .update({ parent_folder_id: groupId })
         .eq('id', folderId)
@@ -178,16 +183,17 @@ export class FolderService {
 
   /**
    * Renomme un dossier
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async renameFolder(folderId: string, newName: string): Promise<Folder | null> {
+  static async renameFolder(supabaseClient: any, folderId: string, newName: string): Promise<Folder | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('folders')
         .update({ name: newName })
         .eq('id', folderId)
         .eq('is_system', false) // Empêche le renommage des dossiers système
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error renaming folder:', error);
@@ -204,10 +210,11 @@ export class FolderService {
   /**
    * Supprime un ou plusieurs dossiers
    * Les liens seront automatiquement déplacés vers "Récents" par le trigger SQL
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async deleteFolders(folderIds: string[]): Promise<boolean> {
+  static async deleteFolders(supabaseClient: any, folderIds: string[]): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('folders')
         .delete()
         .in('id', folderIds)

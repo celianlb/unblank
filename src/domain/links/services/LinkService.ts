@@ -1,5 +1,3 @@
-import { supabase } from '@/infra/db/supabase';
-
 export interface Link {
   id: string;
   user_id: string;
@@ -27,9 +25,10 @@ export interface Tag {
 export class LinkService {
   /**
    * Récupère tous les liens d'un dossier spécifique
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getFolderLinks(folderId: string): Promise<Link[]> {
-    const { data, error } = await supabase
+  static async getFolderLinks(supabaseClient: any, folderId: string): Promise<Link[]> {
+    const { data, error } = await supabaseClient
       .from('links')
       .select(`
         *,
@@ -63,9 +62,10 @@ export class LinkService {
 
   /**
    * Récupère tous les liens d'un utilisateur (tous dossiers confondus)
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async getUserLinks(userId: string, limit?: number, offset?: number): Promise<Link[]> {
-    let query = supabase
+  static async getUserLinks(supabaseClient: any, userId: string, limit?: number, offset?: number): Promise<Link[]> {
+    let query = supabaseClient
       .from('links')
       .select(`
         *,
@@ -155,10 +155,11 @@ export class LinkService {
 
   /**
    * Supprime un seul lien
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async deleteLink(linkId: string): Promise<boolean> {
+  static async deleteLink(supabaseClient: any, linkId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('links')
         .delete()
         .eq('id', linkId);
@@ -177,10 +178,11 @@ export class LinkService {
 
   /**
    * Supprime plusieurs liens
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
-  static async deleteLinks(linkIds: string[]): Promise<boolean> {
+  static async deleteLinks(supabaseClient: any, linkIds: string[]): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('links')
         .delete()
         .in('id', linkIds);
@@ -199,8 +201,10 @@ export class LinkService {
 
   /**
    * Crée un nouveau lien
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
    */
   static async createLink(
+    supabaseClient: any,
     userId: string,
     data: {
       url: string;
@@ -215,7 +219,7 @@ export class LinkService {
   ): Promise<Link | null> {
     try {
       // 1. Créer le lien
-      const { data: link, error: linkError } = await supabase
+      const { data: link, error: linkError } = await supabaseClient
         .from('links')
         .insert({
           user_id: userId,
@@ -240,12 +244,12 @@ export class LinkService {
       if (data.tags && data.tags.length > 0) {
         for (const tagName of data.tags) {
           // Vérifier si le tag existe déjà pour cet utilisateur
-          let { data: existingTag } = await supabase
+          let { data: existingTag } = await supabaseClient
             .from('tags')
             .select('id')
             .eq('user_id', userId)
             .eq('name', tagName)
-            .single();
+            .maybeSingle();
 
           let tagId: string;
 
@@ -253,7 +257,7 @@ export class LinkService {
             tagId = existingTag.id;
           } else {
             // Créer le tag
-            const { data: newTag, error: tagError } = await supabase
+            const { data: newTag, error: tagError } = await supabaseClient
               .from('tags')
               .insert({
                 user_id: userId,
@@ -271,7 +275,7 @@ export class LinkService {
           }
 
           // Associer le tag au lien
-          await supabase.from('link_tags').insert({
+          await supabaseClient.from('link_tags').insert({
             link_id: link.id,
             tag_id: tagId,
             is_auto_generated: false,
@@ -280,7 +284,7 @@ export class LinkService {
       }
 
       // 3. Récupérer le lien complet avec les tags
-      const { data: completeLink } = await supabase
+      const { data: completeLink } = await supabaseClient
         .from('links')
         .select(`
           *,

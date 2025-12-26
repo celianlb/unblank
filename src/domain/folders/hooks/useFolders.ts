@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FolderService, type Folder } from '../services/FolderService';
+import { supabase } from '@/infra/db/supabase';
 
 /**
  * Hook pour récupérer tous les dossiers d'un utilisateur
@@ -7,7 +8,7 @@ import { FolderService, type Folder } from '../services/FolderService';
 export function useFolders(userId: string | undefined) {
   return useQuery({
     queryKey: ['folders', userId],
-    queryFn: () => FolderService.getUserFolders(userId!),
+    queryFn: () => FolderService.getUserFolders(supabase, userId!),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -19,7 +20,7 @@ export function useFolders(userId: string | undefined) {
 export function useGroups(userId: string | undefined) {
   return useQuery({
     queryKey: ['groups', userId],
-    queryFn: () => FolderService.getUserGroups(userId!),
+    queryFn: () => FolderService.getUserGroups(supabase, userId!),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
@@ -31,7 +32,7 @@ export function useGroups(userId: string | undefined) {
 export function useFolderBySlug(userId: string | undefined, slug: string | undefined) {
   return useQuery({
     queryKey: ['folder', userId, slug],
-    queryFn: () => FolderService.getFolderBySlug(userId!, slug!),
+    queryFn: () => FolderService.getFolderBySlug(supabase, userId!, slug!),
     enabled: !!userId && !!slug,
     staleTime: 5 * 60 * 1000,
   });
@@ -43,7 +44,7 @@ export function useFolderBySlug(userId: string | undefined, slug: string | undef
 export function useGroupBySlug(userId: string | undefined, slug: string | undefined) {
   return useQuery({
     queryKey: ['group', userId, slug],
-    queryFn: () => FolderService.getGroupBySlug(userId!, slug!),
+    queryFn: () => FolderService.getGroupBySlug(supabase, userId!, slug!),
     enabled: !!userId && !!slug,
     staleTime: 5 * 60 * 1000,
   });
@@ -52,11 +53,11 @@ export function useGroupBySlug(userId: string | undefined, slug: string | undefi
 /**
  * Hook pour récupérer les sous-dossiers d'un groupe
  */
-export function useGroupFolders(groupId: string | undefined) {
+export function useGroupFolders(userId: string | undefined, groupId: string | undefined) {
   return useQuery({
     queryKey: ['group-folders', groupId],
-    queryFn: () => FolderService.getGroupFolders(groupId!),
-    enabled: !!groupId,
+    queryFn: () => FolderService.getGroupFolders(supabase, userId!, groupId!),
+    enabled: !!userId && !!groupId,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -69,8 +70,8 @@ export function useCreateFolder(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string; isGroup: boolean; parentFolderId?: string | null }) =>
-      FolderService.createFolder(userId, data.name, data.isGroup, data.parentFolderId),
+    mutationFn: (data: { name: string; parentFolderId?: string | null }) =>
+      FolderService.createFolder(supabase, userId, data.name, data.parentFolderId),
 
     onSuccess: (newFolder, variables) => {
       // Invalider les listes concernées
@@ -95,7 +96,7 @@ export function useDeleteFolders(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (folderIds: string[]) => FolderService.deleteFolders(folderIds),
+    mutationFn: (folderIds: string[]) => FolderService.deleteFolders(supabase, folderIds),
 
     onSuccess: () => {
       // Invalider TOUTES les queries de dossiers (car les liens sont déplacés vers Récents)
@@ -116,7 +117,7 @@ export function useRenameFolder(userId: string) {
 
   return useMutation({
     mutationFn: ({ folderId, newName }: { folderId: string; newName: string }) =>
-      FolderService.renameFolder(folderId, newName),
+      FolderService.renameFolder(supabase, folderId, newName),
 
     onSuccess: () => {
       // Invalider toutes les queries de dossiers et groupes
@@ -137,7 +138,7 @@ export function useMoveFolderToGroup(userId: string) {
 
   return useMutation({
     mutationFn: ({ folderId, groupId }: { folderId: string; groupId: string }) =>
-      FolderService.moveFolderToGroup(folderId, groupId),
+      FolderService.moveFolderToGroup(supabase, folderId, groupId),
 
     onSuccess: (_, variables) => {
       // Invalider les listes de dossiers et le groupe concerné
