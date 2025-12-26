@@ -158,9 +158,9 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
               </button>
             </div>
 
-            {/* Nom du dossier */}
+            {/* Nom du groupe */}
             <div className="flex flex-col gap-2 w-full">
-              <label className="text-base font-medium text-black font-[Heebo]">Nom du dossier</label>
+              <label className="text-base font-medium text-black font-[Heebo]">Nom du groupe</label>
               <input
                 type="text"
                 placeholder="Nom"
