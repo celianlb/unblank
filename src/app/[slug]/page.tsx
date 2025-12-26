@@ -31,9 +31,7 @@ export default function GroupPage() {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header />
-        <main className="w-full px-[64px] py-[40px] flex items-center justify-center">
-          <p className="text-gray-500">Chargement...</p>
-        </main>
+        <main className="w-full px-[64px] py-[40px]" />
       </div>
     );
   }
@@ -51,11 +49,7 @@ export default function GroupPage() {
           <div className="flex items-center justify-center py-16">
             <p className="text-gray-500">Groupe introuvable</p>
           </div>
-        ) : loadingFolders ? (
-          <div className="flex items-center justify-center py-16">
-            <p className="text-gray-500">Chargement des dossiers...</p>
-          </div>
-        ) : folders.length > 0 ? (
+        ) : loadingFolders ? null : folders.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1

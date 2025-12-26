@@ -135,9 +135,7 @@ export default function AppPage() {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} />
-        <main className="w-full px-[22px] py-[22px] flex items-center justify-center">
-          <p className="text-gray-500">Chargement...</p>
-        </main>
+        <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
   }
@@ -148,11 +146,7 @@ export default function AppPage() {
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
-        {loadingGroups ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-gray-500">Chargement des groupes...</p>
-          </div>
-        ) : groups.length > 0 ? (
+        {loadingGroups ? null : groups.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
@@ -180,11 +174,7 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Dossiers */}
-        {loadingFolders ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-gray-500">Chargement des dossiers...</p>
-          </div>
-        ) : sortedFolders.length > 0 ? (
+        {loadingFolders ? null : sortedFolders.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
@@ -213,11 +203,7 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Liens récents */}
-        {loadingLinks ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-gray-500">Chargement des liens...</p>
-          </div>
-        ) : userLinks.length > 0 ? (
+        {loadingLinks ? null : userLinks.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
@@ -250,14 +236,7 @@ export default function AppPage() {
 
             {/* Infinite scroll trigger */}
             {hasNextPage && (
-              <div ref={setLoadMoreElement} className="w-full flex items-center justify-center py-8 min-h-[100px]">
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 border-3 border-[#FF506F] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-500">Chargement...</p>
-                  </div>
-                ) : null}
-              </div>
+              <div ref={setLoadMoreElement} className="w-full flex items-center justify-center py-8 min-h-[100px]" />
             )}
           </section>
         ) : null}

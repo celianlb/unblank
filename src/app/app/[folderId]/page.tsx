@@ -100,9 +100,7 @@ export default function FolderPage() {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} />
-        <main className="w-full px-[64px] py-[40px] flex items-center justify-center">
-          <p className="text-gray-500">Chargement...</p>
-        </main>
+        <main className="w-full px-[64px] py-[40px]" />
       </div>
     );
   }
@@ -118,12 +116,6 @@ export default function FolderPage() {
         {!folder && !loadingData && (
           <div className="flex items-center justify-center py-16">
             <p className="text-gray-500">Dossier introuvable</p>
-          </div>
-        )}
-
-        {loadingData && (
-          <div className="flex items-center justify-center py-16">
-            <p className="text-gray-500">Chargement...</p>
           </div>
         )}
 
