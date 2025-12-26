@@ -141,6 +141,7 @@ export default function FolderSettingsModal({
                   .map((share: any) => {
                     const displayName = share.user?.name || share.shared_with_email?.split('@')[0] || 'Utilisateur';
                     const displayEmail = share.shared_with_email || share.user?.email || '';
+                    const isCurrentUser = displayEmail === session?.user?.email;
 
                     return (
                       <div
@@ -157,7 +158,7 @@ export default function FolderSettingsModal({
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[18px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
-                                {displayName}
+                                {displayName}{isCurrentUser && ' (moi)'}
                               </span>
                               <span className="text-[14px] leading-[20px] font-normal text-[#A8A8A8] font-[Heebo]">
                                 {displayEmail}
