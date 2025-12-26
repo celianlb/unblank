@@ -114,14 +114,20 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
     }
   };
 
+  // Vérifier si des données ont été saisies
+  const hasUnsavedData = groupName.trim() !== '' || selectedFolderIds.length > 0;
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     // Si le dropdown est ouvert, on ne ferme pas la modale
     // Le useEffect va fermer le dropdown, et il faudra cliquer à nouveau pour fermer la modale
     if (isDropdownOpen || justClosedDropdownRef.current) {
       return;
     }
-    // Sinon, on ferme la modale normalement
-    onClose();
+
+    // Ne fermer que si aucune donnée n'a été saisie
+    if (!hasUnsavedData) {
+      onClose();
+    }
   };
 
   return (
