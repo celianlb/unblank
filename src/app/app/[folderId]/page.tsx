@@ -99,7 +99,7 @@ export default function FolderPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
-        <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
+        <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} />
         <main className="w-full px-[64px] py-[40px] flex items-center justify-center">
           <p className="text-gray-500">Chargement...</p>
         </main>
@@ -109,7 +109,7 @@ export default function FolderPage() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} />
+      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} />
 
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}

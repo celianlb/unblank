@@ -12,9 +12,10 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 interface HeaderProps {
   selectedCount?: number;
   onDeleteSelected?: () => void;
+  currentFolderId?: string;
 }
 
-export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderProps) {
+export default function Header({ selectedCount = 0, onDeleteSelected, currentFolderId }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
@@ -41,6 +42,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected }: HeaderPr
       <AddLinkModal
         isOpen={isAddLinkModalOpen}
         onClose={() => setIsAddLinkModalOpen(false)}
+        folderId={currentFolderId}
       />
       <CreateFolderModal
         isOpen={isCreateFolderModalOpen}
