@@ -75,12 +75,22 @@ export default function FolderSettingsModal({
     return permission === 'view' ? 'Lecteur' : 'Éditeur';
   };
 
+  const handleOverlayClick = () => {
+    if (openDropdownId) {
+      // Si un dropdown est ouvert, le fermer seulement
+      setOpenDropdownId(null);
+    } else {
+      // Sinon, fermer la modale
+      onClose();
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
       />
 
       {/* Modal */}
