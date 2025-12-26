@@ -232,22 +232,4 @@ export class FolderService {
     }
   }
 
-  /**
-   * Calcule la date de dernière mise à jour d'un dossier
-   */
-  static formatLastUpdate(updatedAt: string): string {
-    const now = new Date();
-    const updated = new Date(updatedAt);
-    const diffMs = now.getTime() - updated.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Mise à jour il y a quelques secondes';
-    if (diffMins < 60) return `Mise à jour il y a ${diffMins}min`;
-    if (diffHours < 24) return `Mise à jour il y a ${diffHours}h`;
-    if (diffDays < 7) return `Mise à jour il y a ${diffDays}j`;
-
-    return `Mise à jour le ${updated.toLocaleDateString('fr-FR')}`;
-  }
 }

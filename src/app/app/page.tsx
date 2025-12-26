@@ -7,10 +7,10 @@ import Header from "@/components/Header";
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
-import { FolderService } from '@/domain/folders/services/FolderService';
 import { useFolders, useGroups } from '@/domain/folders/hooks/useFolders';
 import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/domain/links/hooks/useLinks';
 import { LinkService } from '@/domain/links/services/LinkService';
+import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
 
 export default function AppPage() {
   const router = useRouter();
@@ -167,7 +167,7 @@ export default function AppPage() {
                   title={group.name}
                   slug={group.slug}
                   itemCount={group.link_count || 0}
-                  lastUpdate={FolderService.formatLastUpdate(group.updated_at)}
+                  lastUpdate={formatLastUpdate(group.updated_at)}
                   images={['image1', 'image2', 'image3', 'image4']}
                 />
               ))}
@@ -199,7 +199,7 @@ export default function AppPage() {
                   title={folder.name}
                   slug={folder.slug}
                   itemCount={folder.link_count || 0}
-                  lastUpdate={FolderService.formatLastUpdate(folder.updated_at)}
+                  lastUpdate={formatLastUpdate(folder.updated_at)}
                   isSystem={folder.is_system}
                 />
               ))}
@@ -234,7 +234,7 @@ export default function AppPage() {
                   description={link.description || ''}
                   tags={link.tags?.map(t => t.name) || []}
                   fileType={link.image_format || 'JPG'}
-                  dateAdded={LinkService.formatDateAdded(link.created_at)}
+                  dateAdded={formatDateAdded(link.created_at)}
                   isSelectionMode={isSelectionMode}
                   isSelected={selectedLinkIds.has(link.id)}
                   onCheckChange={handleCheckChange}

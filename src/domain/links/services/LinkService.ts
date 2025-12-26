@@ -109,33 +109,6 @@ export class LinkService {
   }
 
   /**
-   * Formate la date d'ajout d'un lien
-   */
-  static formatDateAdded(createdAt: string): string {
-    const date = new Date(createdAt);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  }
-
-  /**
-   * Formate la taille du fichier (si disponible)
-   */
-  static formatFileSize(bytes?: number): string {
-    if (!bytes) return 'N/A';
-
-    const kb = bytes / 1024;
-    const mb = kb / 1024;
-
-    if (mb >= 1) {
-      return `${mb.toFixed(1)} MB`;
-    }
-    return `${kb.toFixed(1)} KB`;
-  }
-
-  /**
    * Détecte le type de contenu d'un lien
    */
   static getContentType(link: Link): 'image' | 'link' {

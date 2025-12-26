@@ -10,6 +10,7 @@ import ImageCard from '@/components/ImageCard';
 import { LinkService } from '@/domain/links/services/LinkService';
 import { useFolderBySlug } from '@/domain/folders/hooks/useFolders';
 import { useFolderLinks } from '@/domain/links/hooks/useLinks';
+import { formatDateAdded } from '@/utils/formatters';
 
 export default function FolderPage() {
   const params = useParams();
@@ -101,7 +102,7 @@ export default function FolderPage() {
                   fileType={link.image_format?.toUpperCase() || 'IMG'}
                   dimensions="N/A"
                   fileSize="N/A"
-                  dateAdded={LinkService.formatDateAdded(link.created_at)}
+                  dateAdded={formatDateAdded(link.created_at)}
                   folder={folder.name}
                   tags={link.tags?.map(t => t.name) || []}
                   isSelectionMode={isSelectionMode}

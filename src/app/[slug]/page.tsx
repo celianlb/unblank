@@ -6,8 +6,8 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
 import FolderCard from '@/components/FolderCard';
-import { FolderService } from '@/domain/folders/services/FolderService';
 import { useGroupBySlug, useGroupFolders } from '@/domain/folders/hooks/useFolders';
+import { formatLastUpdate } from '@/utils/formatters';
 
 export default function GroupPage() {
   const params = useParams();
@@ -74,7 +74,7 @@ export default function GroupPage() {
                   title={folder.name}
                   slug={folder.slug}
                   itemCount={folder.link_count || 0}
-                  lastUpdate={FolderService.formatLastUpdate(folder.updated_at)}
+                  lastUpdate={formatLastUpdate(folder.updated_at)}
                   groupSlug={slug}
                   isSystem={folder.is_system}
                 />
