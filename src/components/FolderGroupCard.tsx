@@ -73,9 +73,11 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     return url;
   };
 
-  // Get the 2 most recent images (already in reverse chronological order)
+  // Get up to 4 images (one from each child folder)
   const image1 = images[0] ? getProxiedImageUrl(images[0]) : null;
   const image2 = images[1] ? getProxiedImageUrl(images[1]) : null;
+  const image3 = images[2] ? getProxiedImageUrl(images[2]) : null;
+  const image4 = images[3] ? getProxiedImageUrl(images[3]) : null;
 
   return (
     <>
@@ -113,13 +115,13 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
           </div>
         </div>
 
-        {/* Frame 192 - Bottom row - show same images again for visual balance */}
+        {/* Frame 192 - Bottom row */}
         <div className="flex flex-row gap-1.5 w-full h-[89px]">
-          {/* Frame 185 - Image 1 (repeated) */}
+          {/* Frame 185 - Image 3 */}
           <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg overflow-hidden">
-            {image1 && (
+            {image3 && (
               <img
-                src={image1}
+                src={image3}
                 alt=""
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -127,11 +129,11 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
               />
             )}
           </div>
-          {/* Frame 186 - Image 2 (repeated) */}
+          {/* Frame 186 - Image 4 */}
           <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg overflow-hidden">
-            {image2 && (
+            {image4 && (
               <img
-                src={image2}
+                src={image4}
                 alt=""
                 loading="lazy"
                 referrerPolicy="no-referrer"
