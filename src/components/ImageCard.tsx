@@ -35,15 +35,24 @@ export default function ImageCard({
   const [isChecked, setIsChecked] = useState(false);
 
   // Proxy external images to avoid CORS issues
-  const getProxiedImageUrl = (url: string) => {
+  const getProxiedImageUrl = (url: string, size?: 'thumbnail' | 'full') => {
     // Only proxy external images (not localhost or relative URLs)
     if (url.startsWith('http') && !url.includes('localhost')) {
-      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+      const params = new URLSearchParams({ url });
+
+      // Add size params for thumbnails (save bandwidth)
+      if (size === 'thumbnail') {
+        params.set('w', '400'); // Max width 400px for cards
+        params.set('q', '75');  // Quality 75% for thumbnails
+      }
+
+      return `/api/proxy-image?${params.toString()}`;
     }
     return url;
   };
 
-  const proxiedImageUrl = getProxiedImageUrl(imageUrl);
+  const thumbnailUrl = getProxiedImageUrl(imageUrl, 'thumbnail');
+  const fullSizeUrl = getProxiedImageUrl(imageUrl, 'full');
 
   const handleCheckChange = () => {
     const newValue = !isChecked;
@@ -86,7 +95,7 @@ export default function ImageCard({
         {/* Image - full bleed with overflow */}
         <div className="absolute left-0 top-[-18px] sm:top-[-20px] md:top-[-22px] w-[calc(100%-8px)] sm:w-[192px] md:w-[222px] lg:w-[242px] xl:w-[264px] h-[290px] sm:h-[310px] md:h-[344px] lg:h-[360px] xl:h-[374px] overflow-hidden rounded-xl sm:rounded-[16px] ml-1">
           <img
-            src={proxiedImageUrl}
+            src={thumbnailUrl}
             alt="Preview"
             loading="lazy"
             referrerPolicy="no-referrer"
@@ -179,7 +188,7 @@ export default function ImageCard({
       <ImagePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        imageUrl={proxiedImageUrl}
+        imageUrl={fullSizeUrl}
         link={link}
         fileType={fileType}
         dimensions={dimensions}

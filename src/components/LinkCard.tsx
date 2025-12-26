@@ -44,16 +44,25 @@ export default function LinkCard({
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   // Proxy external images to avoid CORS issues
-  const getProxiedImageUrl = (url?: string) => {
+  const getProxiedImageUrl = (url?: string, size?: 'thumbnail' | 'full') => {
     if (!url) return undefined;
     // Only proxy external images (not localhost or relative URLs)
     if (url.startsWith('http') && !url.includes('localhost')) {
-      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+      const params = new URLSearchParams({ url });
+
+      // Add size params for thumbnails (save bandwidth)
+      if (size === 'thumbnail') {
+        params.set('w', '400'); // Max width 400px for cards
+        params.set('q', '75');  // Quality 75% for thumbnails
+      }
+
+      return `/api/proxy-image?${params.toString()}`;
     }
     return url;
   };
 
-  const proxiedImageUrl = getProxiedImageUrl(imageUrl);
+  const thumbnailUrl = getProxiedImageUrl(imageUrl, 'thumbnail');
+  const fullSizeUrl = getProxiedImageUrl(imageUrl, 'full');
 
   const handleCheckChange = () => {
     const newValue = !isSelected;
@@ -112,9 +121,9 @@ export default function LinkCard({
       >
         {/* Image placeholder */}
         <div className="absolute inset-0 bg-[#C4C4C4] rounded-xl sm:rounded-[16px]">
-          {proxiedImageUrl && (
+          {thumbnailUrl && (
             <img
-              src={proxiedImageUrl}
+              src={thumbnailUrl}
               alt=""
               loading="lazy"
               referrerPolicy="no-referrer"
@@ -208,7 +217,7 @@ export default function LinkCard({
       <ImagePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        imageUrl={proxiedImageUrl || 'https://via.placeholder.com/600'}
+        imageUrl={fullSizeUrl || 'https://via.placeholder.com/600'}
         link={link}
         fileType={fileType}
         dimensions={dimensions}

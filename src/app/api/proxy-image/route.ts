@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
 
 // Cache simple en mémoire (pour commencer)
 const imageCache = new Map<string, { buffer: Buffer; contentType: string; timestamp: number }>();
@@ -7,6 +8,9 @@ const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 heures
 export async function GET(request: NextRequest) {
   try {
     const url = request.nextUrl.searchParams.get('url');
+    const width = request.nextUrl.searchParams.get('w');
+    const height = request.nextUrl.searchParams.get('h');
+    const quality = request.nextUrl.searchParams.get('q');
 
     if (!url) {
       return NextResponse.json(
@@ -26,8 +30,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Clé de cache incluant les paramètres de redimensionnement
+    const cacheKey = `${url}_${width || 'auto'}_${height || 'auto'}_${quality || '80'}`;
+
     // Vérifier le cache
-    const cached = imageCache.get(url);
+    const cached = imageCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return new NextResponse(cached.buffer, {
         headers: {
@@ -61,10 +68,41 @@ export async function GET(request: NextRequest) {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    let buffer = Buffer.from(arrayBuffer);
+
+    // Redimensionner l'image si nécessaire
+    if (width || height || quality) {
+      let sharpImage = sharp(buffer);
+
+      // Récupérer les métadonnées pour préserver le format
+      const metadata = await sharpImage.metadata();
+
+      // Redimensionner
+      if (width || height) {
+        const resizeOptions: sharp.ResizeOptions = {
+          width: width ? parseInt(width) : undefined,
+          height: height ? parseInt(height) : undefined,
+          fit: 'inside', // Maintient le ratio d'aspect
+          withoutEnlargement: true, // Ne pas agrandir les petites images
+        };
+        sharpImage = sharpImage.resize(resizeOptions);
+      }
+
+      // Appliquer la qualité selon le format
+      const imageQuality = quality ? parseInt(quality) : 80;
+      if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
+        sharpImage = sharpImage.jpeg({ quality: imageQuality });
+      } else if (metadata.format === 'png') {
+        sharpImage = sharpImage.png({ quality: imageQuality });
+      } else if (metadata.format === 'webp') {
+        sharpImage = sharpImage.webp({ quality: imageQuality });
+      }
+
+      buffer = await sharpImage.toBuffer();
+    }
 
     // Mettre en cache
-    imageCache.set(url, {
+    imageCache.set(cacheKey, {
       buffer,
       contentType,
       timestamp: Date.now(),
