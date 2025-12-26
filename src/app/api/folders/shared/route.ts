@@ -42,8 +42,18 @@ export async function GET(request: NextRequest) {
     // Séparer les groupes et les dossiers
     const sharedGroups = allShared.filter(item => item.is_group === true);
 
-    // Pour les dossiers partagés, exclure ceux dont le groupe parent est AUSSI partagé
-    // (ils seront accessibles via le groupe)
+    // Récupérer tous les groupes que l'utilisateur possède
+    const { data: ownedGroups } = await supabase
+      .from('folders')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_group', true);
+
+    const ownedGroupIds = new Set(ownedGroups?.map(g => g.id) || []);
+
+    // Pour les dossiers partagés, exclure:
+    // 1. Ceux dont le groupe parent est AUSSI partagé (accessibles via le groupe partagé)
+    // 2. Ceux dont le groupe parent est possédé par l'utilisateur (accessibles via son propre groupe)
     const sharedGroupIds = new Set(sharedGroups.map(g => g.id));
     const sharedFolders = allShared.filter(item => {
       if (item.is_group) return false; // Pas un dossier
@@ -51,8 +61,8 @@ export async function GET(request: NextRequest) {
       // Si le dossier n'a pas de parent, toujours l'inclure
       if (!item.parent_folder_id) return true;
 
-      // Si le dossier a un parent, l'inclure SEULEMENT si le parent n'est PAS partagé
-      return !sharedGroupIds.has(item.parent_folder_id);
+      // Exclure si le parent est un groupe partagé OU un groupe possédé
+      return !sharedGroupIds.has(item.parent_folder_id) && !ownedGroupIds.has(item.parent_folder_id);
     });
 
     console.log('[SHARED FOLDERS] Groups:', sharedGroups.length, 'Folders:', sharedFolders.length);
