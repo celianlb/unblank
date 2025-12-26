@@ -10,4 +10,5 @@ export interface Folder {
   created_at: string;
   updated_at: string;
   link_count?: number;
+  preview_images?: string[];
 }

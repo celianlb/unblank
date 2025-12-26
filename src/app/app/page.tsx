@@ -172,7 +172,7 @@ export default function AppPage() {
                   slug={group.slug}
                   itemCount={group.link_count || 0}
                   lastUpdate={formatLastUpdate(group.updated_at)}
-                  images={['image1', 'image2', 'image3', 'image4']}
+                  images={group.preview_images || []}
                 />
               ))}
             </div>
@@ -205,6 +205,7 @@ export default function AppPage() {
                   itemCount={folder.link_count || 0}
                   lastUpdate={formatLastUpdate(folder.updated_at)}
                   isSystem={folder.is_system}
+                  previewImages={folder.preview_images}
                 />
               ))}
             </div>

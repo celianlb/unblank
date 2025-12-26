@@ -60,6 +60,23 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     router.push(`/${groupSlug}`);
   };
 
+  // Proxy external images to avoid CORS issues with reduced quality
+  const getProxiedImageUrl = (url: string) => {
+    // Only proxy external images (not localhost or relative URLs)
+    if (url.startsWith('http') && !url.includes('localhost')) {
+      const params = new URLSearchParams({ url });
+      // Very small size and low quality for group previews
+      params.set('w', '150'); // Max width 150px
+      params.set('q', '60');  // Quality 60%
+      return `/api/proxy-image?${params.toString()}`;
+    }
+    return url;
+  };
+
+  // Get the 2 most recent images (already in reverse chronological order)
+  const image1 = images[0] ? getProxiedImageUrl(images[0]) : null;
+  const image2 = images[1] ? getProxiedImageUrl(images[1]) : null;
+
   return (
     <>
     <div
@@ -71,20 +88,56 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
         {/* Frame 187 - Top row */}
         <div className="flex flex-row gap-1.5 w-full h-[90px]">
           {/* Frame 185 - Image 1 */}
-          <div className="flex-1 h-[90px] bg-[#C4C4C4] rounded-lg">
+          <div className="flex-1 h-[90px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image1 && (
+              <img
+                src={image1}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
           {/* Frame 186 - Image 2 */}
-          <div className="flex-1 h-[90px] bg-[#C4C4C4] rounded-lg">
+          <div className="flex-1 h-[90px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image2 && (
+              <img
+                src={image2}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         </div>
 
-        {/* Frame 192 - Bottom row */}
+        {/* Frame 192 - Bottom row - show same images again for visual balance */}
         <div className="flex flex-row gap-1.5 w-full h-[89px]">
-          {/* Frame 185 - Image 3 */}
-          <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg">
+          {/* Frame 185 - Image 1 (repeated) */}
+          <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image1 && (
+              <img
+                src={image1}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
-          {/* Frame 186 - Image 4 */}
-          <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg">
+          {/* Frame 186 - Image 2 (repeated) */}
+          <div className="flex-1 h-[89px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image2 && (
+              <img
+                src={image2}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         </div>
       </div>

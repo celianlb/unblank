@@ -18,6 +18,7 @@ interface FolderCardProps {
   groupSlug?: string;
   slug?: string;
   isSystem?: boolean;
+  previewImages?: string[];
 }
 
 export default function FolderCard({
@@ -28,6 +29,7 @@ export default function FolderCard({
   groupSlug,
   slug,
   isSystem = false,
+  previewImages = [],
 }: FolderCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
@@ -73,6 +75,23 @@ export default function FolderCard({
     }
   };
 
+  // Proxy external images to avoid CORS issues with reduced quality
+  const getProxiedImageUrl = (url: string) => {
+    // Only proxy external images (not localhost or relative URLs)
+    if (url.startsWith('http') && !url.includes('localhost')) {
+      const params = new URLSearchParams({ url });
+      // Very small size and low quality for folder previews
+      params.set('w', '200'); // Max width 200px
+      params.set('q', '60');  // Quality 60%
+      return `/api/proxy-image?${params.toString()}`;
+    }
+    return url;
+  };
+
+  // Get the 2 most recent images (already in reverse chronological order)
+  const image1 = previewImages[0] ? getProxiedImageUrl(previewImages[0]) : null;
+  const image2 = previewImages[1] ? getProxiedImageUrl(previewImages[1]) : null;
+
   return (
     <>
       <div
@@ -82,9 +101,29 @@ export default function FolderCard({
         {/* Frame 187 - Images Grid (2 images side by side) */}
         <div className="flex flex-row gap-2 w-full h-[185px]">
           {/* Frame 185 - Image 1 */}
-          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg"></div>
+          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image1 && (
+              <img
+                src={image1}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
           {/* Frame 186 - Image 2 */}
-          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg"></div>
+          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+            {image2 && (
+              <img
+                src={image2}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
         </div>
 
         {/* Title */}
