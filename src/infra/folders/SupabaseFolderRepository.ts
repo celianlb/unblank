@@ -194,10 +194,31 @@ export class SupabaseFolderRepository implements FolderRepository {
 
   async createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup: boolean = false): Promise<Folder | null> {
     try {
+      // Si le dossier est créé dans un groupe partagé, récupérer le propriétaire du groupe
+      let folderOwnerId = userId;
+
+      if (parentFolderId) {
+        const { data: parentFolder, error: parentError } = await this.supabase
+          .from('folders')
+          .select('user_id, is_group')
+          .eq('id', parentFolderId)
+          .single();
+
+        if (parentError) {
+          console.error('Error fetching parent folder:', parentError);
+          return null;
+        }
+
+        if (parentFolder && parentFolder.is_group) {
+          // Si le parent est un groupe, utiliser son propriétaire
+          folderOwnerId = parentFolder.user_id;
+        }
+      }
+
       const { data, error } = await this.supabase
         .from('folders')
         .insert({
-          user_id: userId,
+          user_id: folderOwnerId,
           name: name,
           is_group: isGroup,
           parent_folder_id: parentFolderId,
