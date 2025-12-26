@@ -4,7 +4,7 @@ import { X, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCreateLink } from '@/hooks/useLinks';
-import { LinkService } from '@/domain/links/services/LinkService';
+import { extractMetadata } from '@/utils/linkUtils';
 
 interface AddLinkModalProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
   const handleUrlBlur = async () => {
     if (url && url.startsWith('http') && !metadata) {
       setIsLoadingMetadata(true);
-      const meta = await LinkService.extractMetadata(url);
+      const meta = await extractMetadata(url);
       setIsLoadingMetadata(false);
 
       if (meta) {

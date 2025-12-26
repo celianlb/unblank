@@ -7,7 +7,6 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 import FolderSettingsModal from "./FolderSettingsModal";
 import ShareLinkModal from "./ShareLinkModal";
 import RenameFolderModal from "./RenameFolderModal";
-import { FolderService } from "@/domain/folders/services/FolderService";
 import { useDeleteFolders, useRenameFolder } from "@/hooks/useFolders";
 import { useAuthContext } from "@/contexts/AuthContext";
 

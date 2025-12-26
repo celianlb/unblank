@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
 import DetailedLinkCard from '@/components/DetailedLinkCard';
 import ImageCard from '@/components/ImageCard';
-import { LinkService } from '@/domain/links/services/LinkService';
+import { getContentType } from '@/utils/linkUtils';
 import { useFolderBySlug, useGroupBySlug } from '@/hooks/useFolders';
 import { useFolderLinks } from '@/hooks/useLinks';
 import { formatDateAdded } from '@/utils/formatters';
@@ -46,8 +46,8 @@ export default function FolderPage() {
   };
 
   // Séparer les liens en images et liens classiques
-  const imageLinks = links.filter(link => LinkService.getContentType(link) === 'image');
-  const regularLinks = links.filter(link => LinkService.getContentType(link) === 'link');
+  const imageLinks = links.filter(link => getContentType(link) === 'image');
+  const regularLinks = links.filter(link => getContentType(link) === 'link');
 
   if (loading) {
     return (
