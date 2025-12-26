@@ -402,7 +402,9 @@ export class SupabaseAuthRepository implements AuthRepository {
       // Supprimer l'utilisateur via l'admin API
       // Note: Supabase ne permet pas de supprimer directement depuis le client
       // Il faut utiliser une fonction serveur ou l'API admin
-      const { error } = await this.supabase.rpc('delete_user');
+      const { error } = await this.supabase.rpc('delete_user', {
+        p_user_id: user.id
+      });
 
       if (error) {
         this.handleSupabaseError(error);
