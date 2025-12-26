@@ -72,7 +72,7 @@ export default function FolderSettingsModal({
 
   const getPermissionLabel = (permission: 'view' | 'edit' | 'owner') => {
     if (permission === 'owner') return 'Propriétaire';
-    return permission === 'view' ? 'Lecture seule' : 'Lecture et édition';
+    return permission === 'view' ? 'Lecteur' : 'Éditeur';
   };
 
   return (
@@ -197,24 +197,24 @@ export default function FolderSettingsModal({
                                 <div className="absolute right-0 top-full mt-1 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-10 overflow-hidden">
                                   <button
                                     onClick={() => handleChangePermission(share.id, 'view')}
-                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors ${
+                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${
                                       share.permission === 'view' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
                                     }`}
                                   >
-                                    Lecture seule
+                                    Lecteur
                                   </button>
                                   <button
                                     onClick={() => handleChangePermission(share.id, 'edit')}
-                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors ${
+                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${
                                       share.permission === 'edit' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
                                     }`}
                                   >
-                                    Lecture et édition
+                                    Éditeur
                                   </button>
                                   <div className="border-t-2 border-black" />
                                   <button
                                     onClick={() => handleRemoveAccess(share.id)}
-                                    className="w-full px-4 py-2.5 text-left text-[16px] font-medium text-[#FF2F2F] font-[Heebo] hover:bg-red-50 transition-colors"
+                                    className="w-full px-4 py-2.5 text-left text-[16px] font-medium text-[#FF2F2F] font-[Heebo] hover:bg-red-50 transition-colors cursor-pointer"
                                   >
                                     Retirer l&apos;accès
                                   </button>
