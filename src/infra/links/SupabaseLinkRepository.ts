@@ -57,6 +57,7 @@ export class SupabaseLinkRepository implements LinkRepository {
         )
       `)
       .eq('user_id', userId)
+      .is('folder_id', null)
       .order('created_at', { ascending: false });
 
     // Ajouter la limite si fournie

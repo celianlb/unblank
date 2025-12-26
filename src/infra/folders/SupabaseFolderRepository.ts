@@ -93,33 +93,38 @@ export class SupabaseFolderRepository implements FolderRepository {
 
     const groups = data || [];
 
-    // Pour chaque groupe, récupérer les 2 dernières images de tous les dossiers du groupe
+    // Pour chaque groupe, récupérer 1 image par dossier enfant (max 4 dossiers)
     const groupsWithImages = await Promise.all(
       groups.map(async (group) => {
-        // Récupérer tous les dossiers du groupe
+        // Récupérer tous les dossiers du groupe (limité à 4)
         const { data: groupFolders } = await this.supabase
           .from('folders')
           .select('id')
-          .eq('parent_folder_id', group.id);
+          .eq('parent_folder_id', group.id)
+          .limit(4);
 
         if (!groupFolders || groupFolders.length === 0) {
           return { ...group, preview_images: [] };
         }
 
-        const folderIds = groupFolders.map(f => f.id);
+        // Pour chaque dossier, récupérer sa première image
+        const previewImagesPromises = groupFolders.map(async (folder) => {
+          const { data: links } = await this.supabase
+            .from('links')
+            .select('original_image_url, screenshot_url')
+            .eq('folder_id', folder.id)
+            .not('original_image_url', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1);
 
-        // Récupérer les 2 dernières images de tous ces dossiers
-        const { data: links } = await this.supabase
-          .from('links')
-          .select('original_image_url, screenshot_url')
-          .in('folder_id', folderIds)
-          .not('original_image_url', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(2);
+          if (links && links.length > 0) {
+            return links[0].original_image_url || links[0].screenshot_url;
+          }
+          return null;
+        });
 
-        const previewImages = (links || [])
-          .map(link => link.original_image_url || link.screenshot_url)
-          .filter(Boolean) as string[];
+        const allImages = await Promise.all(previewImagesPromises);
+        const previewImages = allImages.filter(Boolean) as string[];
 
         return {
           ...group,
@@ -140,7 +145,31 @@ export class SupabaseFolderRepository implements FolderRepository {
       throw error;
     }
 
-    return data || [];
+    const folders = data || [];
+
+    // Pour chaque dossier du groupe, récupérer les 2 dernières images
+    const foldersWithImages = await Promise.all(
+      folders.map(async (folder) => {
+        const { data: links } = await this.supabase
+          .from('links')
+          .select('original_image_url, screenshot_url')
+          .eq('folder_id', folder.id)
+          .not('original_image_url', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        const previewImages = (links || [])
+          .map(link => link.original_image_url || link.screenshot_url)
+          .filter(Boolean) as string[];
+
+        return {
+          ...folder,
+          preview_images: previewImages
+        };
+      })
+    );
+
+    return foldersWithImages;
   }
 
   async createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup: boolean = false): Promise<Folder | null> {

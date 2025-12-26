@@ -77,6 +77,7 @@ export default function GroupPage() {
                   lastUpdate={formatLastUpdate(folder.updated_at)}
                   groupSlug={slug}
                   isSystem={folder.is_system}
+                  previewImages={folder.preview_images}
                 />
               ))}
             </div>
