@@ -89,11 +89,31 @@ export class SupabaseLinkRepository implements LinkRepository {
 
   async createLink(userId: string, data: CreateLinkData): Promise<Link | null> {
     try {
-      // 1. Créer le lien
+      // 1. Si le lien est dans un dossier, récupérer le propriétaire du dossier
+      let linkOwnerId = userId;
+
+      if (data.folderId) {
+        const { data: folder, error: folderError } = await this.supabase
+          .from('folders')
+          .select('user_id')
+          .eq('id', data.folderId)
+          .single();
+
+        if (folderError) {
+          console.error('Error fetching folder:', folderError);
+          return null;
+        }
+
+        if (folder) {
+          linkOwnerId = folder.user_id;
+        }
+      }
+
+      // 2. Créer le lien avec le user_id du propriétaire du dossier (ou de l'utilisateur si pas de dossier)
       const { data: link, error: linkError } = await this.supabase
         .from('links')
         .insert({
-          user_id: userId,
+          user_id: linkOwnerId,
           folder_id: data.folderId || null,
           url: data.url,
           title: data.title || null,
@@ -111,14 +131,14 @@ export class SupabaseLinkRepository implements LinkRepository {
         return null;
       }
 
-      // 2. Ajouter les tags si fournis
+      // 3. Ajouter les tags si fournis
       if (data.tags && data.tags.length > 0) {
         for (const tagName of data.tags) {
-          // Vérifier si le tag existe déjà pour cet utilisateur
+          // Vérifier si le tag existe déjà pour le propriétaire du lien
           let { data: existingTag } = await this.supabase
             .from('tags')
             .select('id')
-            .eq('user_id', userId)
+            .eq('user_id', linkOwnerId)
             .eq('name', tagName)
             .maybeSingle();
 
@@ -131,7 +151,7 @@ export class SupabaseLinkRepository implements LinkRepository {
             const { data: newTag, error: tagError } = await this.supabase
               .from('tags')
               .insert({
-                user_id: userId,
+                user_id: linkOwnerId,
                 name: tagName,
               })
               .select()
@@ -154,7 +174,7 @@ export class SupabaseLinkRepository implements LinkRepository {
         }
       }
 
-      // 3. Récupérer le lien complet avec les tags
+      // 4. Récupérer le lien complet avec les tags
       const { data: completeLink } = await this.supabase
         .from('links')
         .select(`
