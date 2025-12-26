@@ -1,4 +1,4 @@
-export type SharePermission = 'view' | 'edit';
+export type SharePermission = 'view' | 'edit' | 'owner';
 
 export interface Share {
   id: string;

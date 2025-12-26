@@ -28,6 +28,25 @@ export class SupabaseShareRepository implements ShareRepository {
   }
 
   async getSharesByFolder(folderId: string): Promise<ShareWithUser[]> {
+    // Récupérer d'abord le folder pour obtenir le propriétaire
+    const { data: folder, error: folderError } = await this.supabase
+      .from('folders')
+      .select('user_id')
+      .eq('id', folderId)
+      .single();
+
+    if (folderError) {
+      throw new Error(`Failed to get folder: ${folderError.message}`);
+    }
+
+    // Récupérer le profil du propriétaire
+    const { data: ownerProfile } = await this.supabase
+      .from('user_public_profiles')
+      .select('id, email, name, avatar_url')
+      .eq('id', folder.user_id)
+      .maybeSingle();
+
+    // Récupérer les shares
     const { data: shares, error } = await this.supabase
       .from('shares')
       .select('*')
@@ -59,7 +78,22 @@ export class SupabaseShareRepository implements ShareRepository {
       })
     );
 
-    return sharesWithUser;
+    // Ajouter le propriétaire en tant que premier élément avec permission "owner"
+    const ownerShare = {
+      id: 'owner',
+      folder_id: folderId,
+      shared_by: folder.user_id,
+      shared_with_email: ownerProfile?.email || '',
+      share_token: null,
+      permission: 'owner' as const,
+      is_active: true,
+      expires_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user: ownerProfile,
+    };
+
+    return [ownerShare, ...sharesWithUser];
   }
 
   async getShareById(shareId: string): Promise<Share | null> {
