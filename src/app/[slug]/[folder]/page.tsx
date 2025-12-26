@@ -8,8 +8,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import DetailedLinkCard from '@/components/DetailedLinkCard';
 import ImageCard from '@/components/ImageCard';
 import { LinkService } from '@/domain/links/services/LinkService';
-import { useFolderBySlug, useGroupBySlug } from '@/domain/folders/hooks/useFolders';
-import { useFolderLinks } from '@/domain/links/hooks/useLinks';
+import { useFolderBySlug, useGroupBySlug } from '@/hooks/useFolders';
+import { useFolderLinks } from '@/hooks/useLinks';
 import { formatDateAdded } from '@/utils/formatters';
 
 export default function FolderPage() {

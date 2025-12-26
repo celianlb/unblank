@@ -3,7 +3,7 @@
 import { X, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useCreateLink } from '@/domain/links/hooks/useLinks';
+import { useCreateLink } from '@/hooks/useLinks';
 import { LinkService } from '@/domain/links/services/LinkService';
 
 interface AddLinkModalProps {

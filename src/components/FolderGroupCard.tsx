@@ -8,7 +8,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
 import RenameFolderModal from './RenameFolderModal';
-import { useDeleteFolders, useRenameFolder } from '@/domain/folders/hooks/useFolders';
+import { useDeleteFolders, useRenameFolder } from '@/hooks/useFolders';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 interface FolderGroupCardProps {

@@ -6,7 +6,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
 import FolderCard from '@/components/FolderCard';
-import { useGroupBySlug, useGroupFolders } from '@/domain/folders/hooks/useFolders';
+import { useGroupBySlug, useGroupFolders } from '@/hooks/useFolders';
 import { formatLastUpdate } from '@/utils/formatters';
 
 export default function GroupPage() {

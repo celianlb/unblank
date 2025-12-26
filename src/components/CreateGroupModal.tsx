@@ -3,7 +3,7 @@
 import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useFolders, useCreateFolder, useMoveFolderToGroup } from '@/domain/folders/hooks/useFolders';
+import { useFolders, useCreateFolder, useMoveFolderToGroup } from '@/hooks/useFolders';
 
 interface CreateGroupModalProps {
   isOpen: boolean;

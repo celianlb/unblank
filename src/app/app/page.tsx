@@ -7,8 +7,8 @@ import Header from "@/components/Header";
 import FolderGroupCard from '@/components/FolderGroupCard';
 import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
-import { useFolders, useGroups } from '@/domain/folders/hooks/useFolders';
-import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/domain/links/hooks/useLinks';
+import { useFolders, useGroups } from '@/hooks/useFolders';
+import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/hooks/useLinks';
 import { LinkService } from '@/domain/links/services/LinkService';
 import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
 

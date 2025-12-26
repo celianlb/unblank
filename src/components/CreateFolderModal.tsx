@@ -3,7 +3,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useCreateFolder } from '@/domain/folders/hooks/useFolders';
+import { useCreateFolder } from '@/hooks/useFolders';
 
 interface CreateFolderModalProps {
   isOpen: boolean;
