@@ -39,11 +39,27 @@ export class SupabaseShareRepository implements ShareRepository {
       throw new Error(`Failed to get shares: ${error.message}`);
     }
 
-    // Return shares without user join - the UI can display the email directly
-    return (shares || []).map(share => ({
-      ...share,
-      user: null, // No user data for now
-    }));
+    // Enrichir avec les infos utilisateur depuis la vue sécurisée
+    const sharesWithUser = await Promise.all(
+      (shares || []).map(async (share) => {
+        if (!share.shared_with_email) {
+          return { ...share, user: null };
+        }
+
+        const { data: userProfile } = await this.supabase
+          .from('user_public_profiles')
+          .select('id, email, name, avatar_url')
+          .eq('email', share.shared_with_email)
+          .maybeSingle();
+
+        return {
+          ...share,
+          user: userProfile,
+        };
+      })
+    );
+
+    return sharesWithUser;
   }
 
   async getShareById(shareId: string): Promise<Share | null> {
@@ -134,22 +150,10 @@ export class SupabaseShareRepository implements ShareRepository {
   }
 
   async getSharedWithUser(userEmail: string): Promise<ShareWithUser[]> {
+    // Récupérer les shares sans faire de jointure avec folders (pour éviter les problèmes RLS)
     const { data: shares, error } = await this.supabase
       .from('shares')
-      .select(`
-        id,
-        folder_id,
-        permission,
-        folders:folder_id (
-          id,
-          name,
-          slug,
-          parent_folder_id,
-          is_group,
-          created_at,
-          updated_at
-        )
-      `)
+      .select('id, folder_id, permission, created_at')
       .eq('is_active', true)
       .eq('shared_with_email', userEmail)
       .order('created_at', { ascending: false });
@@ -158,6 +162,55 @@ export class SupabaseShareRepository implements ShareRepository {
       throw new Error(`Failed to get shared folders: ${error.message}`);
     }
 
-    return shares || [];
+    if (!shares || shares.length === 0) {
+      return [];
+    }
+
+    // Récupérer les folders correspondants séparément
+    const folderIds = shares.map(s => s.folder_id);
+    const { data: folders, error: foldersError } = await this.supabase
+      .from('folders')
+      .select('id, name, slug, parent_folder_id, is_group, created_at, updated_at')
+      .in('id', folderIds);
+
+    if (foldersError) {
+      throw new Error(`Failed to get folders: ${foldersError.message}`);
+    }
+
+    // Pour chaque folder, récupérer le nombre de links et les images preview
+    const foldersWithDetails = await Promise.all(
+      (folders || []).map(async (folder) => {
+        // Compter les links
+        const { count } = await this.supabase
+          .from('links')
+          .select('*', { count: 'exact', head: true })
+          .eq('folder_id', folder.id);
+
+        // Récupérer les 2 dernières images pour preview
+        const { data: links } = await this.supabase
+          .from('links')
+          .select('original_image_url, screenshot_url')
+          .eq('folder_id', folder.id)
+          .not('original_image_url', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        const previewImages = (links || [])
+          .map(link => link.original_image_url || link.screenshot_url)
+          .filter(Boolean) as string[];
+
+        return {
+          ...folder,
+          link_count: count || 0,
+          preview_images: previewImages,
+        };
+      })
+    );
+
+    // Combiner shares et folders
+    return shares.map(share => ({
+      ...share,
+      folders: foldersWithDetails.find(f => f.id === share.folder_id) || null,
+    }));
   }
 }

@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
     const shareService = ShareFactory.createShareService(supabase);
 
     // Get folders shared with this user
+    console.log('[SHARED FOLDERS] Fetching for email:', user.email);
     const sharedFolders = await shareService.getSharedFolders(user.email!);
+    console.log('[SHARED FOLDERS] Found:', sharedFolders.length, 'folders');
 
     return NextResponse.json(sharedFolders);
   } catch (error) {
