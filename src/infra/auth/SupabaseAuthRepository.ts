@@ -29,22 +29,55 @@ export class SupabaseAuthRepository implements AuthRepository {
    * Récupère les données depuis la table public.users
    */
 
-  private async mapSupabaseUserToDomain(supabaseUser: any): Promise<User> {
-    // Récupérer les données depuis public.users
-    const { data: publicUser, error } = await this.supabase
-      .from('users')
-      .select('username, avatar_url, created_at, updated_at')
-      .eq('id', supabaseUser.id)
-      .maybeSingle();
+  private async mapSupabaseUserToDomain(supabaseUser: any, isNewUser = false): Promise<User> {
+    let publicUser = null;
+    let error = null;
+
+    // Si c'est un nouvel utilisateur (après signup), on retry avec délai pour laisser le trigger s'exécuter
+    if (isNewUser) {
+      const maxRetries = 5;
+      const delayMs = 300; // 300ms entre chaque tentative
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const { data, error: fetchError } = await this.supabase
+          .from('users')
+          .select('username, avatar_url, created_at, updated_at')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
+
+        if (data) {
+          publicUser = data;
+          error = null;
+          break;
+        }
+
+        error = fetchError;
+
+        // Si ce n'est pas la dernière tentative, attendre avant de réessayer
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    } else {
+      // Pour les utilisateurs existants, une seule tentative
+      const { data, error: fetchError } = await this.supabase
+        .from('users')
+        .select('username, avatar_url, created_at, updated_at')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
+
+      publicUser = data;
+      error = fetchError;
+    }
 
     if (error) {
       console.error('Error fetching user from public.users:', error);
     }
 
-    // Si l'utilisateur n'existe pas dans public.users, utiliser user_metadata comme fallback
+    // Si l'utilisateur n'existe pas dans public.users après tous les retries, utiliser user_metadata comme fallback
     // Le trigger SQL devrait créer l'entrée automatiquement lors de l'inscription
     if (!publicUser) {
-      console.warn('User not found in public.users, falling back to user_metadata. This might indicate the trigger did not run.');
+      console.warn('User not found in public.users after retries, falling back to user_metadata. This might indicate the trigger did not run.');
       return {
         id: supabaseUser.id,
         email: supabaseUser.email!,
@@ -85,9 +118,9 @@ export class SupabaseAuthRepository implements AuthRepository {
   /**
    * Convertit une session Supabase en UserSession du domaine
    */
-  private async mapSupabaseSessionToDomain(supabaseSession: any): Promise<UserSession> {
+  private async mapSupabaseSessionToDomain(supabaseSession: any, isNewUser = false): Promise<UserSession> {
     return {
-      user: await this.mapSupabaseUserToDomain(supabaseSession.user),
+      user: await this.mapSupabaseUserToDomain(supabaseSession.user, isNewUser),
       accessToken: supabaseSession.access_token,
       refreshToken: supabaseSession.refresh_token,
       expiresAt: (supabaseSession.expires_at || 0) * 1000, // Convert seconds to milliseconds
@@ -172,14 +205,15 @@ export class SupabaseAuthRepository implements AuthRepository {
       if (!data.session) {
         // Créer une session temporaire pour afficher un message
         return {
-          user: await this.mapSupabaseUserToDomain(data.user),
+          user: await this.mapSupabaseUserToDomain(data.user, true),
           accessToken: '',
           refreshToken: '',
           expiresAt: 0,
         };
       }
 
-      return await this.mapSupabaseSessionToDomain(data.session);
+      // Pour signUp, on indique que c'est un nouvel utilisateur pour activer le retry
+      return await this.mapSupabaseSessionToDomain(data.session, true);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
