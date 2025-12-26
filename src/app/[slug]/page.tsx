@@ -30,7 +30,7 @@ export default function GroupPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
-        <Header />
+        <Header currentGroupId={group?.id} />
         <main className="w-full px-[64px] py-[40px]" />
       </div>
     );
@@ -38,7 +38,7 @@ export default function GroupPage() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header />
+      <Header currentGroupId={group?.id} />
 
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}

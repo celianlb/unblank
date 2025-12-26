@@ -13,9 +13,10 @@ interface HeaderProps {
   selectedCount?: number;
   onDeleteSelected?: () => void;
   currentFolderId?: string;
+  currentGroupId?: string;
 }
 
-export default function Header({ selectedCount = 0, onDeleteSelected, currentFolderId }: HeaderProps) {
+export default function Header({ selectedCount = 0, onDeleteSelected, currentFolderId, currentGroupId }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
@@ -47,6 +48,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
       <CreateFolderModal
         isOpen={isCreateFolderModalOpen}
         onClose={() => setIsCreateFolderModalOpen(false)}
+        parentFolderId={currentGroupId}
       />
       <CreateGroupModal
         isOpen={isCreateGroupModalOpen}

@@ -8,9 +8,10 @@ import { useCreateFolder } from '@/hooks/useFolders';
 interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  parentFolderId?: string;
 }
 
-export default function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
+export default function CreateFolderModal({ isOpen, onClose, parentFolderId }: CreateFolderModalProps) {
   const [folderName, setFolderName] = useState('');
   const { session } = useAuthContext();
 
@@ -28,7 +29,7 @@ export default function CreateFolderModal({ isOpen, onClose }: CreateFolderModal
       // ✅ Créer le dossier avec React Query (invalide automatiquement le cache)
       await createFolder.mutateAsync({
         name: folderName.trim(),
-        parentFolderId: null,
+        parentFolderId: parentFolderId || null,
       });
 
       // Fermer le modal et réinitialiser
