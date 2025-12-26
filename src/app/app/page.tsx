@@ -9,6 +9,7 @@ import FolderCard from '@/components/FolderCard';
 import LinkCard from '@/components/LinkCard';
 import { useFolders, useGroups } from '@/hooks/useFolders';
 import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/hooks/useLinks';
+import { useSharedFolders } from '@/hooks/useSharedFolders';
 import { LinkService } from '@/domain/links/services/LinkService';
 import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
 
@@ -21,6 +22,7 @@ export default function AppPage() {
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
+  const { data: sharedFolders = [], isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id);
 
   // ✅ Infinite scroll avec pagination (12 liens par page)
   const {
@@ -195,6 +197,35 @@ export default function AppPage() {
                   itemCount={folder.link_count || 0}
                   lastUpdate={formatLastUpdate(folder.updated_at)}
                   isSystem={folder.is_system}
+                  previewImages={folder.preview_images}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Section Dossiers partagés */}
+        {loadingSharedFolders ? null : sharedFolders.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
+            {/* Titre */}
+            <h1
+              className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+            >
+              Dossiers partagés ({sharedFolders.length})
+            </h1>
+
+            {/* Contenu des cartes */}
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {sharedFolders.map((folder) => (
+                <FolderCard
+                  key={folder.id}
+                  id={folder.id}
+                  title={folder.name}
+                  slug={folder.slug}
+                  itemCount={folder.link_count || 0}
+                  lastUpdate={formatLastUpdate(folder.updated_at)}
+                  isSystem={false}
                   previewImages={folder.preview_images}
                 />
               ))}

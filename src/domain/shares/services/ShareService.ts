@@ -121,4 +121,20 @@ export class ShareService {
 
     return { isValid: true, share };
   }
+
+  /**
+   * Get all folders shared with a specific user
+   */
+  async getSharedFolders(userEmail: string): Promise<any[]> {
+    const shares = await this.shareRepository.getSharedWithUser(userEmail);
+
+    // Transform the data to include share info with folder data
+    return shares
+      .filter(share => share.folders) // Filter out shares where folder was deleted
+      .map(share => ({
+        ...share.folders,
+        share_permission: share.permission,
+        share_id: share.id,
+      }));
+  }
 }

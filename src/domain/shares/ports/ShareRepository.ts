@@ -40,4 +40,9 @@ export interface ShareRepository {
    * Check if a user has access to a folder via share
    */
   hasAccess(folderId: string, userId: string): Promise<boolean>;
+
+  /**
+   * Get all folders shared with a specific user
+   */
+  getSharedWithUser(userEmail: string): Promise<ShareWithUser[]>;
 }

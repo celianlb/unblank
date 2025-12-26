@@ -31,22 +31,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const folderId = searchParams.get('folderId');
-
-    if (!folderId) {
-      return NextResponse.json({ error: 'folderId is required' }, { status: 400 });
-    }
-
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const shareService = ShareFactory.createShareService(supabase);
-    const shares = await shareService.getFolderShares(folderId);
 
-    return NextResponse.json(shares);
+    // Get folders shared with this user
+    const sharedFolders = await shareService.getSharedFolders(user.email!);
+
+    return NextResponse.json(sharedFolders);
   } catch (error) {
-    console.error('Error fetching shares:', error);
+    console.error('Error fetching shared folders:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch shares' },
+      { error: 'Failed to fetch shared folders' },
       { status: 500 }
     );
   }

@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/client';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { ShareRepository } from '@/domain/shares/ports/ShareRepository';
 import { Share, ShareWithUser, CreateShareDTO, UpdateShareDTO } from '@/domain/shares/models/Share';
 
 export class SupabaseShareRepository implements ShareRepository {
-  private supabase = createClient();
+  constructor(private supabase: SupabaseClient) {}
 
   async createShare(data: CreateShareDTO): Promise<Share> {
     const { data: share, error } = await this.supabase
@@ -30,15 +30,7 @@ export class SupabaseShareRepository implements ShareRepository {
   async getSharesByFolder(folderId: string): Promise<ShareWithUser[]> {
     const { data: shares, error } = await this.supabase
       .from('shares')
-      .select(`
-        *,
-        user:users!shares_shared_with_email_fkey (
-          id,
-          email,
-          name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('folder_id', folderId)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
@@ -47,7 +39,11 @@ export class SupabaseShareRepository implements ShareRepository {
       throw new Error(`Failed to get shares: ${error.message}`);
     }
 
-    return shares || [];
+    // Return shares without user join - the UI can display the email directly
+    return (shares || []).map(share => ({
+      ...share,
+      user: null, // No user data for now
+    }));
   }
 
   async getShareById(shareId: string): Promise<Share | null> {
@@ -135,5 +131,33 @@ export class SupabaseShareRepository implements ShareRepository {
     }
 
     return (shares && shares.length > 0) || false;
+  }
+
+  async getSharedWithUser(userEmail: string): Promise<ShareWithUser[]> {
+    const { data: shares, error } = await this.supabase
+      .from('shares')
+      .select(`
+        id,
+        folder_id,
+        permission,
+        folders:folder_id (
+          id,
+          name,
+          slug,
+          parent_folder_id,
+          is_group,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('is_active', true)
+      .eq('shared_with_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to get shared folders: ${error.message}`);
+    }
+
+    return shares || [];
   }
 }

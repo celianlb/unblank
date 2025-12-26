@@ -224,6 +224,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     />
 
     <FolderSettingsModal
+      folderId={id}
       isOpen={isSettingsModalOpen}
       onClose={() => setIsSettingsModalOpen(false)}
       folderName={title}
@@ -232,6 +233,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     <ShareLinkModal
       isOpen={isShareModalOpen}
       onClose={() => setIsShareModalOpen(false)}
+      folderId={id}
     />
 
     <RenameFolderModal

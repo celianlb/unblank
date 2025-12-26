@@ -1,8 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SharePermission } from '@/domain/shares/models/Share';
+import { supabase } from '@/infra/db/supabase';
 
 // API endpoints
 const SHARES_API = '/api/shares';
+
+// Helper function to get auth token
+async function getAuthToken(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+
+  if (!accessToken) {
+    throw new Error('No access token found');
+  }
+
+  return accessToken;
+}
 
 interface CreatePublicShareParams {
   folderId: string;
@@ -31,7 +44,13 @@ export function useFolderShares(folderId: string | null) {
     queryFn: async () => {
       if (!folderId) return [];
 
-      const response = await fetch(`${SHARES_API}?folderId=${folderId}`);
+      const accessToken = await getAuthToken();
+      const response = await fetch(`${SHARES_API}?folderId=${folderId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
       if (!response.ok) {
         throw new Error('Failed to fetch shares');
       }
@@ -49,9 +68,13 @@ export function useCreatePublicShare() {
 
   return useMutation({
     mutationFn: async (params: CreatePublicShareParams) => {
+      const accessToken = await getAuthToken();
       const response = await fetch(`${SHARES_API}/public`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(params),
       });
 
@@ -75,9 +98,13 @@ export function useInviteByEmail() {
 
   return useMutation({
     mutationFn: async (params: InviteByEmailParams) => {
+      const accessToken = await getAuthToken();
       const response = await fetch(`${SHARES_API}/invite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(params),
       });
 
@@ -101,9 +128,13 @@ export function useUpdateSharePermission() {
 
   return useMutation({
     mutationFn: async (params: UpdateSharePermissionParams) => {
+      const accessToken = await getAuthToken();
       const response = await fetch(`${SHARES_API}/${params.shareId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ permission: params.permission }),
       });
 
@@ -127,8 +158,12 @@ export function useRevokeShare() {
 
   return useMutation({
     mutationFn: async (shareId: string) => {
+      const accessToken = await getAuthToken();
       const response = await fetch(`${SHARES_API}/${shareId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
       });
 
       if (!response.ok) {
@@ -139,6 +174,7 @@ export function useRevokeShare() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shares'] });
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }

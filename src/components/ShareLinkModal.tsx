@@ -2,51 +2,67 @@
 
 import { X, Copy } from 'lucide-react';
 import { useState } from 'react';
+import { useCreatePublicShare, useInviteByEmail } from '@/hooks/useShares';
 
 interface ShareLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  shareUrl?: string;
-  onGenerate?: (permission: 'view' | 'edit') => void;
-  onInviteByEmail?: (email: string, permission: 'view' | 'edit') => void;
+  folderId: string;
 }
 
 export default function ShareLinkModal({
   isOpen,
   onClose,
-  shareUrl = "https://www.googlefont.com/",
-  onGenerate,
-  onInviteByEmail
+  folderId
 }: ShareLinkModalProps) {
   const [selectedPermission, setSelectedPermission] = useState<'view' | 'edit'>('view');
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
   const [activeTab, setActiveTab] = useState<'link' | 'email'>('link');
+  const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(null);
+
+  const createPublicShare = useCreatePublicShare();
+  const inviteByEmailMutation = useInviteByEmail();
 
   if (!isOpen) return null;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-  };
-
-  const handleGenerate = () => {
-    // TODO: API call to generate share link with token
-    if (onGenerate) {
-      onGenerate(selectedPermission);
+    if (generatedShareUrl) {
+      navigator.clipboard.writeText(generatedShareUrl);
     }
   };
 
-  const handleInviteByEmail = () => {
+  const handleGenerate = async () => {
+    try {
+      const result = await createPublicShare.mutateAsync({
+        folderId,
+        permission: selectedPermission,
+      });
+      setGeneratedShareUrl(result.shareUrl);
+    } catch (error) {
+      console.error('Error generating share link:', error);
+      alert('Erreur lors de la génération du lien de partage');
+    }
+  };
+
+  const handleInviteByEmail = async () => {
     if (!inviteEmail.trim()) return;
 
-    // TODO: API call to invite by email
-    if (onInviteByEmail) {
-      onInviteByEmail(inviteEmail, invitePermission);
-    }
+    try {
+      await inviteByEmailMutation.mutateAsync({
+        folderId,
+        email: inviteEmail,
+        permission: invitePermission,
+      });
 
-    // Reset form
-    setInviteEmail('');
-    setInvitePermission('view');
+      // Reset form
+      setInviteEmail('');
+      setInvitePermission('view');
+      alert('Invitation envoyée avec succès !');
+    } catch (error) {
+      console.error('Error inviting by email:', error);
+      alert('Erreur lors de l\'envoi de l\'invitation');
+    }
   };
 
   return (
@@ -158,14 +174,14 @@ export default function ShareLinkModal({
                 </button>
 
                 {/* Share Link Display (shown if URL exists) */}
-                {shareUrl && shareUrl !== "https://www.googlefont.com/" && (
+                {generatedShareUrl && (
                   <div className="flex flex-col gap-2 w-full">
                     <span className="text-[14px] font-medium text-[#0D0D0D] font-[Heebo]">
                       Lien généré
                     </span>
                     <div className="flex flex-row items-center justify-center px-2.5 gap-2.5 w-full h-[46px] bg-[#FEF8EE] border-2 border-black rounded-xl">
                       <span className="flex-1 text-[16px] leading-[24px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
-                        {shareUrl}
+                        {generatedShareUrl}
                       </span>
                       <button
                         onClick={handleCopyLink}
@@ -175,6 +191,13 @@ export default function ShareLinkModal({
                       </button>
                     </div>
                   </div>
+                )}
+
+                {/* Loading state */}
+                {createPublicShare.isPending && (
+                  <p className="text-[14px] text-[#A8A8A8] font-[Heebo]">
+                    Génération du lien en cours...
+                  </p>
                 )}
               </div>
             )}
@@ -245,10 +268,10 @@ export default function ShareLinkModal({
                 {/* Invite Button */}
                 <button
                   onClick={handleInviteByEmail}
-                  disabled={!inviteEmail.trim()}
+                  disabled={!inviteEmail.trim() || inviteByEmailMutation.isPending}
                   className="w-full h-[46px] bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors"
                 >
-                  Envoyer l&apos;invitation
+                  {inviteByEmailMutation.isPending ? 'Envoi en cours...' : 'Envoyer l\'invitation'}
                 </button>
               </div>
             )}

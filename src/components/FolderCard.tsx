@@ -228,6 +228,7 @@ export default function FolderCard({
       />
 
       <FolderSettingsModal
+        folderId={id}
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         folderName={title}
@@ -236,6 +237,7 @@ export default function FolderCard({
       <ShareLinkModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
+        folderId={id}
       />
 
       <RenameFolderModal
