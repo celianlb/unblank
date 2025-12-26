@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { X, Pencil, Copy, ExternalLink } from 'lucide-react';
 import EditTagsModal from './EditTagsModal';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   imageUrl: string;
   link: string;
+  linkId?: string;
   fileType: string;
   dimensions: string;
   fileSize: string;
@@ -22,6 +24,7 @@ export default function ImagePreviewModal({
   onClose,
   imageUrl,
   link,
+  linkId,
   fileType,
   dimensions,
   fileSize,
@@ -31,6 +34,8 @@ export default function ImagePreviewModal({
 }: ImagePreviewModalProps) {
   const [isEditTagsOpen, setIsEditTagsOpen] = useState(false);
   const [currentTags, setCurrentTags] = useState(tags);
+  const [isSaving, setIsSaving] = useState(false);
+  const { session } = useAuthContext();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
@@ -40,9 +45,40 @@ export default function ImagePreviewModal({
     window.open(link, '_blank');
   };
 
-  const handleSaveTags = (newTags: string[]) => {
-    setCurrentTags(newTags);
-    // TODO: Save to backend/database
+  const handleSaveTags = async (newTags: string[]) => {
+    if (!linkId) {
+      console.error('No linkId provided');
+      return;
+    }
+
+    if (!session?.accessToken) {
+      console.error('No access token available');
+      alert('Vous devez être connecté pour modifier les tags');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/links/${linkId}/tags`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({ tags: newTags }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update tags');
+      }
+
+      setCurrentTags(newTags);
+    } catch (error) {
+      console.error('Error saving tags:', error);
+      alert('Erreur lors de la sauvegarde des tags');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;

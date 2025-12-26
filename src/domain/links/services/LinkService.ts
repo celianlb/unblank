@@ -315,6 +315,89 @@ export class LinkService {
   }
 
   /**
+   * Met à jour les tags d'un lien
+   * @param supabaseClient - Client Supabase authentifié avec les credentials de l'utilisateur
+   */
+  static async updateTags(
+    supabaseClient: any,
+    linkId: string,
+    userId: string,
+    tags: string[]
+  ): Promise<boolean> {
+    try {
+      // 1. Vérifier que le lien appartient à l'utilisateur
+      const { data: link, error: linkError } = await supabaseClient
+        .from('links')
+        .select('id')
+        .eq('id', linkId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (linkError || !link) {
+        console.error('Link not found or unauthorized:', linkError);
+        return false;
+      }
+
+      // 2. Supprimer les associations existantes
+      await supabaseClient
+        .from('link_tags')
+        .delete()
+        .eq('link_id', linkId);
+
+      // 3. Si aucun tag, on s'arrête là
+      if (tags.length === 0) {
+        return true;
+      }
+
+      // 4. Créer ou récupérer les tags et créer les associations
+      for (const tagName of tags) {
+        // Vérifier si le tag existe déjà pour cet utilisateur
+        let { data: existingTag } = await supabaseClient
+          .from('tags')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('name', tagName)
+          .maybeSingle();
+
+        let tagId: string;
+
+        if (existingTag) {
+          tagId = existingTag.id;
+        } else {
+          // Créer le tag
+          const { data: newTag, error: tagError } = await supabaseClient
+            .from('tags')
+            .insert({
+              user_id: userId,
+              name: tagName,
+            })
+            .select('id')
+            .single();
+
+          if (tagError || !newTag) {
+            console.error('Error creating tag:', tagError);
+            continue;
+          }
+
+          tagId = newTag.id;
+        }
+
+        // Associer le tag au lien
+        await supabaseClient.from('link_tags').insert({
+          link_id: linkId,
+          tag_id: tagId,
+          is_auto_generated: false,
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error updating tags:', error);
+      return false;
+    }
+  }
+
+  /**
    * Extrait les métadonnées d'une URL via l'API
    */
   static async extractMetadata(url: string): Promise<{

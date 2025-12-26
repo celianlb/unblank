@@ -219,6 +219,7 @@ export default function LinkCard({
         onClose={() => setIsPreviewModalOpen(false)}
         imageUrl={fullSizeUrl || 'https://via.placeholder.com/600'}
         link={link}
+        linkId={id}
         fileType={fileType}
         dimensions={dimensions}
         fileSize={fileSize}
