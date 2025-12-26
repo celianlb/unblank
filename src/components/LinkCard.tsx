@@ -43,6 +43,18 @@ export default function LinkCard({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
+  // Proxy external images to avoid CORS issues
+  const getProxiedImageUrl = (url?: string) => {
+    if (!url) return undefined;
+    // Only proxy external images (not localhost or relative URLs)
+    if (url.startsWith('http') && !url.includes('localhost')) {
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
+  const proxiedImageUrl = getProxiedImageUrl(imageUrl);
+
   const handleCheckChange = () => {
     const newValue = !isSelected;
     if (id) {
@@ -100,11 +112,12 @@ export default function LinkCard({
       >
         {/* Image placeholder */}
         <div className="absolute inset-0 bg-[#C4C4C4] rounded-xl sm:rounded-[16px]">
-          {imageUrl && (
+          {proxiedImageUrl && (
             <img
-              src={imageUrl}
+              src={proxiedImageUrl}
               alt=""
               loading="lazy"
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover rounded-xl sm:rounded-[16px]"
             />
           )}
@@ -195,7 +208,7 @@ export default function LinkCard({
       <ImagePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        imageUrl={imageUrl || 'https://via.placeholder.com/600'}
+        imageUrl={proxiedImageUrl || 'https://via.placeholder.com/600'}
         link={link}
         fileType={fileType}
         dimensions={dimensions}

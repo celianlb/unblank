@@ -32,6 +32,17 @@ export default function ImagePreviewModal({
   const [isEditTagsOpen, setIsEditTagsOpen] = useState(false);
   const [currentTags, setCurrentTags] = useState(tags);
 
+  // Proxy external images to avoid CORS issues
+  const getProxiedImageUrl = (url: string) => {
+    // Only proxy external images (not localhost or relative URLs)
+    if (url.startsWith('http') && !url.includes('localhost')) {
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
+  const proxiedImageUrl = getProxiedImageUrl(imageUrl);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
   };
@@ -63,9 +74,10 @@ export default function ImagePreviewModal({
         {/* Image preview - Takes more space on larger screens */}
         <div className="w-full h-[35vh] sm:h-[40vh] md:h-full md:w-[55%] lg:w-[55%] xl:w-[644px] bg-[#FEF8EE] rounded-xl overflow-hidden shrink-0 p-3 sm:p-4 md:p-6 lg:p-10">
           <img
-            src={imageUrl}
+            src={proxiedImageUrl}
             alt="Preview"
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="w-full h-full object-contain rounded-lg"
           />
         </div>

@@ -34,6 +34,17 @@ export default function ImageCard({
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
+  // Proxy external images to avoid CORS issues
+  const getProxiedImageUrl = (url: string) => {
+    // Only proxy external images (not localhost or relative URLs)
+    if (url.startsWith('http') && !url.includes('localhost')) {
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
+  const proxiedImageUrl = getProxiedImageUrl(imageUrl);
+
   const handleCheckChange = () => {
     const newValue = !isChecked;
     setIsChecked(newValue);
@@ -75,8 +86,10 @@ export default function ImageCard({
         {/* Image - full bleed with overflow */}
         <div className="absolute left-0 top-[-18px] sm:top-[-20px] md:top-[-22px] w-[calc(100%-8px)] sm:w-[192px] md:w-[222px] lg:w-[242px] xl:w-[264px] h-[290px] sm:h-[310px] md:h-[344px] lg:h-[360px] xl:h-[374px] overflow-hidden rounded-xl sm:rounded-[16px] ml-1">
           <img
-            src={imageUrl}
+            src={proxiedImageUrl}
             alt="Preview"
+            loading="lazy"
+            referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
           />
         </div>
@@ -166,7 +179,7 @@ export default function ImageCard({
       <ImagePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        imageUrl={imageUrl}
+        imageUrl={proxiedImageUrl}
         link={link}
         fileType={fileType}
         dimensions={dimensions}
