@@ -90,12 +90,23 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  // Vérifier si des données ont été saisies
+  const hasUnsavedData = url.trim() !== '' || title.trim() !== '' || description.trim() !== '' || tags.length > 0;
+
+  // Gérer le clic sur l'overlay
+  const handleOverlayClick = () => {
+    // Ne fermer que si aucune donnée n'a été saisie
+    if (!hasUnsavedData) {
+      onClose();
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
       />
 
       {/* Modal */}
