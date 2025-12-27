@@ -54,12 +54,18 @@ export async function extractMetadata(url: string): Promise<Metadata | null> {
  */
 export async function getFolders(): Promise<{ folders: Folder[]; groups: Folder[]; all: Folder[] }> {
   try {
+    console.log('[API] Getting access token...');
     const token = await getAccessToken();
+    console.log('[API] Token retrieved:', token ? 'YES' : 'NO');
+
     if (!token) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/folders`, {
+    const url = `${API_BASE_URL}/api/folders`;
+    console.log('[API] Fetching folders from:', url);
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -67,19 +73,23 @@ export async function getFolders(): Promise<{ folders: Folder[]; groups: Folder[
       },
     });
 
+    console.log('[API] Response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[API] Error response:', errorData);
       throw new Error(errorData.error || 'Failed to fetch folders');
     }
 
     const data = await response.json();
+    console.log('[API] Folders data:', data);
     return {
       folders: data.folders || [],
       groups: data.groups || [],
       all: data.all || []
     };
   } catch (error) {
-    console.error('Error fetching folders:', error);
+    console.error('[API] Error fetching folders:', error);
     throw error; // Propagate error instead of silently returning empty array
   }
 }
@@ -98,12 +108,19 @@ export async function createLink(data: {
   tags?: string[];
 }): Promise<{ success: boolean; error?: string }> {
   try {
+    console.log('[API] Creating link with data:', data);
+    console.log('[API] Getting access token...');
     const token = await getAccessToken();
+    console.log('[API] Token retrieved:', token ? 'YES' : 'NO');
+
     if (!token) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/links`, {
+    const url = `${API_BASE_URL}/api/links`;
+    console.log('[API] Posting to:', url);
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -112,14 +129,19 @@ export async function createLink(data: {
       body: JSON.stringify(data),
     });
 
+    console.log('[API] Response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[API] Error response:', errorData);
       throw new Error(errorData.error || 'Failed to create link');
     }
 
+    const result = await response.json();
+    console.log('[API] Link created successfully:', result);
     return { success: true };
   } catch (error) {
-    console.error('Error creating link:', error);
+    console.error('[API] Error creating link:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

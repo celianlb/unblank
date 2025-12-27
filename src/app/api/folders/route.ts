@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import FolderFactory from '@/lib/folders/folderFactory';
+import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
+
+// Handle CORS preflight
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsPreFlight(request);
+}
 
 export async function GET(request: NextRequest) {
+  const origin = request.headers.get('origin');
+
   try {
     // Get the access token from the Authorization header
     const authHeader = request.headers.get('Authorization');
     const accessToken = authHeader?.replace('Bearer ', '');
 
     if (!accessToken) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+      return addCorsHeaders(response, origin);
     }
 
     // Create Supabase client with the user's access token
@@ -32,10 +41,11 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+      return addCorsHeaders(response, origin);
     }
 
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
@@ -47,31 +57,36 @@ export async function GET(request: NextRequest) {
       folderService.getUserGroups(user.id)
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       folders,
       groups,
       all: [...groups, ...folders] // Combined list for convenience
     });
+    return addCorsHeaders(response, origin);
   } catch (error) {
     console.error('Error in folders API:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Failed to fetch folders' },
       { status: 500 }
     );
+    return addCorsHeaders(response, origin);
   }
 }
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin');
+
   try {
     // Get the access token from the Authorization header
     const authHeader = request.headers.get('Authorization');
     const accessToken = authHeader?.replace('Bearer ', '');
 
     if (!accessToken) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+      return addCorsHeaders(response, origin);
     }
 
     // Create Supabase client with the user's access token
@@ -91,10 +106,11 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+      return addCorsHeaders(response, origin);
     }
 
     // Parse request body
@@ -102,10 +118,11 @@ export async function POST(request: NextRequest) {
     const { name, parentFolderId, isGroup } = body;
 
     if (!name) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Folder name is required' },
         { status: 400 }
       );
+      return addCorsHeaders(response, origin);
     }
 
     // ✅ Vérifier les permissions si on crée dans un groupe partagé
@@ -130,10 +147,11 @@ export async function POST(request: NextRequest) {
       const hasEditPermission = share?.permission === 'edit';
 
       if (!isOwner && !hasEditPermission) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           { error: 'You do not have permission to create folders in this group' },
           { status: 403 }
         );
+        return addCorsHeaders(response, origin);
       }
     }
 
@@ -149,22 +167,24 @@ export async function POST(request: NextRequest) {
     );
 
     if (!folder) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Failed to create folder' },
         { status: 500 }
       );
+      return addCorsHeaders(response, origin);
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       folder
     });
+    return addCorsHeaders(response, origin);
   } catch (error) {
     console.error('Error in folders POST API:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Failed to create folder' },
       { status: 500 }
     );
+    return addCorsHeaders(response, origin);
   }
 }
-

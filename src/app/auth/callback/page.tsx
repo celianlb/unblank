@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/infra/db/supabase';
+import { isFromExtension, sendSessionToExtension } from '@/lib/extension/extensionBridge';
 
 /**
  * Page de callback OAuth
@@ -10,14 +11,28 @@ import { supabase } from '@/infra/db/supabase';
  */
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const fromExtension = isFromExtension();
 
   useEffect(() => {
     // Écoute les changements d'état d'authentification
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Connexion réussie, redirection vers le dashboard
-          router.push('/app');
+          // Connexion réussie
+          if (fromExtension) {
+            // Coming from extension: send session and close tab
+            // Note: session.expires_at is in seconds, convert to milliseconds
+            await sendSessionToExtension({
+              accessToken: session.access_token,
+              refreshToken: session.refresh_token || '',
+              expiresAt: (session.expires_at || 0) * 1000, // Convert to milliseconds
+              userId: session.user.id,
+              email: session.user.email || '',
+            });
+          } else {
+            // Regular access: redirect to app
+            router.push('/app');
+          }
         } else if (event === 'SIGNED_OUT') {
           // Déconnexion, retour au login
           router.push('/login');
@@ -29,7 +44,7 @@ export default function AuthCallbackPage() {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, fromExtension]);
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
