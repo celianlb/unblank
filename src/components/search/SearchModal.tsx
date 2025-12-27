@@ -155,7 +155,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setSelectedTags([...selectedTags, tagName]);
     }
     setTagInputValue('');
-    setIsTagDropdownOpen(false);
+    // Keep dropdown open after adding a tag
   };
 
   const removeTag = (tagName: string) => {
@@ -252,7 +252,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               <button
                 ref={tagButtonRef}
                 onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black bg-white hover:bg-[#FFE3E8] focus:outline-none focus:ring-2 focus:ring-[#FF506F] transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black bg-white hover:bg-[#FFE3E8] focus:outline-none transition-colors cursor-pointer"
               >
                 <span className="text-sm font-medium text-black font-[Heebo]">
                   Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
