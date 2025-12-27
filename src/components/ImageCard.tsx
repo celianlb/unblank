@@ -193,6 +193,7 @@ export default function ImageCard({
         onClose={() => setIsPreviewModalOpen(false)}
         imageUrl={fullSizeUrl}
         link={link}
+        linkId={linkId}
         fileType={fileType}
         dimensions={dimensions}
         fileSize={fileSize}
