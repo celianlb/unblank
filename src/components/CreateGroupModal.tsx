@@ -1,6 +1,6 @@
 'use client';
 
-import { X, FolderOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { X, FolderOpen, ChevronDown, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useFolders, useCreateFolder, useMoveFolderToGroup } from '@/hooks/useFolders';
@@ -192,11 +192,12 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                         : 'Dossiers existants'}
                     </span>
                   </div>
-                  {isDropdownOpen ? (
-                    <ChevronUp className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
-                  ) : (
-                    <ChevronDown className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
-                  )}
+                  <ChevronDown
+                    className={`w-6 h-6 text-black shrink-0 transition-transform duration-200 ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                    strokeWidth={2}
+                  />
                 </div>
 
                 {/* Dropdown ouvert avec boutons Ajouter */}

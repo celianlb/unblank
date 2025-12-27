@@ -1,8 +1,8 @@
-import { X, WandSparkles, Folder, ChevronDown, Plus } from "lucide-react";
+import { X, WandSparkles, Folder, ChevronDown, Plus, ChevronLeft, FolderOpen } from "lucide-react";
 import { Button } from "../components/Button";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { motion } from "framer-motion";
-import { extractMetadata, createLink, getFolders, type Metadata, type Folder as FolderType } from "../utils/api";
+import { extractMetadata, createLink, getFolders, getGroupFolders, type Metadata, type Folder as FolderType } from "../utils/api";
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -24,22 +24,45 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [isSaving, setIsSaving] = useState(false);
   const spanRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Navigation hiérarchique
+  const [currentGroupId, setCurrentGroupId] = useState<string | null>(null);
+  const [breadcrumb, setBreadcrumb] = useState<Array<{ id: string | null; name: string }>>([]);
+  const [currentFolders, setCurrentFolders] = useState<FolderType[]>([]);
 
   // Load folders on mount
   useEffect(() => {
     loadFolders();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const loadFolders = async () => {
     setIsLoadingFolders(true);
     try {
-      const { folders: userFolders, groups: userGroups, all } = await getFolders();
+      const { folders: userFolders, groups: userGroups } = await getFolders();
       setGroups(userGroups);
       setFolders(userFolders);
-      // Set first item from combined list as default if available
-      if (all.length > 0 && !selectedDestination) {
-        setSelectedDestination(all[0].id);
-      }
+      // Initialize with root level: groups and root folders
+      setCurrentFolders([...userGroups, ...userFolders]);
+      setCurrentGroupId(null);
+      setBreadcrumb([]);
     } catch (error) {
       console.error('Error loading folders:', error);
     } finally {
@@ -47,8 +70,73 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     }
   };
 
-  // Combined list for dropdown (groups first, then folders)
-  const allDestinations = [...groups, ...folders];
+  // Navigate into a group to see its folders
+  const navigateToGroup = async (group: FolderType) => {
+    // Update breadcrumb and UI immediately
+    setCurrentGroupId(group.id);
+    setBreadcrumb([...breadcrumb, { id: group.id, name: group.name }]);
+    setSelectedDestination(null);
+    setCurrentFolders([]); // Clear folders to show white space
+
+    // Then load folders in background
+    setIsLoadingFolders(true);
+    try {
+      const { folders: groupFolders } = await getGroupFolders(group.id);
+      setCurrentFolders(groupFolders);
+    } catch (error) {
+      console.error('Error loading group folders:', error);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  };
+
+  // Navigate back to the previous level
+  const navigateBack = () => {
+    if (breadcrumb.length === 0) return;
+
+    const newBreadcrumb = [...breadcrumb];
+    newBreadcrumb.pop();
+
+    if (newBreadcrumb.length === 0) {
+      // Back to root
+      setCurrentFolders([...groups, ...folders]);
+      setCurrentGroupId(null);
+      setBreadcrumb([]);
+    } else {
+      // Back to previous group level
+      const previousLevel = newBreadcrumb[newBreadcrumb.length - 1];
+      const previousGroup = groups.find(g => g.id === previousLevel.id);
+      if (previousGroup) {
+        navigateToGroup(previousGroup);
+      }
+    }
+  };
+
+  // Handle item selection in dropdown
+  const handleItemClick = (item: FolderType) => {
+    if (item.is_group && currentGroupId === null) {
+      // Clicked on a group at root level - navigate into it
+      navigateToGroup(item);
+    } else {
+      // Clicked on a folder - select it and close dropdown
+      setSelectedDestination(item.id);
+      setIsDropdownOpen(false);
+    }
+  };
+
+  // Get the display name for the selected destination
+  const getSelectedDestinationName = () => {
+    if (!selectedDestination) return "Sélectionner un dossier";
+
+    // Check in current folders first
+    const current = currentFolders.find(f => f.id === selectedDestination);
+    if (current) return current.name;
+
+    // Fallback to all folders/groups
+    const allItems = [...groups, ...folders];
+    const item = allItems.find(f => f.id === selectedDestination);
+    return item?.name || "Sélectionner un dossier";
+  };
 
   useLayoutEffect(() => {
     if (spanRef.current) {
@@ -492,7 +580,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       {/* Destination Selector */}
       <div style={sectionStyle}>
         <div style={sectionTitleStyle}>Choisir la destination</div>
-        <div style={dropdownStyle}>
+        <div style={dropdownStyle} ref={dropdownRef}>
           <div
             style={dropdownButtonStyle}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -500,31 +588,56 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
             <div style={dropdownContentStyle}>
               <Folder size={24} color="#000000" strokeWidth={2} />
               <span>
-                {isLoadingFolders
-                  ? "Chargement..."
-                  : selectedDestination
-                    ? allDestinations.find(f => f.id === selectedDestination)?.name || "Sélectionner un dossier"
+                {selectedDestination
+                  ? breadcrumb.length > 0
+                    ? `${breadcrumb.map(b => b.name).join(' > ')} > ${getSelectedDestinationName()}`
+                    : getSelectedDestinationName()
+                  : breadcrumb.length > 0
+                    ? breadcrumb.map(b => b.name).join(' > ')
                     : "Sélectionner un dossier"
                 }
               </span>
             </div>
-            <ChevronDown size={24} color="#000000" strokeWidth={2} />
+            <motion.div
+              animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              <ChevronDown size={24} color="#000000" strokeWidth={2} />
+            </motion.div>
           </div>
-          {isDropdownOpen && !isLoadingFolders && (
+          {isDropdownOpen && (
             <div style={dropdownMenuStyle}>
-              {allDestinations.length === 0 ? (
+              {breadcrumb.length > 0 && (
+                <div
+                  key="back"
+                  style={{
+                    ...dropdownItemStyle,
+                    borderBottom: "1px solid #E5E5E5",
+                    fontWeight: 700,
+                  }}
+                  onClick={navigateBack}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "#FFE3E8")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "#FFFFFF")
+                  }
+                >
+                  <ChevronLeft size={24} color="#000000" strokeWidth={2} />
+                  <span>{breadcrumb[breadcrumb.length - 1].name}</span>
+                </div>
+              )}
+              {!isLoadingFolders && currentFolders.length === 0 && breadcrumb.length === 0 ? (
                 <div style={{ ...dropdownItemStyle, cursor: "default" }}>
                   <span>Aucun dossier disponible</span>
                 </div>
               ) : (
-                allDestinations.map((destination) => (
+                currentFolders.map((item) => (
                   <div
-                    key={destination.id}
+                    key={item.id}
                     style={dropdownItemStyle}
-                    onClick={() => {
-                      setSelectedDestination(destination.id);
-                      setIsDropdownOpen(false);
-                    }}
+                    onClick={() => handleItemClick(item)}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.background = "#FFE3E8")
                     }
@@ -532,8 +645,12 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
                       (e.currentTarget.style.background = "#FFFFFF")
                     }
                   >
-                    <Folder size={24} color="#000000" strokeWidth={2} />
-                    <span>{destination.name}</span>
+                    {item.is_group ? (
+                      <FolderOpen size={24} color="#000000" strokeWidth={2} />
+                    ) : (
+                      <Folder size={24} color="#000000" strokeWidth={2} />
+                    )}
+                    <span>{item.name}</span>
                   </div>
                 ))
               )}

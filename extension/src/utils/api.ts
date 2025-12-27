@@ -95,6 +95,49 @@ export async function getFolders(): Promise<{ folders: Folder[]; groups: Folder[
 }
 
 /**
+ * Get folders for a specific group
+ */
+export async function getGroupFolders(groupId: string): Promise<{ folders: Folder[] }> {
+  try {
+    console.log('[API] Getting access token...');
+    const token = await getAccessToken();
+    console.log('[API] Token retrieved:', token ? 'YES' : 'NO');
+
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const url = `${API_BASE_URL}/api/folders/${groupId}`;
+    console.log('[API] Fetching group folders from:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('[API] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[API] Error response:', errorData);
+      throw new Error(errorData.error || 'Failed to fetch group folders');
+    }
+
+    const data = await response.json();
+    console.log('[API] Group folders data:', data);
+    return {
+      folders: data.folders || []
+    };
+  } catch (error) {
+    console.error('[API] Error fetching group folders:', error);
+    throw error;
+  }
+}
+
+/**
  * Create a link
  */
 export async function createLink(data: {

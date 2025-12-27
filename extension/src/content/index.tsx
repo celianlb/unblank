@@ -77,11 +77,11 @@ function applyOverlayStyles(container: HTMLDivElement) {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Semi-transparent background
     margin: '0',
     padding: '16px',
     boxSizing: 'border-box',
-    pointerEvents: 'none', // Allow clicks to pass through the container
+    pointerEvents: 'auto', // Enable clicks on container
   });
 }
 

@@ -157,19 +157,33 @@ export class SupabaseFolderRepository implements FolderRepository {
   }
 
   async getGroupFolders(userId: string, groupId: string): Promise<Folder[]> {
-    const { data, error } = await this.supabase
-      .rpc('get_group_folders_with_counts', { p_group_id: groupId });
+    // Récupérer les dossiers enfants du groupe
+    const { data: folders, error } = await this.supabase
+      .from('folders')
+      .select('*')
+      .eq('parent_folder_id', groupId)
+      .eq('is_group', false)
+      .order('position', { ascending: true });
 
     if (error) {
       console.error('Error fetching group folders:', error);
       throw error;
     }
 
-    const folders = data || [];
+    if (!folders || folders.length === 0) {
+      return [];
+    }
 
-    // Pour chaque dossier du groupe, récupérer les 2 dernières images
-    const foldersWithImages = await Promise.all(
+    // Pour chaque dossier, compter les liens et récupérer les images
+    const foldersWithCountsAndImages = await Promise.all(
       folders.map(async (folder) => {
+        // Compter les liens
+        const { count } = await this.supabase
+          .from('links')
+          .select('*', { count: 'exact', head: true })
+          .eq('folder_id', folder.id);
+
+        // Récupérer les 2 dernières images
         const { data: links } = await this.supabase
           .from('links')
           .select('original_image_url, screenshot_url')
@@ -184,12 +198,13 @@ export class SupabaseFolderRepository implements FolderRepository {
 
         return {
           ...folder,
+          link_count: count || 0,
           preview_images: previewImages
         };
       })
     );
 
-    return foldersWithImages;
+    return foldersWithCountsAndImages;
   }
 
   async createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup: boolean = false): Promise<Folder | null> {
