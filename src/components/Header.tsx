@@ -1,13 +1,14 @@
 'use client';
 
 import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import AddLinkModal from './AddLinkModal';
 import CreateFolderModal from './CreateFolderModal';
 import CreateGroupModal from './CreateGroupModal';
 import ProfileMenu from './ProfileMenu';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import SearchModal from './search/SearchModal';
 
 interface HeaderProps {
   selectedCount?: number;
@@ -24,6 +25,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const handleDeleteConfirm = async () => {
     if (onDeleteSelected) {
@@ -39,6 +41,20 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
   // Utiliser le context au lieu de fetcher à chaque fois
   const { session } = useAuthContext();
   const currentUser = session?.user || null;
+
+  // Global keyboard listener for Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K on Mac, Ctrl+K on Windows/Linux
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -61,17 +77,30 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
       />
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
     <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
       <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
         <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
           <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
-            <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8">
+            <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 pointer-events-none">
               <Search className="w-full h-full" strokeWidth={2} />
+            </div>
+            {/* Keyboard shortcut badge */}
+            <div className="hidden lg:flex absolute left-12 sm:left-14 md:left-16 lg:left-[72px] xl:left-[88px] top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-md border border-[#636363] bg-white pointer-events-none">
+              <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
+                {typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl'}
+              </span>
+              <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">K</span>
             </div>
             <input
               type="text"
               placeholder="Rechercher un dossier, une image, un lien"
-              className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-16 xl:pl-[74px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis"
+              onClick={() => setIsSearchModalOpen(true)}
+              readOnly
+              className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-pointer hover:bg-[#FFE3E8] transition-colors"
             />
           </div>
 
