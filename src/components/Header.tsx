@@ -148,27 +148,27 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
         <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
           <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
             <button
-              onClick={() => !currentFolderId && !isLoading && setIsCreateFolderModalOpen(true)}
-              disabled={!!currentFolderId || isLoading}
-              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(currentFolderId || isLoading) ? 'bg-[#FF506F] opacity-50 cursor-not-allowed' : 'bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+              onClick={() => !isLoading && !currentFolderId && setIsCreateFolderModalOpen(true)}
+              disabled={isLoading || !!currentFolderId}
+              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || currentFolderId) ? 'bg-[#FF506F] opacity-50 cursor-not-allowed' : 'bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
               <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
             </button>
 
             <button
-              onClick={() => !(isInGroup || currentFolderId || isLoading) && setIsCreateGroupModalOpen(true)}
-              disabled={isInGroup || !!currentFolderId || isLoading}
-              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isInGroup || currentFolderId || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+              onClick={() => !isLoading && !isInGroup && !currentFolderId && setIsCreateGroupModalOpen(true)}
+              disabled={isLoading || isInGroup || !!currentFolderId}
+              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || isInGroup || currentFolderId) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
               <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
             </button>
 
             <button
-              onClick={() => !(isInGroup || isLoading) && setIsAddLinkModalOpen(true)}
-              disabled={isInGroup || isLoading}
-              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isInGroup || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+              onClick={() => !isLoading && !isInGroup && setIsAddLinkModalOpen(true)}
+              disabled={isLoading || isInGroup}
+              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || isInGroup) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
               <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
