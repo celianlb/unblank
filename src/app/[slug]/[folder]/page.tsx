@@ -101,7 +101,7 @@ export default function FolderPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
-        <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} />
+        <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} isLoading={true} />
         <main className="w-full px-[64px] py-[40px]" />
       </div>
     );
@@ -109,7 +109,7 @@ export default function FolderPage() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} />
+      <Header selectedCount={selectedCount} onDeleteSelected={handleDeleteSelected} currentFolderId={folder?.id} isLoading={loadingData} />
 
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}

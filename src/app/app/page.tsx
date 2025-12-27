@@ -140,7 +140,7 @@ export default function AppPage() {
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
-        <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} />
+        <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} isLoading={true} />
         <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
@@ -148,7 +148,7 @@ export default function AppPage() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} />
+      <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} isLoading={loadingData} />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
