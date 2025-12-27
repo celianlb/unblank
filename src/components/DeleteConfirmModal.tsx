@@ -7,7 +7,7 @@ interface DeleteConfirmModalProps {
   title?: string;
 }
 
-export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title = "ÊTES VOUS SUR DE VOULOIR SUPPRIMER CET ÉLÉMENT ?" }: DeleteConfirmModalProps) {
+export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title = "Êtes vous sûr de vouloir supprimer cet élément ?" }: DeleteConfirmModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -32,7 +32,7 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, title =
               <div className="flex flex-row justify-center items-center gap-2.5 w-full h-[70px]">
                 {/* Title */}
                 <h2
-                  className="text-2xl leading-[110%] font-extrabold text-[#0D0D0D] text-center uppercase flex-1"
+                  className="text-2xl leading-[110%] font-extrabold text-[#0D0D0D] text-center flex-1"
                   style={{ fontFamily: 'Area Inktrap, sans-serif' }}
                 >
                   {title}
