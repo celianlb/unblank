@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Search, Loader2, XCircle } from 'lucide-react';
+import { X, Search, Loader2, XCircle, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useInfiniteSearch, useUserTags, useRecentLinks } from '@/hooks/useSearch';
 import { useDebounce } from '@/utils/useDebounce';
@@ -21,6 +21,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const tagDropdownRef = useRef<HTMLDivElement>(null);
+  const tagButtonRef = useRef<HTMLButtonElement>(null);
 
   // Fetch search results (only when there's a query or tags)
   const {
@@ -73,7 +75,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }, [isOpen]);
 
-  // Handle Escape key to close modal
+  // Auto-focus tag input when dropdown opens
+  useEffect(() => {
+    if (isTagDropdownOpen && tagInputRef.current) {
+      tagInputRef.current.focus();
+    }
+  }, [isTagDropdownOpen]);
+
+  // Handle Escape key to close dropdown/modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -90,6 +99,26 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen, isTagDropdownOpen, onClose]);
+
+  // Handle click outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+
+      // Check if click is outside both the dropdown and the button
+      const isClickOutsideDropdown = tagDropdownRef.current && !tagDropdownRef.current.contains(target);
+      const isClickOutsideButton = tagButtonRef.current && !tagButtonRef.current.contains(target);
+
+      if (isTagDropdownOpen && isClickOutsideDropdown && isClickOutsideButton) {
+        setIsTagDropdownOpen(false);
+      }
+    };
+
+    if (isOpen && isTagDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen, isTagDropdownOpen]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -148,12 +177,21 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const showEmptyState = !isLoading && !hasResults && (query.trim().length >= 2 || selectedTags.length > 0);
   const showInitialState = !isLoading && query.trim().length < 2 && selectedTags.length === 0;
 
+  const handleOverlayClick = () => {
+    // If tag dropdown is open, close it first instead of closing the modal
+    if (isTagDropdownOpen) {
+      setIsTagDropdownOpen(false);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
         data-overlay="true"
       />
 
@@ -165,7 +203,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         >
           {/* Header with Search Input */}
           <div className="p-6 border-b-2 border-black">
-            <div className="flex items-center justify-end mb-4">
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 onClick={onClose}
@@ -174,6 +212,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <X className="w-7 h-7" strokeWidth={2} />
               </button>
             </div>
+
+            {/* Spacer */}
+            <div className="h-6" />
 
             {/* Search Input */}
             <div className="relative">
@@ -206,72 +247,109 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <div className="h-6" />
 
             {/* Tag Filter Section */}
-            <div className="flex flex-col gap-2">
-              {/* Tag Input with Autocomplete */}
-              <div className="relative">
-                <input
-                  ref={tagInputRef}
-                  type="text"
-                  placeholder="+ Ajouter un tag"
-                  value={tagInputValue}
-                  onChange={(e) => {
-                    setTagInputValue(e.target.value);
-                    setIsTagDropdownOpen(true);
-                  }}
-                  onFocus={() => {
-                    setIsTagDropdownOpen(true);
-                  }}
-                  className="w-full h-10 px-4 rounded-lg border-2 border-black bg-white text-black placeholder-[#636363] focus:outline-none text-sm font-[Heebo]"
-                />
+            <div className="relative w-1/2">
+              {/* Tag Button */}
+              <button
+                ref={tagButtonRef}
+                onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black bg-white hover:bg-[#FFE3E8] focus:outline-none focus:ring-2 focus:ring-[#FF506F] transition-colors cursor-pointer"
+              >
+                <span className="text-sm font-medium text-black font-[Heebo]">
+                  Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-black transition-transform ${isTagDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
+              </button>
 
-                {/* Tag Dropdown */}
-                {isTagDropdownOpen && filteredTags.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_#000000] z-10 max-h-[200px] overflow-y-auto">
-                    {filteredTags.map((tag) => (
-                      <div
-                        key={tag.id}
-                        onClick={() => addTag(tag.name)}
-                        className="px-4 py-2 hover:bg-[#FFE3E8] cursor-pointer transition-colors border-b border-gray-200 last:border-b-0"
-                      >
-                        <span className="text-sm font-medium text-black font-[Heebo]">
-                          {tag.name}
-                        </span>
-                        <span className="text-xs text-[#636363] ml-2">
-                          ({tag.usage_count})
+              {/* Combined Dropdown: Search Input + Available Tags + Selected Tags */}
+              {isTagDropdownOpen && (
+                <div
+                  ref={tagDropdownRef}
+                  className="absolute top-full left-0 right-0 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_#000000] z-10 max-h-[300px] flex flex-col overflow-hidden"
+                  style={{ marginTop: '0.75rem' }}
+                >
+                  {/* Search Input inside dropdown */}
+                  <div className="p-3 border-b-2 border-black">
+                    <input
+                      ref={tagInputRef}
+                      type="text"
+                      placeholder="Rechercher un tag..."
+                      value={tagInputValue}
+                      onChange={(e) => setTagInputValue(e.target.value)}
+                      className="w-full h-9 px-3 rounded-lg border-2 border-black bg-white text-black placeholder-[#636363] focus:outline-none text-sm font-[Heebo]"
+                    />
+                  </div>
+
+                  <div className="overflow-y-auto">
+                    {/* Selected Tags Section */}
+                    {selectedTags.length > 0 && (
+                      <div className="border-b-2 border-black p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-[#636363] font-[Heebo]">
+                            Tags sélectionnés
+                          </span>
+                          {selectedTags.length > 1 && (
+                            <button
+                              onClick={clearAllTags}
+                              className="text-xs text-[#636363] hover:text-black font-medium font-[Heebo] underline"
+                            >
+                              Tout effacer
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {selectedTags.map((tagName) => (
+                            <div
+                              key={tagName}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF506F] rounded-lg border-2 border-black"
+                            >
+                              <span className="text-sm font-medium text-black font-[Heebo]">
+                                {tagName}
+                              </span>
+                              <button
+                                onClick={() => removeTag(tagName)}
+                                className="hover:text-white focus:outline-none focus:text-white transition-colors cursor-pointer"
+                              >
+                                <X className="w-4 h-4" strokeWidth={2} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Available Tags Section */}
+                    {filteredTags.length > 0 ? (
+                      <>
+                        {selectedTags.length > 0 && (
+                          <div className="px-4 pt-3 pb-1">
+                            <span className="text-xs font-medium text-[#636363] font-[Heebo]">
+                              Tags disponibles
+                            </span>
+                          </div>
+                        )}
+                        {filteredTags.map((tag) => (
+                          <div
+                            key={tag.id}
+                            onClick={() => addTag(tag.name)}
+                            className="px-4 py-2 hover:bg-[#FFE3E8] cursor-pointer transition-colors border-b border-gray-200 last:border-b-0"
+                          >
+                            <span className="text-sm font-medium text-black font-[Heebo]">
+                              {tag.name}
+                            </span>
+                            <span className="text-xs text-[#636363] ml-2">
+                              ({tag.usage_count})
+                            </span>
+                          </div>
+                        ))}
+                      </>
+                    ) : selectedTags.length === 0 ? (
+                      <div className="px-4 py-3 text-center">
+                        <span className="text-sm text-[#636363] font-[Heebo]">
+                          Aucun tag disponible
                         </span>
                       </div>
-                    ))}
+                    ) : null}
                   </div>
-                )}
-              </div>
-
-              {/* Selected Tags Chips */}
-              {selectedTags.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {selectedTags.map((tagName) => (
-                    <div
-                      key={tagName}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF506F] rounded-lg border-2 border-black"
-                    >
-                      <span className="text-sm font-medium text-black font-[Heebo]">
-                        {tagName}
-                      </span>
-                      <button
-                        onClick={() => removeTag(tagName)}
-                        className="hover:text-white transition-colors"
-                      >
-                        <X className="w-4 h-4" strokeWidth={2} />
-                      </button>
-                    </div>
-                  ))}
-                  {selectedTags.length > 1 && (
-                    <button
-                      onClick={clearAllTags}
-                      className="text-xs text-[#636363] hover:text-black font-medium font-[Heebo] underline"
-                    >
-                      Tout effacer
-                    </button>
-                  )}
                 </div>
               )}
             </div>
