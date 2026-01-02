@@ -236,7 +236,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               {query && (
                 <button
                   onClick={clearQuery}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#636363] hover:text-black transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#636363] hover:text-[#FF506F] focus:text-[#FF506F] focus:outline-none transition-colors cursor-pointer"
                 >
                   <XCircle className="w-6 h-6" strokeWidth={2} />
                 </button>
