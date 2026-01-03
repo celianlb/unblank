@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Plus, ChevronDown, ChevronUp, Trash } from 'lucide-react';
+import { Search, Plus, ChevronDown, Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import AddLinkModal from './AddLinkModal';
@@ -99,8 +99,9 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
               type="text"
               placeholder="Rechercher un dossier, une image, un lien"
               onClick={() => setIsSearchModalOpen(true)}
+              onFocus={(e) => e.target.blur()}
               readOnly
-              className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-pointer hover:bg-[#FFE3E8] transition-colors"
+              className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
             />
           </div>
 
@@ -128,11 +129,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
                     </div>
                   ) : null}
                 </div>
-                {isProfileMenuOpen ? (
-                  <ChevronUp className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
-                ) : (
-                  <ChevronDown className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black" strokeWidth={2} />
-                )}
+                <ChevronDown className={`w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-black transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
               </button>
 
               {isProfileMenuOpen && (

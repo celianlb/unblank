@@ -87,7 +87,7 @@ export default function CreateFolderModal({ isOpen, onClose, parentFolderId }: C
             <button
               type="submit"
               disabled={createFolder.isPending || !folderName.trim()}
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 rounded-xl bg-[#FF506F] transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:bg-[#FF6080] enabled:active:translate-y-[2px] enabled:active:shadow-none enabled:cursor-pointer"
             >
               {createFolder.isPending ? 'Création...' : 'Créer le dossier'}
             </button>
