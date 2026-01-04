@@ -122,13 +122,37 @@ export function useCreateFolder(userId: string) {
 
 /**
  * Hook pour supprimer des dossiers
- * Invalide automatiquement le cache après suppression
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useDeleteFolders(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (folderIds: string[]) => folderService.deleteFolders(folderIds),
+    mutationFn: async (folderIds: string[]) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch('/api/folders', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ folderIds }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete folders');
+      }
+
+      return response.json();
+    },
 
     onSuccess: () => {
       // Invalider TOUTES les queries de dossiers (car les liens sont déplacés vers Récents)
@@ -142,14 +166,38 @@ export function useDeleteFolders(userId: string) {
 
 /**
  * Hook pour renommer un dossier
- * Invalide automatiquement le cache après renommage
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useRenameFolder(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ folderId, newName }: { folderId: string; newName: string }) =>
-      folderService.renameFolder(folderId, newName),
+    mutationFn: async ({ folderId, newName }: { folderId: string; newName: string }) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/folders/${folderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ newName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to rename folder');
+      }
+
+      const result = await response.json();
+      return result.folder;
+    },
 
     onSuccess: () => {
       // Invalider toutes les queries de dossiers et groupes
@@ -164,13 +212,37 @@ export function useRenameFolder(userId: string) {
 
 /**
  * Hook pour déplacer un dossier vers un groupe
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useMoveFolderToGroup(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ folderId, groupId }: { folderId: string; groupId: string }) =>
-      folderService.moveFolderToGroup(folderId, groupId),
+    mutationFn: async ({ folderId, groupId }: { folderId: string; groupId: string }) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/folders/${folderId}/move`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ groupId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to move folder');
+      }
+
+      return response.json();
+    },
 
     onSuccess: (_, variables) => {
       // Invalider les listes de dossiers et le groupe concerné

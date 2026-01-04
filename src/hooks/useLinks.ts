@@ -112,13 +112,36 @@ export function useDeleteLinks(folderId?: string) {
 
 /**
  * Hook pour supprimer un seul lien
- * Invalide automatiquement le cache des liens et dossiers
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useDeleteLink(userId?: string, folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (linkId: string) => linkService.deleteLink(linkId),
+    mutationFn: async (linkId: string) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/links/${linkId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete link');
+      }
+
+      return response.json();
+    },
 
     onSuccess: () => {
       // Invalider les liens du dossier
@@ -139,13 +162,38 @@ export function useDeleteLink(userId?: string, folderId?: string) {
 
 /**
  * Hook pour créer un lien
- * Invalide automatiquement le cache des liens et dossiers
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useCreateLink(userId: string, folderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateLinkData) => linkService.createLink(userId, data),
+    mutationFn: async (data: CreateLinkData) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch('/api/links', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create link');
+      }
+
+      const result = await response.json();
+      return result.link;
+    },
 
     onSuccess: (newLink) => {
       if (!newLink) return;

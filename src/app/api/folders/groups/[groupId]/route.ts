@@ -73,3 +73,4 @@ export async function GET(
     return addCorsHeaders(response, origin);
   }
 }
+

@@ -69,6 +69,47 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
+    // ✅ Vérifier les permissions si on crée dans un dossier partagé
+    if (folderId) {
+      const { data: folder } = await supabase
+        .from('folders')
+        .select('user_id')
+        .eq('id', folderId)
+        .single();
+
+      if (!folder) {
+        const response = NextResponse.json(
+          { error: 'Folder not found' },
+          { status: 404 }
+        );
+        return addCorsHeaders(response, origin);
+      }
+
+      const isOwner = folder.user_id === user.id;
+
+      // Si pas propriétaire, vérifier les permissions de partage
+      if (!isOwner) {
+        const { data: share } = await supabase
+          .from('shares')
+          .select('permission')
+          .eq('folder_id', folderId)
+          .eq('shared_with_email', user.email)
+          .eq('is_active', true)
+          .eq('permission', 'edit')
+          .maybeSingle();
+
+        const hasEditPermission = share?.permission === 'edit';
+
+        if (!hasEditPermission) {
+          const response = NextResponse.json(
+            { error: 'You do not have permission to create links in this folder' },
+            { status: 403 }
+          );
+          return addCorsHeaders(response, origin);
+        }
+      }
+    }
+
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const linkService = LinkFactory.createLinkService(supabase);
 
@@ -107,6 +148,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * DELETE /api/links
+ * Supprime plusieurs liens
+ * Vérifie les permissions (propriétaire ou permission edit via shares sur les dossiers parents)
+ */
 export async function DELETE(request: NextRequest) {
   const origin = request.headers.get('origin');
 
@@ -157,6 +203,54 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
       return addCorsHeaders(response, origin);
+    }
+
+    // ✅ Vérifier les permissions pour chaque lien
+    const { data: links } = await supabase
+      .from('links')
+      .select('id, user_id, folder_id')
+      .in('id', linkIds);
+
+    if (!links || links.length !== linkIds.length) {
+      const response = NextResponse.json(
+        { error: 'Some links not found' },
+        { status: 404 }
+      );
+      return addCorsHeaders(response, origin);
+    }
+
+    // Vérifier les permissions pour chaque lien
+    for (const link of links) {
+      const isOwner = link.user_id === user.id;
+
+      // Si pas propriétaire, vérifier les permissions via le dossier parent
+      if (!isOwner && link.folder_id) {
+        const { data: share } = await supabase
+          .from('shares')
+          .select('permission')
+          .eq('folder_id', link.folder_id)
+          .eq('shared_with_email', user.email)
+          .eq('is_active', true)
+          .eq('permission', 'edit')
+          .maybeSingle();
+
+        const hasEditPermission = share?.permission === 'edit';
+
+        if (!hasEditPermission) {
+          const response = NextResponse.json(
+            { error: `You do not have permission to delete link ${link.id}` },
+            { status: 403 }
+          );
+          return addCorsHeaders(response, origin);
+        }
+      } else if (!isOwner && !link.folder_id) {
+        // Lien sans dossier et pas le propriétaire : interdit
+        const response = NextResponse.json(
+          { error: `You do not have permission to delete link ${link.id}` },
+          { status: 403 }
+        );
+        return addCorsHeaders(response, origin);
+      }
     }
 
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
