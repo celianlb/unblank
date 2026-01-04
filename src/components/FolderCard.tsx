@@ -51,8 +51,8 @@ export default function FolderCard({
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
   // ✅ Mutations React Query
-  const deleteFolders = useDeleteFolders(session?.user?.id || '');
-  const renameFolder = useRenameFolder(session?.user?.id || '');
+  const deleteFolders = useDeleteFolders(session?.user?.id || "");
+  const renameFolder = useRenameFolder(session?.user?.id || "");
 
   const handleCardClick = () => {
     const folderSlug = slug || title.toLowerCase().replace(/\s+/g, "-");
@@ -93,23 +93,23 @@ export default function FolderCard({
       // Sinon, on quitte le dossier lui-même
       const folderIdToExit = sharedGroupId || id;
 
-      const response = await fetch('/api/shares/exit', {
-        method: 'POST',
+      const response = await fetch("/api/shares/exit", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
         },
         body: JSON.stringify({ folderId: folderIdToExit }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to exit folder/group');
+        throw new Error("Failed to exit folder/group");
       }
 
       setIsExitModalOpen(false);
 
       // ✅ Invalider le cache React Query pour les dossiers partagés
-      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+      queryClient.invalidateQueries({ queryKey: ["shared-folders"] });
 
       // Appeler le callback si fourni (pour invalider les caches de la page parent)
       if (onExitSuccess) {
@@ -118,7 +118,7 @@ export default function FolderCard({
 
       // Si on quitte un groupe, rediriger vers la page d'accueil
       if (sharedGroupId) {
-        router.push('/app');
+        router.push("/app");
       } else {
         router.refresh();
       }
@@ -131,11 +131,11 @@ export default function FolderCard({
   // Proxy external images to avoid CORS issues with reduced quality
   const getProxiedImageUrl = (url: string) => {
     // Only proxy external images (not localhost or relative URLs)
-    if (url.startsWith('http') && !url.includes('localhost')) {
+    if (url.startsWith("http") && !url.includes("localhost")) {
       const params = new URLSearchParams({ url });
       // Very small size and low quality for folder previews
-      params.set('w', '200'); // Max width 200px
-      params.set('q', '60');  // Quality 60%
+      params.set("w", "200"); // Max width 200px
+      params.set("q", "60"); // Quality 60%
       return `/api/proxy-image?${params.toString()}`;
     }
     return url;
@@ -210,11 +210,16 @@ export default function FolderCard({
                 disabled={!canDelete}
                 className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
                   !canDelete
-                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                    : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                    : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
                 }`}
               >
-                <Pencil className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
+                <Pencil
+                  className={`w-5 h-5 ${
+                    !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+                  }`}
+                  strokeWidth={2}
+                />
               </button>
 
               {/* Frame 172 - Share Button */}
@@ -226,11 +231,16 @@ export default function FolderCard({
                 disabled={!canDelete}
                 className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
                   !canDelete
-                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                    : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                    : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
                 }`}
               >
-                <Share2 className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
+                <Share2
+                  className={`w-5 h-5 ${
+                    !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+                  }`}
+                  strokeWidth={2}
+                />
               </button>
 
               {/* Frame 170 - Settings Button (Groupement) */}
@@ -268,15 +278,15 @@ export default function FolderCard({
                 disabled={!canDelete}
                 className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
                   !canDelete
-                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                    : 'bg-[#C5C5C5] cursor-pointer'
+                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                    : "bg-[#C5C5C5] cursor-pointer"
                 }`}
               >
                 <Trash
                   className={`w-5 h-5 transition-colors ${
                     !canDelete
-                      ? 'text-gray-400'
-                      : 'text-black group-hover:text-[#FF5070]'
+                      ? "text-gray-400"
+                      : "text-black group-hover:text-[#FF5070]"
                   }`}
                   strokeWidth={2}
                 />

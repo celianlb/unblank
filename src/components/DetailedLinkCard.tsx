@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Copy, ExternalLink, Pencil, Trash, Check } from 'lucide-react';
-import { useState } from 'react';
-import DeleteConfirmModal from './DeleteConfirmModal';
-import EditLinkModal from './EditLinkModal';
-import Tooltip from './Tooltip';
+import { Copy, ExternalLink, Pencil, Trash, Check } from "lucide-react";
+import { useState } from "react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import EditLinkModal from "./EditLinkModal";
+import Tooltip from "./Tooltip";
 
 interface DetailedLinkCardProps {
   linkId: string;
@@ -33,7 +33,7 @@ export default function DetailedLinkCard({
   onCheckChange,
   onDelete,
   canDelete = true,
-  canEdit = true
+  canEdit = true,
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -63,7 +63,7 @@ export default function DetailedLinkCard({
 
   const handleOpenLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(link, '_blank');
+    window.open(link, "_blank");
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -71,13 +71,18 @@ export default function DetailedLinkCard({
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (newTitle: string, newUrl: string, newDescription: string, newTags: string[]) => {
+  const handleSaveEdit = (
+    newTitle: string,
+    newUrl: string,
+    newDescription: string,
+    newTags: string[]
+  ) => {
     // TODO: Logique de sauvegarde
-    console.log('Saved:', { newTitle, newUrl, newDescription, newTags });
+    console.log("Saved:", { newTitle, newUrl, newDescription, newTags });
   };
 
   // Truncate link for display
-  const displayLink = link.length > 20 ? link.substring(0, 20) + '...' : link;
+  const displayLink = link.length > 20 ? link.substring(0, 20) + "..." : link;
 
   return (
     <>
@@ -87,7 +92,9 @@ export default function DetailedLinkCard({
           <div className="absolute left-3 top-3 z-10">
             <div
               onClick={handleCheckChange}
-              className={`relative w-7 h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-[3px] border-[#0D0D0D] rounded-lg flex items-center justify-center cursor-pointer transition-colors`}
+              className={`relative w-7 h-7 ${
+                isChecked ? "bg-[#FEF8EE]" : "bg-[#FEF8EE] hover:bg-[#FFE3E8]"
+              } border-[3px] border-[#0D0D0D] rounded-lg flex items-center justify-center cursor-pointer transition-colors`}
             >
               {isChecked && (
                 <svg
@@ -121,9 +128,15 @@ export default function DetailedLinkCard({
           {/* Favicon */}
           <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center bg-white shrink-0 overflow-hidden">
             {faviconUrl ? (
-              <img src={faviconUrl} alt={siteName} className="w-full h-full object-cover" />
+              <img
+                src={faviconUrl}
+                alt={siteName}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <span className="text-xs font-normal text-black font-[Heebo]">Favicon</span>
+              <span className="text-xs font-normal text-black font-[Heebo]">
+                Favicon
+              </span>
             )}
           </div>
 
@@ -131,7 +144,7 @@ export default function DetailedLinkCard({
           <div className="flex flex-col items-start gap-[10px]">
             <h3
               className="text-[28px] leading-[30px] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               {siteName}
             </h3>
@@ -158,14 +171,23 @@ export default function DetailedLinkCard({
             <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {displayLink}
             </span>
-            <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all">
+            <button
+              onClick={handleCopy}
+              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
+            >
               {isCopied ? (
                 <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
               ) : (
-                <Copy className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+                <Copy
+                  className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                  strokeWidth={2}
+                />
               )}
             </button>
-            <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
+            <button
+              onClick={handleOpenLink}
+              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
+            >
               <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
             </button>
           </div>
@@ -179,7 +201,11 @@ export default function DetailedLinkCard({
               <button
                 onClick={canEdit ? handleEdit : undefined}
                 disabled={!canEdit}
-                className={`w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 transition-all ${!canEdit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#1a1a1a]'}`}
+                className={`w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 transition-all ${
+                  !canEdit
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-[#1a1a1a]"
+                }`}
               >
                 <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
               </button>
@@ -200,7 +226,10 @@ export default function DetailedLinkCard({
               }}
               className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
             >
-              <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+              <Trash
+                className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
+                strokeWidth={2}
+              />
             </button>
           )}
         </div>

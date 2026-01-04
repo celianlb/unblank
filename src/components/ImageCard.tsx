@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Copy, ExternalLink, Trash, Check } from 'lucide-react';
-import { useState } from 'react';
-import DeleteConfirmModal from './DeleteConfirmModal';
-import ImagePreviewModal from './ImagePreviewModal';
+import { Copy, ExternalLink, Trash, Check } from "lucide-react";
+import { useState } from "react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 interface ImageCardProps {
   linkId: string;
@@ -36,7 +36,7 @@ export default function ImageCard({
   onCheckChange,
   onDelete,
   canDelete = true,
-  canEdit = true
+  canEdit = true,
 }: ImageCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -44,15 +44,15 @@ export default function ImageCard({
   const [isCopied, setIsCopied] = useState(false);
 
   // Proxy external images to avoid CORS issues
-  const getProxiedImageUrl = (url: string, size?: 'thumbnail' | 'full') => {
+  const getProxiedImageUrl = (url: string, size?: "thumbnail" | "full") => {
     // Only proxy external images (not localhost or relative URLs)
-    if (url.startsWith('http') && !url.includes('localhost')) {
+    if (url.startsWith("http") && !url.includes("localhost")) {
       const params = new URLSearchParams({ url });
 
       // Add size params for thumbnails (save bandwidth)
-      if (size === 'thumbnail') {
-        params.set('w', '400'); // Max width 400px for cards
-        params.set('q', '75');  // Quality 75% for thumbnails
+      if (size === "thumbnail") {
+        params.set("w", "400"); // Max width 400px for cards
+        params.set("q", "75"); // Quality 75% for thumbnails
       }
 
       return `/api/proxy-image?${params.toString()}`;
@@ -60,8 +60,8 @@ export default function ImageCard({
     return url;
   };
 
-  const thumbnailUrl = getProxiedImageUrl(imageUrl, 'thumbnail');
-  const fullSizeUrl = getProxiedImageUrl(imageUrl, 'full');
+  const thumbnailUrl = getProxiedImageUrl(imageUrl, "thumbnail");
+  const fullSizeUrl = getProxiedImageUrl(imageUrl, "full");
 
   const handleCheckChange = () => {
     const newValue = !isChecked;
@@ -86,7 +86,7 @@ export default function ImageCard({
 
   const handleOpenLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(link, '_blank');
+    window.open(link, "_blank");
   };
 
   const handleCardClick = () => {
@@ -94,7 +94,7 @@ export default function ImageCard({
   };
 
   // Truncate link for display
-  const displayLink = link.length > 20 ? link.substring(0, 20) + '...' : link;
+  const displayLink = link.length > 20 ? link.substring(0, 20) + "..." : link;
 
   return (
     <>
@@ -114,13 +114,19 @@ export default function ImageCard({
         </div>
 
         {/* Checkbox container - hidden by default, shown on hover */}
-        <div className={`absolute left-2 sm:left-3 top-2 sm:top-3 w-[30px] sm:w-[36px] h-[26px] sm:h-[30px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row items-center`}>
+        <div
+          className={`absolute left-2 sm:left-3 top-2 sm:top-3 w-[30px] sm:w-[36px] h-[26px] sm:h-[30px] ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } flex-row items-center`}
+        >
           <div
             onClick={(e) => {
               e.stopPropagation();
               handleCheckChange();
             }}
-            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${isChecked ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
+            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${
+              isChecked ? "bg-[#FEF8EE]" : "bg-[#FEF8EE] hover:bg-[#FFE3E8]"
+            } border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
           >
             {isChecked && (
               <svg
@@ -155,15 +161,24 @@ export default function ImageCard({
               e.stopPropagation();
               setIsDeleteModalOpen(true);
             }}
-            className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer`}
+            className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${
+              showHoverElements ? "flex" : "hidden group-hover/card:flex"
+            } flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer`}
           >
-            <Trash className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+            <Trash
+              className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors"
+              strokeWidth={2}
+            />
           </button>
         )}
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
-          <div className={`absolute left-2 sm:left-3 bottom-[50px] sm:bottom-[61px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row gap-1`}>
+          <div
+            className={`absolute left-2 sm:left-3 bottom-[50px] sm:bottom-[61px] ${
+              showHoverElements ? "flex" : "hidden group-hover/card:flex"
+            } flex-row gap-1`}
+          >
             {tags.map((tag, index) => (
               <div
                 key={index}
@@ -178,19 +193,38 @@ export default function ImageCard({
         )}
 
         {/* Link bar - hidden by default, shown on hover */}
-        <div className={`absolute left-2 sm:left-3 right-2 sm:right-3 bottom-2 sm:bottom-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2 sm:p-2.5 gap-2 sm:gap-2.5 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg`}>
+        <div
+          className={`absolute left-2 sm:left-3 right-2 sm:right-3 bottom-2 sm:bottom-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } flex-row justify-center items-center p-2 sm:p-2.5 gap-2 sm:gap-2.5 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg`}
+        >
           <span className="flex-1 text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}
           </span>
-          <button onClick={handleCopy} className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer transition-all">
+          <button
+            onClick={handleCopy}
+            className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer transition-all"
+          >
             {isCopied ? (
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" strokeWidth={2} />
+              <Check
+                className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
+                strokeWidth={2}
+              />
             ) : (
-              <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+              <Copy
+                className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                strokeWidth={2}
+              />
             )}
           </button>
-          <button onClick={handleOpenLink} className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">
-            <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]" strokeWidth={2} />
+          <button
+            onClick={handleOpenLink}
+            className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer"
+          >
+            <ExternalLink
+              className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]"
+              strokeWidth={2}
+            />
           </button>
         </div>
       </div>

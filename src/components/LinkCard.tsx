@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Trash, Copy, ExternalLink, Check } from 'lucide-react';
-import { useState } from 'react';
-import DeleteConfirmModal from './DeleteConfirmModal';
-import ImagePreviewModal from './ImagePreviewModal';
+import { Trash, Copy, ExternalLink, Check } from "lucide-react";
+import { useState } from "react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 interface LinkCardProps {
   id?: string;
@@ -29,36 +29,36 @@ export default function LinkCard({
   id,
   imageUrl,
   link,
-  title = '',
-  description = '',
+  title = "",
+  description = "",
   tags = [],
-  fileType = 'JPG',
-  dimensions = '615×856 px',
-  fileSize = '2,3 Mo',
-  dateAdded = new Date().toLocaleDateString('fr-FR'),
-  folder = 'Affiche horreur',
+  fileType = "JPG",
+  dimensions = "615×856 px",
+  fileSize = "2,3 Mo",
+  dateAdded = new Date().toLocaleDateString("fr-FR"),
+  folder = "Affiche horreur",
   isSelectionMode = false,
   isSelected = false,
   onCheckChange,
   onDelete,
   canDelete = true,
-  canEdit = true
+  canEdit = true,
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   // Proxy external images to avoid CORS issues
-  const getProxiedImageUrl = (url?: string, size?: 'thumbnail' | 'full') => {
+  const getProxiedImageUrl = (url?: string, size?: "thumbnail" | "full") => {
     if (!url) return undefined;
     // Only proxy external images (not localhost or relative URLs)
-    if (url.startsWith('http') && !url.includes('localhost')) {
+    if (url.startsWith("http") && !url.includes("localhost")) {
       const params = new URLSearchParams({ url });
 
       // Add size params for thumbnails (save bandwidth)
-      if (size === 'thumbnail') {
-        params.set('w', '400'); // Max width 400px for cards
-        params.set('q', '75');  // Quality 75% for thumbnails
+      if (size === "thumbnail") {
+        params.set("w", "400"); // Max width 400px for cards
+        params.set("q", "75"); // Quality 75% for thumbnails
       }
 
       return `/api/proxy-image?${params.toString()}`;
@@ -66,8 +66,8 @@ export default function LinkCard({
     return url;
   };
 
-  const thumbnailUrl = getProxiedImageUrl(imageUrl, 'thumbnail');
-  const fullSizeUrl = getProxiedImageUrl(imageUrl, 'full');
+  const thumbnailUrl = getProxiedImageUrl(imageUrl, "thumbnail");
+  const fullSizeUrl = getProxiedImageUrl(imageUrl, "full");
 
   const handleCheckChange = () => {
     const newValue = !isSelected;
@@ -90,8 +90,8 @@ export default function LinkCard({
         onDelete(id);
       }
     } catch (error) {
-      console.error('Error deleting link:', error);
-      alert('Erreur lors de la suppression du lien');
+      console.error("Error deleting link:", error);
+      alert("Erreur lors de la suppression du lien");
     }
   };
 
@@ -104,11 +104,11 @@ export default function LinkCard({
 
   const handleOpenLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(link, '_blank');
+    window.open(link, "_blank");
   };
 
   // Truncate link for display
-  const displayLink = link.length > 25 ? link.substring(0, 25) + '...' : link;
+  const displayLink = link.length > 25 ? link.substring(0, 25) + "..." : link;
 
   const handleCardClick = () => {
     if (isSelectionMode) {
@@ -140,13 +140,19 @@ export default function LinkCard({
         </div>
 
         {/* Checkbox container - Frame 134: 36x30px to allow checkmark overflow */}
-        <div className={`absolute left-2 sm:left-3 top-2 sm:top-3 w-[30px] sm:w-[36px] h-[26px] sm:h-[30px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row items-center`}>
+        <div
+          className={`absolute left-2 sm:left-3 top-2 sm:top-3 w-[30px] sm:w-[36px] h-[26px] sm:h-[30px] ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } flex-row items-center`}
+        >
           <div
             onClick={(e) => {
               e.stopPropagation();
               handleCheckChange();
             }}
-            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${isSelected ? 'bg-[#FEF8EE]' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8]'} border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
+            className={`relative w-6 h-6 sm:w-7 sm:h-7 ${
+              isSelected ? "bg-[#FEF8EE]" : "bg-[#FEF8EE] hover:bg-[#FFE3E8]"
+            } border-2 sm:border-[3px] border-[#0D0D0D] rounded-md sm:rounded-lg flex items-center justify-center cursor-pointer transition-colors isolate`}
           >
             {isSelected && (
               <svg
@@ -181,15 +187,24 @@ export default function LinkCard({
               e.stopPropagation();
               setIsDeleteModalOpen(true);
             }}
-            className={`absolute right-3 top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
+            className={`absolute right-3 top-3 ${
+              showHoverElements ? "flex" : "hidden group-hover/card:flex"
+            } flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
           >
-            <Trash className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+            <Trash
+              className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors"
+              strokeWidth={2}
+            />
           </button>
         )}
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
-          <div className={`absolute left-3 bottom-[61px] ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row gap-1`}>
+          <div
+            className={`absolute left-3 bottom-[61px] ${
+              showHoverElements ? "flex" : "hidden group-hover/card:flex"
+            } flex-row gap-1`}
+          >
             {tags.map((tag, index) => (
               <div
                 key={index}
@@ -204,18 +219,31 @@ export default function LinkCard({
         )}
 
         {/* Link bar - hidden by default, shown on hover */}
-        <div className={`absolute left-3 right-3 bottom-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2.5 gap-2.5 bg-[#FEF8EE] border-2 border-black rounded-lg`}>
+        <div
+          className={`absolute left-3 right-3 bottom-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } flex-row justify-center items-center p-2.5 gap-2.5 bg-[#FEF8EE] border-2 border-black rounded-lg`}
+        >
           <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}
           </span>
-          <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center transition-all">
+          <button
+            onClick={handleCopy}
+            className="w-5 h-5 flex items-center justify-center transition-all"
+          >
             {isCopied ? (
               <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
             ) : (
-              <Copy className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+              <Copy
+                className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                strokeWidth={2}
+              />
             )}
           </button>
-          <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center">
+          <button
+            onClick={handleOpenLink}
+            className="w-5 h-5 flex items-center justify-center"
+          >
             <ExternalLink className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />
           </button>
         </div>
@@ -230,7 +258,7 @@ export default function LinkCard({
       <ImagePreviewModal
         isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        imageUrl={fullSizeUrl || 'https://via.placeholder.com/600'}
+        imageUrl={fullSizeUrl || "https://via.placeholder.com/600"}
         link={link}
         linkId={id}
         fileType={fileType}

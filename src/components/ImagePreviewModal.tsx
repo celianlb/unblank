@@ -133,7 +133,11 @@ export default function ImagePreviewModal({
                 <button
                   onClick={() => canEdit && setIsEditTagsOpen(true)}
                   disabled={!canEdit}
-                  className={`w-full sm:w-auto h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 transition-all ${!canEdit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none'}`}
+                  className={`w-full sm:w-auto h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 transition-all ${
+                    !canEdit
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none"
+                  }`}
                 >
                   <Pencil
                     className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0D0D0D]"
@@ -145,7 +149,9 @@ export default function ImagePreviewModal({
                 </button>
                 {!canEdit && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center pointer-events-none">
-                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">!</span>
+                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">
+                      !
+                    </span>
                   </div>
                 )}
               </div>

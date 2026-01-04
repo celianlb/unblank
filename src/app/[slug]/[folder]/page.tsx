@@ -42,18 +42,26 @@ export default function FolderPage() {
   const deleteLink = useDeleteLink(session?.user?.id, folder?.id);
 
   // Récupérer les permissions du dossier actuel
-  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder?.id || null);
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(
+    folder?.id || null
+  );
 
   // Vérifier si l'utilisateur a la permission d'éditer (supprimer des liens)
-  const currentUserShare = shares.find((share: any) =>
-    share.user?.email === session?.user?.email
+  const currentUserShare = shares.find(
+    (share: any) => share.user?.email === session?.user?.email
   );
 
   // Logique de permission :
   // - Si le dossier est en cours de chargement : ne pas autoriser (pour éviter le flash)
   // - Si dossier chargé mais pas de partages : l'utilisateur est propriétaire, peut éditer
   // - Si dossier partagé : vérifier la permission (edit ou owner)
-  const canEdit = !loadingFolder && !isLoadingShares && folder?.id && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+  const canEdit =
+    !loadingFolder &&
+    !isLoadingShares &&
+    folder?.id &&
+    (shares.length === 0 ||
+      currentUserShare?.permission === "edit" ||
+      currentUserShare?.permission === "owner");
 
   const loadingData = loadingFolder || loadingLinks;
   const selectedCount = selectedLinkIds.size;
