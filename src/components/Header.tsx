@@ -196,7 +196,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
                   <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
                   <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
                 </button>
-                {!canCreateFolder && !isLoading && !isLoadingGroupShares && (
+                {!canCreateFolder && !isLoading && !isLoadingGroupShares && !currentFolderId && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
                     <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">!</span>
                   </div>
