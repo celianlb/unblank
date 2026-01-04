@@ -162,27 +162,19 @@ export class SupabaseShareRepository implements ShareRepository {
   }
 
   async revokeShare(shareId: string): Promise<void> {
-    console.log('[REVOKE SHARE] Attempting to revoke share:', shareId);
-
     const { data, error } = await this.supabase
       .from('shares')
       .update({ is_active: false })
       .eq('id', shareId)
       .select();
 
-    console.log('[REVOKE SHARE] Result:', { data, error, shareId });
-
     if (error) {
-      console.error('[REVOKE SHARE] Error:', error);
       throw new Error(`Failed to revoke share: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      console.warn('[REVOKE SHARE] No rows updated - possible RLS restriction');
       throw new Error('Failed to revoke share - you may not have permission to modify this share');
     }
-
-    console.log('[REVOKE SHARE] Successfully revoked share');
   }
 
   async deleteShare(shareId: string): Promise<void> {
