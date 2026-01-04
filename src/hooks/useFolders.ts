@@ -116,6 +116,9 @@ export function useCreateFolder(userId: string) {
           queryKey: ['group-folders', variables.parentFolderId]
         });
       }
+      
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
@@ -160,6 +163,8 @@ export function useDeleteFolders(userId: string) {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group-folders'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
@@ -206,6 +211,8 @@ export function useRenameFolder(userId: string) {
       queryClient.invalidateQueries({ queryKey: ['folder'] });
       queryClient.invalidateQueries({ queryKey: ['group'] });
       queryClient.invalidateQueries({ queryKey: ['group-folders'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
@@ -251,6 +258,8 @@ export function useMoveFolderToGroup(userId: string) {
       queryClient.invalidateQueries({
         queryKey: ['group-folders', variables.groupId]
       });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }

@@ -106,6 +106,8 @@ export function useDeleteLinks(folderId?: string) {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
@@ -156,6 +158,8 @@ export function useDeleteLink(userId?: string, folderId?: string) {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
@@ -210,6 +214,8 @@ export function useCreateLink(userId: string, folderId?: string) {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
