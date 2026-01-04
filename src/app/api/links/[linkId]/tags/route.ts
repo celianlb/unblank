@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import LinkFactory from '@/lib/links/linkFactory';
 
+/**
+ * PUT /api/links/[linkId]/tags
+ * Met à jour les tags d'un lien
+ * Vérifie les permissions (propriétaire ou permission edit via shares sur le dossier parent)
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ linkId: string }> }
@@ -51,14 +56,59 @@ export async function PUT(
       );
     }
 
+    // ✅ Récupérer le lien avec son dossier parent
+    const { data: link } = await supabase
+      .from('links')
+      .select('user_id, folder_id')
+      .eq('id', linkId)
+      .single();
+
+    if (!link) {
+      return NextResponse.json(
+        { error: 'Link not found' },
+        { status: 404 }
+      );
+    }
+
+    // ✅ Vérifier les permissions
+    // 1. Vérifier si l'utilisateur est le propriétaire du lien
+    const isOwner = link.user_id === user.id;
+
+    // 2. Si pas propriétaire, vérifier les permissions via le dossier parent
+    if (!isOwner && link.folder_id) {
+      const { data: share } = await supabase
+        .from('shares')
+        .select('permission')
+        .eq('folder_id', link.folder_id)
+        .eq('shared_with_email', user.email)
+        .eq('is_active', true)
+        .eq('permission', 'edit')
+        .maybeSingle();
+
+      const hasEditPermission = share?.permission === 'edit';
+
+      if (!hasEditPermission) {
+        return NextResponse.json(
+          { error: 'You do not have permission to edit tags for this link' },
+          { status: 403 }
+        );
+      }
+    } else if (!isOwner && !link.folder_id) {
+      // Lien sans dossier et pas le propriétaire : interdit
+      return NextResponse.json(
+        { error: 'You do not have permission to edit tags for this link' },
+        { status: 403 }
+      );
+    }
+
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const linkService = LinkFactory.createLinkService(supabase);
     const success = await linkService.updateTags(linkId, user.id, tags);
 
     if (!success) {
       return NextResponse.json(
-        { error: 'Link not found or unauthorized' },
-        { status: 404 }
+        { error: 'Failed to update tags' },
+        { status: 500 }
       );
     }
 

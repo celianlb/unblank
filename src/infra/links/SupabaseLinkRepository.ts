@@ -249,12 +249,11 @@ export class SupabaseLinkRepository implements LinkRepository {
 
   async updateTags(linkId: string, userId: string, tags: string[]): Promise<boolean> {
     try {
-      // 1. Vérifier que le lien appartient à l'utilisateur
+      // ✅ Vérifier que le lien existe et que l'utilisateur a les permissions (RLS le gère)
       const { data: link, error: linkError } = await this.supabase
         .from('links')
         .select('id')
         .eq('id', linkId)
-        .eq('user_id', userId)
         .maybeSingle();
 
       if (linkError || !link) {
