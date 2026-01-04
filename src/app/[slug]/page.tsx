@@ -10,6 +10,32 @@ import { useGroupBySlug, useGroupFolders } from '@/hooks/useFolders';
 import { formatLastUpdate } from '@/utils/formatters';
 import { useFolderShares } from '@/hooks/useShares';
 
+// Helper component to render FolderCard with permission checking for each folder
+function GroupFolderCard({ folder, groupSlug, currentUserEmail }: { folder: any; groupSlug: string; currentUserEmail: string | undefined }) {
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
+
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === currentUserEmail
+  );
+
+  // Logique de permission pour chaque dossier individuel
+  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  return (
+    <FolderCard
+      id={folder.id}
+      title={folder.name}
+      slug={folder.slug}
+      itemCount={folder.link_count || 0}
+      lastUpdate={formatLastUpdate(folder.updated_at)}
+      groupSlug={groupSlug}
+      isSystem={folder.is_system}
+      previewImages={folder.preview_images}
+      canDelete={canDelete}
+    />
+  );
+}
+
 export default function GroupPage() {
   const params = useParams();
   const router = useRouter();
@@ -78,17 +104,11 @@ export default function GroupPage() {
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {folders.map((folder) => (
-                <FolderCard
+                <GroupFolderCard
                   key={folder.id}
-                  id={folder.id}
-                  title={folder.name}
-                  slug={folder.slug}
-                  itemCount={folder.link_count || 0}
-                  lastUpdate={formatLastUpdate(folder.updated_at)}
+                  folder={folder}
                   groupSlug={slug}
-                  isSystem={folder.is_system}
-                  previewImages={folder.preview_images}
-                  canDelete={canCreateFolder}
+                  currentUserEmail={session?.user?.email}
                 />
               ))}
             </div>
