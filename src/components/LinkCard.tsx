@@ -22,6 +22,7 @@ interface LinkCardProps {
   onCheckChange?: (id: string, checked: boolean) => void;
   onDelete?: (id: string) => void;
   canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 export default function LinkCard({
@@ -40,7 +41,8 @@ export default function LinkCard({
   isSelected = false,
   onCheckChange,
   onDelete,
-  canDelete = true
+  canDelete = true,
+  canEdit = true
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -237,6 +239,7 @@ export default function LinkCard({
         dateAdded={dateAdded}
         folder={folder}
         tags={tags}
+        canEdit={canEdit}
       />
     </>
   );

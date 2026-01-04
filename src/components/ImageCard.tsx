@@ -19,6 +19,7 @@ interface ImageCardProps {
   onCheckChange?: (linkId: string, checked: boolean) => void;
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 export default function ImageCard({
@@ -34,7 +35,8 @@ export default function ImageCard({
   isSelectionMode = false,
   onCheckChange,
   onDelete,
-  canDelete = true
+  canDelete = true,
+  canEdit = true
 }: ImageCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -211,6 +213,7 @@ export default function ImageCard({
         dateAdded={dateAdded}
         folder={folder}
         tags={tags}
+        canEdit={canEdit}
       />
     </>
   );

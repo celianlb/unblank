@@ -1,8 +1,25 @@
-import { X, WandSparkles, Folder, ChevronDown, Plus, ChevronLeft, FolderOpen } from "lucide-react";
+import {
+  X,
+  WandSparkles,
+  Folder,
+  ChevronDown,
+  Plus,
+  ChevronLeft,
+  FolderOpen,
+} from "lucide-react";
 import { Button } from "../components/Button";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { motion } from "framer-motion";
-import { extractMetadata, createLink, getFolders, getGroupFolders, type Metadata, type Folder as FolderType } from "../utils/api";
+import {
+  extractMetadata,
+  createLink,
+  getFolders,
+  getGroupFolders,
+  getTagSuggestions,
+  type Metadata,
+  type Folder as FolderType,
+  type TagWithMetadata,
+} from "../utils/api";
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
@@ -11,9 +28,13 @@ interface ConnectedOverlayAppProps {
 function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const [url, setUrl] = useState("");
   const [autoTagging, setAutoTagging] = useState(false);
-  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(
+    null
+  );
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<TagWithMetadata[]>([]);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [inputWidth, setInputWidth] = useState(130);
   const [metadata, setMetadata] = useState<Metadata | null>(null);
@@ -25,10 +46,13 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   const spanRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const tagSuggestionsRef = useRef<HTMLDivElement>(null);
 
   // Navigation hiérarchique
   const [currentGroupId, setCurrentGroupId] = useState<string | null>(null);
-  const [breadcrumb, setBreadcrumb] = useState<Array<{ id: string | null; name: string }>>([]);
+  const [breadcrumb, setBreadcrumb] = useState<
+    Array<{ id: string | null; name: string }>
+  >([]);
   const [currentFolders, setCurrentFolders] = useState<FolderType[]>([]);
 
   // Load folders on mount
@@ -39,19 +63,51 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
+      }
+      if (
+        tagSuggestionsRef.current &&
+        !tagSuggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowTagSuggestions(false);
       }
     };
 
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+    if (isDropdownOpen || showTagSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, showTagSuggestions]);
+
+  // Fetch tag suggestions when user types
+  useEffect(() => {
+    const fetchTagSuggestions = async () => {
+      if (tagInput.length > 0) {
+        try {
+          const suggestions = await getTagSuggestions(tagInput);
+          setTagSuggestions(suggestions);
+          setShowTagSuggestions(suggestions.length > 0);
+        } catch (error) {
+          console.error("Error fetching tag suggestions:", error);
+          setTagSuggestions([]);
+          setShowTagSuggestions(false);
+        }
+      } else {
+        setTagSuggestions([]);
+        setShowTagSuggestions(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchTagSuggestions, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [tagInput]);
 
   const loadFolders = async () => {
     setIsLoadingFolders(true);
@@ -64,7 +120,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       setCurrentGroupId(null);
       setBreadcrumb([]);
     } catch (error) {
-      console.error('Error loading folders:', error);
+      console.error("Error loading folders:", error);
     } finally {
       setIsLoadingFolders(false);
     }
@@ -84,7 +140,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       const { folders: groupFolders } = await getGroupFolders(group.id);
       setCurrentFolders(groupFolders);
     } catch (error) {
-      console.error('Error loading group folders:', error);
+      console.error("Error loading group folders:", error);
     } finally {
       setIsLoadingFolders(false);
     }
@@ -105,7 +161,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     } else {
       // Back to previous group level
       const previousLevel = newBreadcrumb[newBreadcrumb.length - 1];
-      const previousGroup = groups.find(g => g.id === previousLevel.id);
+      const previousGroup = groups.find((g) => g.id === previousLevel.id);
       if (previousGroup) {
         navigateToGroup(previousGroup);
       }
@@ -129,12 +185,12 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     if (!selectedDestination) return "Sélectionner un dossier";
 
     // Check in current folders first
-    const current = currentFolders.find(f => f.id === selectedDestination);
+    const current = currentFolders.find((f) => f.id === selectedDestination);
     if (current) return current.name;
 
     // Fallback to all folders/groups
     const allItems = [...groups, ...folders];
-    const item = allItems.find(f => f.id === selectedDestination);
+    const item = allItems.find((f) => f.id === selectedDestination);
     return item?.name || "Sélectionner un dossier";
   };
 
@@ -159,7 +215,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
 
   // Extract metadata when URL is entered
   const handleUrlBlur = async () => {
-    if (url && url.startsWith('http') && !metadata) {
+    if (url && url.startsWith("http") && !metadata) {
       setIsLoadingMetadata(true);
       try {
         const meta = await extractMetadata(url);
@@ -167,7 +223,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           setMetadata(meta);
         }
       } catch (error) {
-        console.error('Error extracting metadata:', error);
+        console.error("Error extracting metadata:", error);
       } finally {
         setIsLoadingMetadata(false);
       }
@@ -176,7 +232,7 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
 
   const handleSave = async () => {
     if (!url.trim()) {
-      alert('Veuillez entrer une URL');
+      alert("Veuillez entrer une URL");
       return;
     }
 
@@ -190,20 +246,20 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
         originalImageUrl: metadata?.image || undefined,
         imageFormat: metadata?.imageFormat,
         contentType: metadata?.contentType,
-        tags: autoTagging ? undefined : (tags.length > 0 ? tags : undefined),
+        tags: autoTagging ? undefined : tags.length > 0 ? tags : undefined,
       });
 
       if (result.success) {
         // Show success message
-        console.log('Link saved successfully!');
+        console.log("Link saved successfully!");
         // Close the overlay
         onClose();
       } else {
         alert(`Erreur: ${result.error}`);
       }
     } catch (error) {
-      console.error('Error saving link:', error);
-      alert('Erreur lors de l\'enregistrement du lien');
+      console.error("Error saving link:", error);
+      alert("Erreur lors de l'enregistrement du lien");
     } finally {
       setIsSaving(false);
     }
@@ -496,6 +552,36 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     overflowY: "auto",
   };
 
+  const tagSuggestionsDropdownStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    marginTop: "4px",
+    background: "#FFFFFF",
+    border: "2px solid #000000",
+    borderRadius: "8px",
+    boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+    zIndex: 1000,
+    maxHeight: "200px",
+    overflowY: "auto",
+  };
+
+  const tagSuggestionItemStyle: React.CSSProperties = {
+    padding: "10px 12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
+    fontFamily: "Heebo",
+    fontWeight: 500,
+    fontSize: "14px",
+    lineHeight: "21px",
+    color: "#0D0D0D",
+    cursor: "pointer",
+    transition: "background 0.2s",
+  };
+
   return (
     <div style={cardStyle} onClick={handleCardClick}>
       {/* Header */}
@@ -537,7 +623,9 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           }}
         />
         {isLoadingMetadata && (
-          <div style={{ padding: "0 12px", color: "#8B8B8B", fontSize: "14px" }}>
+          <div
+            style={{ padding: "0 12px", color: "#8B8B8B", fontSize: "14px" }}
+          >
             Chargement...
           </div>
         )}
@@ -590,12 +678,13 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
               <span>
                 {selectedDestination
                   ? breadcrumb.length > 0
-                    ? `${breadcrumb.map(b => b.name).join(' > ')} > ${getSelectedDestinationName()}`
+                    ? `${breadcrumb
+                        .map((b) => b.name)
+                        .join(" > ")} > ${getSelectedDestinationName()}`
                     : getSelectedDestinationName()
                   : breadcrumb.length > 0
-                    ? breadcrumb.map(b => b.name).join(' > ')
-                    : "Sélectionner un dossier"
-                }
+                  ? breadcrumb.map((b) => b.name).join(" > ")
+                  : "Sélectionner un dossier"}
               </span>
             </div>
             <motion.div
@@ -628,7 +717,9 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
                   <span>{breadcrumb[breadcrumb.length - 1].name}</span>
                 </div>
               )}
-              {!isLoadingFolders && currentFolders.length === 0 && breadcrumb.length === 0 ? (
+              {!isLoadingFolders &&
+              currentFolders.length === 0 &&
+              breadcrumb.length === 0 ? (
                 <div style={{ ...dropdownItemStyle, cursor: "default" }}>
                   <span>Aucun dossier disponible</span>
                 </div>
@@ -676,34 +767,63 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
           </div>
 
           {/* Tag Input */}
-          <div style={tagInputContainerStyle}>
-            <span ref={spanRef} style={measureSpanStyle}>
-              {tagInput || "Écrire un tag..."}
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Écrire un tag..."
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  handleAddTag();
-                }
-              }}
-              style={tagInputStyle}
-            />
-            <div
-              onClick={handleAddTag}
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Plus size={16} color="#8B8B8B" strokeWidth={2} />
+          <div style={{ position: "relative" }}>
+            <div style={tagInputContainerStyle}>
+              <span ref={spanRef} style={measureSpanStyle}>
+                {tagInput || "Écrire un tag..."}
+              </span>
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Écrire un tag..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddTag();
+                  }
+                }}
+                onFocus={() => {
+                  if (tagInput.length > 0 && tagSuggestions.length > 0) {
+                    setShowTagSuggestions(true);
+                  }
+                }}
+                style={tagInputStyle}
+              />
+              <div
+                onClick={handleAddTag}
+                style={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Plus size={16} color="#8B8B8B" strokeWidth={2} />
+              </div>
             </div>
+
+            {/* Tag Suggestions Dropdown */}
+            {showTagSuggestions && tagSuggestions.length > 0 && (
+              <div ref={tagSuggestionsRef} style={tagSuggestionsDropdownStyle}>
+                {tagSuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.id}
+                    onClick={() => {
+                      setTagInput(suggestion.name);
+                      setShowTagSuggestions(false);
+                      handleAddTag();
+                    }}
+                    style={tagSuggestionItemStyle}
+                  >
+                    <span style={{ flex: 1 }}>{suggestion.name}</span>
+                    <span style={{ fontSize: "12px", color: "#8B8B8B" }}>
+                      {suggestion.usage_count} utilisations
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Tags Display */}
@@ -735,9 +855,9 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
       </motion.div>
 
       {/* Save Button */}
-      <Button 
-        variant="primary" 
-        size="md" 
+      <Button
+        variant="primary"
+        size="md"
         onClick={handleSave}
         disabled={isSaving || !url.trim()}
       >

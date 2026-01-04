@@ -1,13 +1,17 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { LinkRepository } from '@/domain/links/ports/LinkRepository';
 import { Link, CreateLinkData } from '@/domain/links/models';
+import { TagService } from '@/domain/tags/services/TagService';
 
 /**
  * Implémentation Supabase du repository de liens
  * Adapter entre Supabase et notre domaine métier
  */
 export class SupabaseLinkRepository implements LinkRepository {
-  constructor(private readonly supabase: SupabaseClient) {}
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly tagService?: TagService
+  ) {}
 
   async getFolderLinks(folderId: string): Promise<Link[]> {
     const { data, error } = await this.supabase
@@ -132,43 +136,20 @@ export class SupabaseLinkRepository implements LinkRepository {
       }
 
       // 3. Ajouter les tags si fournis
-      if (data.tags && data.tags.length > 0) {
+      if (data.tags && data.tags.length > 0 && this.tagService) {
         for (const tagName of data.tags) {
-          // Vérifier si le tag existe déjà pour le propriétaire du lien
-          let { data: existingTag } = await this.supabase
-            .from('tags')
-            .select('id')
-            .eq('user_id', linkOwnerId)
-            .eq('name', tagName)
-            .maybeSingle();
+          // ✅ CLEAN ARCHITECTURE: Utiliser TagService pour normalisation et création
+          const tag = await this.tagService.createTag(linkOwnerId, tagName);
 
-          let tagId: string;
-
-          if (existingTag) {
-            tagId = existingTag.id;
-          } else {
-            // Créer le tag
-            const { data: newTag, error: tagError } = await this.supabase
-              .from('tags')
-              .insert({
-                user_id: linkOwnerId,
-                name: tagName,
-              })
-              .select()
-              .single();
-
-            if (tagError || !newTag) {
-              console.error('Error creating tag:', tagError);
-              continue;
-            }
-
-            tagId = newTag.id;
+          if (!tag) {
+            console.error('Error creating/getting tag:', tagName);
+            continue;
           }
 
           // Associer le tag au lien
           await this.supabase.from('link_tags').insert({
             link_id: link.id,
-            tag_id: tagId,
+            tag_id: tag.id,
             is_auto_generated: false,
           });
         }
@@ -272,43 +253,25 @@ export class SupabaseLinkRepository implements LinkRepository {
         return true;
       }
 
-      // 4. Créer ou récupérer les tags et créer les associations
+      // 4. Créer ou récupérer les tags via TagService (clean architecture)
+      if (!this.tagService) {
+        console.error('TagService not injected - cannot update tags');
+        return false;
+      }
+
       for (const tagName of tags) {
-        // Vérifier si le tag existe déjà pour cet utilisateur
-        let { data: existingTag } = await this.supabase
-          .from('tags')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('name', tagName)
-          .maybeSingle();
+        // ✅ CLEAN ARCHITECTURE: Utiliser TagService pour normalisation et création
+        const tag = await this.tagService.createTag(userId, tagName);
 
-        let tagId: string;
-
-        if (existingTag) {
-          tagId = existingTag.id;
-        } else {
-          // Créer le tag
-          const { data: newTag, error: tagError } = await this.supabase
-            .from('tags')
-            .insert({
-              user_id: userId,
-              name: tagName,
-            })
-            .select('id')
-            .single();
-
-          if (tagError || !newTag) {
-            console.error('Error creating tag:', tagError);
-            continue;
-          }
-
-          tagId = newTag.id;
+        if (!tag) {
+          console.error('Error creating/getting tag:', tagName);
+          continue;
         }
 
         // Associer le tag au lien
         await this.supabase.from('link_tags').insert({
           link_id: linkId,
-          tag_id: tagId,
+          tag_id: tag.id,
           is_auto_generated: false,
         });
       }

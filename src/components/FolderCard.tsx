@@ -296,6 +296,7 @@ export default function FolderCard({
         isOpen={isExitModalOpen}
         onClose={() => setIsExitModalOpen(false)}
         onConfirm={handleExit}
+        title="Êtes-vous sûr de vouloir quitter ce dossier partagé ?"
       />
 
       <FolderSettingsModal

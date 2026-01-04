@@ -297,6 +297,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
       isOpen={isExitModalOpen}
       onClose={() => setIsExitModalOpen(false)}
       onConfirm={handleExit}
+      title="Êtes-vous sûr de vouloir quitter ce groupe partagé ?"
     />
 
     <FolderSettingsModal

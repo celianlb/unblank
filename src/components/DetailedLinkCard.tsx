@@ -4,6 +4,7 @@ import { Copy, ExternalLink, Pencil, Trash, Check } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditLinkModal from './EditLinkModal';
+import Tooltip from './Tooltip';
 
 interface DetailedLinkCardProps {
   linkId: string;
@@ -17,6 +18,7 @@ interface DetailedLinkCardProps {
   onCheckChange?: (linkId: string, checked: boolean) => void;
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 export default function DetailedLinkCard({
@@ -30,7 +32,8 @@ export default function DetailedLinkCard({
   isSelectionMode = false,
   onCheckChange,
   onDelete,
-  canDelete = true
+  canDelete = true,
+  canEdit = true
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -168,12 +171,25 @@ export default function DetailedLinkCard({
           </div>
 
           {/* Edit button */}
-          <button
-            onClick={handleEdit}
-            className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer"
+          <Tooltip
+            content="Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"
+            disabled={canEdit}
           >
-            <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-          </button>
+            <div className="relative inline-block">
+              <button
+                onClick={canEdit ? handleEdit : undefined}
+                disabled={!canEdit}
+                className={`w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 transition-all ${!canEdit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[#1a1a1a]'}`}
+              >
+                <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+              </button>
+              {!canEdit && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                  <span className="text-xs font-black text-black">!</span>
+                </div>
+              )}
+            </div>
+          </Tooltip>
 
           {/* Delete button - Frame 73 */}
           {canDelete && (

@@ -2,6 +2,7 @@ import { SupabaseClient, createClient as createSupabaseClient } from '@supabase/
 import { supabase } from '@/infra/db/supabase';
 import { SupabaseLinkRepository } from '@/infra/links/SupabaseLinkRepository';
 import { LinkService } from '@/domain/links/services/LinkService';
+import TagFactory from '@/lib/tags/tagFactory';
 
 /**
  * Factory pour créer les instances de gestion des liens
@@ -20,7 +21,8 @@ class LinkFactory {
    */
   static getLinkRepository(): SupabaseLinkRepository {
     if (!this.linkRepository) {
-      this.linkRepository = new SupabaseLinkRepository(supabase);
+      const tagService = TagFactory.getTagService();
+      this.linkRepository = new SupabaseLinkRepository(supabase, tagService);
     }
     return this.linkRepository;
   }
@@ -40,7 +42,8 @@ class LinkFactory {
    * Utilisé côté serveur (API routes) avec le token de l'utilisateur
    */
   static createLinkService(supabaseClient: SupabaseClient): LinkService {
-    const repository = new SupabaseLinkRepository(supabaseClient);
+    const tagService = TagFactory.createTagService(supabaseClient);
+    const repository = new SupabaseLinkRepository(supabaseClient, tagService);
     return new LinkService(repository);
   }
 

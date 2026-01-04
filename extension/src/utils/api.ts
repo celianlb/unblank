@@ -25,6 +25,16 @@ export interface Folder {
   link_count?: number;
 }
 
+export interface TagWithMetadata {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+  usage_count: number;
+  link_count?: number;
+  last_used_at?: string;
+}
+
 /**
  * Extract metadata from a URL
  */
@@ -191,4 +201,35 @@ export async function createLink(data: {
     };
   }
 }
+/**
+ * Get tag suggestions for autocomplete
+ */
+export async function getTagSuggestions(searchTerm: string, limit: number = 10): Promise<TagWithMetadata[]> {
+  try {
+    const token = await getAccessToken();
 
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const url = `${API_BASE_URL}/api/tags/suggestions?q=${encodeURIComponent(searchTerm)}&limit=${limit}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch tag suggestions');
+    }
+
+    const data = await response.json();
+    return data.suggestions || [];
+  } catch (error) {
+    console.error('[API] Error fetching tag suggestions:', error);
+    return [];
+  }
+}

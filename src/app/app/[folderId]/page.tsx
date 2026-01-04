@@ -37,11 +37,10 @@ export default function FolderPage() {
   );
 
   // Logique de permission :
-  // - Si pas de dossier (folder?.id null/undefined) : peut éditer
-  // - Si dossier existe mais les shares sont en cours de chargement : on attend
-  // - Si dossier existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
+  // - Si le dossier est en cours de chargement : ne pas autoriser (pour éviter le flash)
+  // - Si dossier chargé mais pas de partages : l'utilisateur est propriétaire, peut éditer
   // - Si dossier partagé : vérifier la permission (edit ou owner)
-  const canEdit = !folder?.id || (!isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner'));
+  const canEdit = !loadingFolder && !isLoadingShares && folder?.id && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
 
   const loadingData = loadingFolder || loadingLinks;
   const selectedCount = selectedLinkIds.size;
@@ -167,6 +166,7 @@ export default function FolderPage() {
                   onCheckChange={handleCheckChange}
                   onDelete={handleDeleteSingle}
                   canDelete={canEdit}
+                  canEdit={canEdit}
                 />
               ))}
             </div>
@@ -205,6 +205,7 @@ export default function FolderPage() {
                     onCheckChange={handleCheckChange}
                     onDelete={handleDeleteSingle}
                     canDelete={canEdit}
+                    canEdit={canEdit}
                   />
                 );
               })}
