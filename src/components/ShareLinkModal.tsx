@@ -1,28 +1,33 @@
 'use client';
 
-import { X, Copy } from 'lucide-react';
+import { X, Copy, Check, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { useCreatePublicShare, useInviteByEmail } from '@/hooks/useShares';
+import { useCreatePublicShare, useInviteByEmail, useFolderShares } from '@/hooks/useShares';
 
 interface ShareLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
   folderId: string;
+  currentUserEmail?: string;
 }
 
 export default function ShareLinkModal({
   isOpen,
   onClose,
-  folderId
+  folderId,
+  currentUserEmail
 }: ShareLinkModalProps) {
   const [selectedPermission, setSelectedPermission] = useState<'view' | 'edit'>('view');
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
   const [activeTab, setActiveTab] = useState<'link' | 'email'>('link');
   const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(null);
+  const [inviteSent, setInviteSent] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const createPublicShare = useCreatePublicShare();
   const inviteByEmailMutation = useInviteByEmail();
+  const { data: shares = [] } = useFolderShares(folderId);
 
   if (!isOpen) return null;
 
@@ -45,8 +50,32 @@ export default function ShareLinkModal({
     }
   };
 
+  // Live validation de l'email
+  const validateEmail = (email: string): string | null => {
+    if (!email.trim()) return null;
+
+    // Validation 1: Empêcher de s'inviter soi-même
+    if (currentUserEmail && email.toLowerCase() === currentUserEmail.toLowerCase()) {
+      return 'Vous ne pouvez pas vous inviter vous-même';
+    }
+
+    // Validation 2: Vérifier si l'utilisateur est déjà invité
+    const existingShare = shares.find((share: any) =>
+      share.user?.email?.toLowerCase() === email.toLowerCase()
+    );
+
+    if (existingShare) {
+      return 'Cet utilisateur a déjà accès à ce dossier';
+    }
+
+    return null;
+  };
+
+  // Calculer l'erreur de validation en temps réel
+  const validationError = validateEmail(inviteEmail);
+
   const handleInviteByEmail = async () => {
-    if (!inviteEmail.trim()) return;
+    if (!inviteEmail.trim() || validationError) return;
 
     try {
       await inviteByEmailMutation.mutateAsync({
@@ -55,13 +84,21 @@ export default function ShareLinkModal({
         permission: invitePermission,
       });
 
-      // Reset form
-      setInviteEmail('');
-      setInvitePermission('view');
-      alert('Invitation envoyée avec succès !');
-    } catch (error) {
+      // Show checkmark
+      setInviteSent(true);
+
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setInviteEmail('');
+        setInvitePermission('view');
+        setInviteSent(false);
+      }, 2000);
+    } catch (error: any) {
       console.error('Error inviting by email:', error);
-      alert('Erreur lors de l\'envoi de l\'invitation');
+      // Afficher le message d'erreur dans le bouton
+      const errorMessage = error?.message || 'Erreur lors de l\'envoi';
+      setInviteError(errorMessage);
+      setTimeout(() => setInviteError(null), 3000);
     }
   };
 
@@ -268,10 +305,30 @@ export default function ShareLinkModal({
                 {/* Invite Button */}
                 <button
                   onClick={handleInviteByEmail}
-                  disabled={!inviteEmail.trim() || inviteByEmailMutation.isPending}
-                  className="w-full h-[46px] bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors"
+                  disabled={!inviteEmail.trim() || !!validationError || !!inviteError || inviteByEmailMutation.isPending || inviteSent}
+                  className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors flex items-center justify-center gap-2 ${
+                    inviteSent
+                      ? 'bg-green-600 hover:bg-green-600'
+                      : (validationError || inviteError)
+                      ? 'bg-red-600 cursor-not-allowed'
+                      : 'bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed'
+                  }`}
                 >
-                  {inviteByEmailMutation.isPending ? 'Envoi en cours...' : 'Envoyer l\'invitation'}
+                  {inviteSent ? (
+                    <>
+                      <Check className="w-5 h-5" strokeWidth={3} />
+                      Invitation envoyée
+                    </>
+                  ) : (validationError || inviteError) ? (
+                    <>
+                      <AlertCircle className="w-5 h-5" strokeWidth={2} />
+                      {validationError || inviteError}
+                    </>
+                  ) : inviteByEmailMutation.isPending ? (
+                    'Envoi en cours...'
+                  ) : (
+                    'Envoyer l\'invitation'
+                  )}
                 </button>
               </div>
             )}

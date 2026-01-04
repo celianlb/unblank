@@ -310,6 +310,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
       isOpen={isShareModalOpen}
       onClose={() => setIsShareModalOpen(false)}
       folderId={id}
+      currentUserEmail={session?.user?.email}
     />
 
     <RenameFolderModal

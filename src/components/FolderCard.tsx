@@ -309,6 +309,7 @@ export default function FolderCard({
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         folderId={id}
+        currentUserEmail={session?.user?.email}
       />
 
       <RenameFolderModal

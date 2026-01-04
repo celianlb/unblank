@@ -209,7 +209,7 @@ export default function FolderSettingsModal({
 
                               {/* Dropdown Menu */}
                               {openDropdownId === share.id && (
-                                <div className="absolute right-0 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-10 overflow-hidden" style={{ top: 'calc(100% + 8px)' }}>
+                                <div className="absolute right-0 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-[100] overflow-hidden" style={{ top: 'calc(100% + 8px)' }}>
                                   <button
                                     onClick={() => handleChangePermission(share.id, 'view')}
                                     className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${

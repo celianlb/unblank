@@ -58,8 +58,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validation 1: Empêcher de s'inviter soi-même
+    if (user.email && email.toLowerCase() === user.email.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You cannot invite yourself' },
+        { status: 400 }
+      );
+    }
+
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const shareService = ShareFactory.createShareService(supabase);
+
+    // Validation 2: Vérifier si l'utilisateur est déjà invité
+    const existingShare = await shareService.getFolderShares(folderId);
+    const alreadyInvited = existingShare.find(
+      (share: any) => share.user?.email?.toLowerCase() === email.toLowerCase()
+    );
+
+    if (alreadyInvited) {
+      return NextResponse.json(
+        { error: 'User already has access to this folder' },
+        { status: 400 }
+      );
+    }
 
     const share = await shareService.inviteByEmail(
       folderId,
