@@ -166,6 +166,7 @@ export default function FolderPage() {
                   isSelectionMode={isSelectionMode}
                   onCheckChange={handleCheckChange}
                   onDelete={handleDeleteSingle}
+                  canDelete={canEdit}
                 />
               ))}
             </div>

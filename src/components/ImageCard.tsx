@@ -18,6 +18,7 @@ interface ImageCardProps {
   isSelectionMode?: boolean;
   onCheckChange?: (linkId: string, checked: boolean) => void;
   onDelete?: (linkId: string) => void;
+  canDelete?: boolean;
 }
 
 export default function ImageCard({
@@ -32,7 +33,8 @@ export default function ImageCard({
   tags = [],
   isSelectionMode = false,
   onCheckChange,
-  onDelete
+  onDelete,
+  canDelete = true
 }: ImageCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -142,15 +144,17 @@ export default function ImageCard({
         </div>
 
         {/* Delete button - hidden by default, shown on hover */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsDeleteModalOpen(true);
-          }}
-          className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer`}
-        >
-          <Trash className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
-        </button>
+        {canDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDeleteModalOpen(true);
+            }}
+            className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer`}
+          >
+            <Trash className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          </button>
+        )}
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
