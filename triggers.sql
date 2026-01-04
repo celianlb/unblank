@@ -1,13 +1,11 @@
-public :
-
-before_folder_delete_move_links : move_links_to_recents_before_folder_delete()
-before_folder_update_check_system : prevent_system_folder_grouping()
-trigger_auto_generate_folder_slug : auto_generate_folder_slug()
-update_folders_updated_at : update_updated_at()
-update_links_updated_at : update_updated_at()
-update_shares_updated_at : update_updated_at()
-update_users_updated_at : moddatetime()
-
-auth :
-on_auth_user_created : handle_new_user()
-on_auth_user_created_avatar : queue_avatar_sync()
+| schema_name | table_name | trigger_name                               | trigger_timing | trigger_event | trigger_level | function_name                              | trigger_definition                                                                                                                                        |
+| ----------- | ---------- | ------------------------------------------ | -------------- | ------------- | ------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| public      | folders    | auto_share_folder_with_creator_trigger     | AFTER          | INSERT        | ROW           | auto_share_folder_with_creator             | CREATE TRIGGER auto_share_folder_with_creator_trigger AFTER INSERT ON public.folders FOR EACH ROW EXECUTE FUNCTION auto_share_folder_with_creator()       |
+| public      | folders    | before_folder_delete_move_links            | BEFORE         | DELETE        | ROW           | move_links_to_recents_before_folder_delete | CREATE TRIGGER before_folder_delete_move_links BEFORE DELETE ON public.folders FOR EACH ROW EXECUTE FUNCTION move_links_to_recents_before_folder_delete() |
+| public      | folders    | before_folder_update_check_system          | BEFORE         | UPDATE        | ROW           | prevent_system_folder_grouping             | CREATE TRIGGER before_folder_update_check_system BEFORE UPDATE ON public.folders FOR EACH ROW EXECUTE FUNCTION prevent_system_folder_grouping()           |
+| public      | folders    | trigger_auto_generate_folder_slug          | BEFORE         | INSERT        | ROW           | auto_generate_folder_slug                  | CREATE TRIGGER trigger_auto_generate_folder_slug BEFORE INSERT OR UPDATE ON public.folders FOR EACH ROW EXECUTE FUNCTION auto_generate_folder_slug()      |
+| public      | folders    | update_folders_updated_at                  | BEFORE         | UPDATE        | ROW           | update_updated_at                          | CREATE TRIGGER update_folders_updated_at BEFORE UPDATE ON public.folders FOR EACH ROW EXECUTE FUNCTION update_updated_at()                                |
+| public      | link_tags  | after_link_tags_delete_cleanup_orphan_tags | AFTER          | DELETE        | ROW           | cleanup_orphan_tags_trigger                | CREATE TRIGGER after_link_tags_delete_cleanup_orphan_tags AFTER DELETE ON public.link_tags FOR EACH ROW EXECUTE FUNCTION cleanup_orphan_tags_trigger()    |
+| public      | links      | update_links_updated_at                    | BEFORE         | UPDATE        | ROW           | update_updated_at                          | CREATE TRIGGER update_links_updated_at BEFORE UPDATE ON public.links FOR EACH ROW EXECUTE FUNCTION update_updated_at()                                    |
+| public      | shares     | update_shares_updated_at                   | BEFORE         | UPDATE        | ROW           | update_updated_at                          | CREATE TRIGGER update_shares_updated_at BEFORE UPDATE ON public.shares FOR EACH ROW EXECUTE FUNCTION update_updated_at()                                  |
+| public      | users      | update_users_updated_at                    | BEFORE         | UPDATE        | ROW           | moddatetime                                | CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION moddatetime('updated_at')                              |

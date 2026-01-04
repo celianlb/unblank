@@ -1,262 +1,46 @@
-Schema	Table	Name	
-public
-
-folders
-
-folders_pkey
-
-
-
-
-public
-
-folders
-
-folders_user_slug_unique
-
-
-
-
-public
-
-folders
-
-idx_folders_parent_id
-
-
-
-
-public
-
-folders
-
-idx_folders_user_id
-
-
-
-
-public
-
-folders
-
-idx_folders_user_slug
-
-
-
-
-public
-
-link_tags
-
-idx_link_tags_link_id
-
-
-
-
-public
-
-link_tags
-
-idx_link_tags_tag_id
-
-
-
-
-public
-
-links
-
-idx_links_created_at
-
-
-
-
-public
-
-links
-
-idx_links_folder_id
-
-
-
-
-public
-
-links
-
-idx_links_url
-
-
-
-
-public
-
-links
-
-idx_links_user_id
-
-
-
-
-public
-
-share_access
-
-idx_share_access_share_id
-
-
-
-
-public
-
-share_access
-
-idx_share_access_unique
-
-
-
-
-public
-
-shares
-
-idx_shares_folder_id
-
-
-
-
-public
-
-shares
-
-idx_shares_shared_by
-
-
-
-
-public
-
-shares
-
-idx_shares_token
-
-
-
-
-public
-
-tags
-
-idx_tags_name
-
-
-
-
-public
-
-tags
-
-idx_tags_user_id
-
-
-
-
-public
-
-link_tags
-
-link_tags_link_id_tag_id_key
-
-
-
-
-public
-
-link_tags
-
-link_tags_pkey
-
-
-
-
-public
-
-links
-
-links_pkey
-
-
-
-
-public
-
-share_access
-
-share_access_pkey
-
-
-
-
-public
-
-shares
-
-shares_pkey
-
-
-
-
-public
-
-shares
-
-shares_share_token_key
-
-
-
-
-public
-
-tags
-
-tags_pkey
-
-
-
-
-public
-
-tags
-
-tags_user_id_name_key
-
-
-
-
-public
-
-users
-
-users_pkey
-
-
-
-
-public
-
-users
-
-users_referral_code_key
-
-
-
-
-public
-
-users
-
-users_username_key
-
-
-
-
+| schema_name | table_name   | index_name                    | column_name      | index_type | is_unique | is_primary | index_definition                                                                                                                                                   |
+| ----------- | ------------ | ----------------------------- | ---------------- | ---------- | --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| public      | folders      | folders_pkey                  | id               | btree      | true      | true       | CREATE UNIQUE INDEX folders_pkey ON public.folders USING btree (id)                                                                                                |
+| public      | folders      | folders_user_slug_unique      | user_id          | btree      | true      | false      | CREATE UNIQUE INDEX folders_user_slug_unique ON public.folders USING btree (user_id, slug)                                                                         |
+| public      | folders      | folders_user_slug_unique      | slug             | btree      | true      | false      | CREATE UNIQUE INDEX folders_user_slug_unique ON public.folders USING btree (user_id, slug)                                                                         |
+| public      | folders      | idx_folders_parent_id         | parent_folder_id | btree      | false     | false      | CREATE INDEX idx_folders_parent_id ON public.folders USING btree (parent_folder_id)                                                                                |
+| public      | folders      | idx_folders_parent_position   | parent_folder_id | btree      | false     | false      | CREATE INDEX idx_folders_parent_position ON public.folders USING btree (parent_folder_id, "position") WHERE (parent_folder_id IS NOT NULL)                         |
+| public      | folders      | idx_folders_parent_position   | position         | btree      | false     | false      | CREATE INDEX idx_folders_parent_position ON public.folders USING btree (parent_folder_id, "position") WHERE (parent_folder_id IS NOT NULL)                         |
+| public      | folders      | idx_folders_user_id           | user_id          | btree      | false     | false      | CREATE INDEX idx_folders_user_id ON public.folders USING btree (user_id)                                                                                           |
+| public      | folders      | idx_folders_user_root_folders | user_id          | btree      | false     | false      | CREATE INDEX idx_folders_user_root_folders ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = false)) |
+| public      | folders      | idx_folders_user_root_folders | is_group         | btree      | false     | false      | CREATE INDEX idx_folders_user_root_folders ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = false)) |
+| public      | folders      | idx_folders_user_root_folders | position         | btree      | false     | false      | CREATE INDEX idx_folders_user_root_folders ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = false)) |
+| public      | folders      | idx_folders_user_root_groups  | user_id          | btree      | false     | false      | CREATE INDEX idx_folders_user_root_groups ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = true))   |
+| public      | folders      | idx_folders_user_root_groups  | is_group         | btree      | false     | false      | CREATE INDEX idx_folders_user_root_groups ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = true))   |
+| public      | folders      | idx_folders_user_root_groups  | position         | btree      | false     | false      | CREATE INDEX idx_folders_user_root_groups ON public.folders USING btree (user_id, is_group, "position") WHERE ((parent_folder_id IS NULL) AND (is_group = true))   |
+| public      | folders      | idx_folders_user_slug_unique  | user_id          | btree      | true      | false      | CREATE UNIQUE INDEX idx_folders_user_slug_unique ON public.folders USING btree (user_id, slug)                                                                     |
+| public      | folders      | idx_folders_user_slug_unique  | slug             | btree      | true      | false      | CREATE UNIQUE INDEX idx_folders_user_slug_unique ON public.folders USING btree (user_id, slug)                                                                     |
+| public      | link_tags    | idx_link_tags_link_id         | link_id          | btree      | false     | false      | CREATE INDEX idx_link_tags_link_id ON public.link_tags USING btree (link_id)                                                                                       |
+| public      | link_tags    | idx_link_tags_tag_id          | tag_id           | btree      | false     | false      | CREATE INDEX idx_link_tags_tag_id ON public.link_tags USING btree (tag_id)                                                                                         |
+| public      | link_tags    | link_tags_link_id_tag_id_key  | link_id          | btree      | true      | false      | CREATE UNIQUE INDEX link_tags_link_id_tag_id_key ON public.link_tags USING btree (link_id, tag_id)                                                                 |
+| public      | link_tags    | link_tags_link_id_tag_id_key  | tag_id           | btree      | true      | false      | CREATE UNIQUE INDEX link_tags_link_id_tag_id_key ON public.link_tags USING btree (link_id, tag_id)                                                                 |
+| public      | link_tags    | link_tags_pkey                | id               | btree      | true      | true       | CREATE UNIQUE INDEX link_tags_pkey ON public.link_tags USING btree (id)                                                                                            |
+| public      | links        | idx_links_created_at          | created_at       | btree      | false     | false      | CREATE INDEX idx_links_created_at ON public.links USING btree (created_at DESC)                                                                                    |
+| public      | links        | idx_links_folder_covering     | id               | btree      | false     | false      | CREATE INDEX idx_links_folder_covering ON public.links USING btree (folder_id) INCLUDE (id)                                                                        |
+| public      | links        | idx_links_folder_covering     | folder_id        | btree      | false     | false      | CREATE INDEX idx_links_folder_covering ON public.links USING btree (folder_id) INCLUDE (id)                                                                        |
+| public      | links        | idx_links_folder_id           | folder_id        | btree      | false     | false      | CREATE INDEX idx_links_folder_id ON public.links USING btree (folder_id)                                                                                           |
+| public      | links        | idx_links_url                 | url              | btree      | false     | false      | CREATE INDEX idx_links_url ON public.links USING btree (url)                                                                                                       |
+| public      | links        | idx_links_user_id             | user_id          | btree      | false     | false      | CREATE INDEX idx_links_user_id ON public.links USING btree (user_id)                                                                                               |
+| public      | links        | links_pkey                    | id               | btree      | true      | true       | CREATE UNIQUE INDEX links_pkey ON public.links USING btree (id)                                                                                                    |
+| public      | share_access | idx_share_access_share_id     | share_id         | btree      | false     | false      | CREATE INDEX idx_share_access_share_id ON public.share_access USING btree (share_id)                                                                               |
+| public      | share_access | idx_share_access_unique       | share_id         | btree      | true      | false      | CREATE UNIQUE INDEX idx_share_access_unique ON public.share_access USING btree (share_id, accessed_by) WHERE (accessed_by IS NOT NULL)                             |
+| public      | share_access | idx_share_access_unique       | accessed_by      | btree      | true      | false      | CREATE UNIQUE INDEX idx_share_access_unique ON public.share_access USING btree (share_id, accessed_by) WHERE (accessed_by IS NOT NULL)                             |
+| public      | share_access | share_access_pkey             | id               | btree      | true      | true       | CREATE UNIQUE INDEX share_access_pkey ON public.share_access USING btree (id)                                                                                      |
+| public      | shares       | idx_shares_folder_id          | folder_id        | btree      | false     | false      | CREATE INDEX idx_shares_folder_id ON public.shares USING btree (folder_id)                                                                                         |
+| public      | shares       | idx_shares_shared_by          | shared_by        | btree      | false     | false      | CREATE INDEX idx_shares_shared_by ON public.shares USING btree (shared_by)                                                                                         |
+| public      | shares       | idx_shares_token              | share_token      | btree      | false     | false      | CREATE INDEX idx_shares_token ON public.shares USING btree (share_token)                                                                                           |
+| public      | shares       | shares_pkey                   | id               | btree      | true      | true       | CREATE UNIQUE INDEX shares_pkey ON public.shares USING btree (id)                                                                                                  |
+| public      | shares       | shares_share_token_key        | share_token      | btree      | true      | false      | CREATE UNIQUE INDEX shares_share_token_key ON public.shares USING btree (share_token)                                                                              |
+| public      | tags         | idx_tags_name                 | name             | btree      | false     | false      | CREATE INDEX idx_tags_name ON public.tags USING btree (name)                                                                                                       |
+| public      | tags         | idx_tags_user_id              | user_id          | btree      | false     | false      | CREATE INDEX idx_tags_user_id ON public.tags USING btree (user_id)                                                                                                 |
+| public      | tags         | tags_pkey                     | id               | btree      | true      | true       | CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)                                                                                                      |
+| public      | tags         | tags_user_id_name_key         | user_id          | btree      | true      | false      | CREATE UNIQUE INDEX tags_user_id_name_key ON public.tags USING btree (user_id, name)                                                                               |
+| public      | tags         | tags_user_id_name_key         | name             | btree      | true      | false      | CREATE UNIQUE INDEX tags_user_id_name_key ON public.tags USING btree (user_id, name)                                                                               |
+| public      | users        | users_pkey                    | id               | btree      | true      | true       | CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)                                                                                                    |
+| public      | users        | users_referral_code_key       | referral_code    | btree      | true      | false      | CREATE UNIQUE INDEX users_referral_code_key ON public.users USING btree (referral_code)                                                                            |
+| public      | users        | users_username_key            | username         | btree      | true      | false      | CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username)                                                                                      |
