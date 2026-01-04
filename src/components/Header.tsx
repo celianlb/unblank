@@ -185,7 +185,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
           <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
             <Tooltip
               content="Vous n'avez pas la permission de créer des dossiers dans ce groupe partagé"
-              disabled={canCreateFolder || isLoading}
+              disabled={canCreateFolder || isLoading || !!currentFolderId}
             >
               <div className="relative inline-block">
                 <button
