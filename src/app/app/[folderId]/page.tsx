@@ -11,6 +11,7 @@ import { getContentType } from '@/utils/linkUtils';
 import { useFolderBySlug } from '@/hooks/useFolders';
 import { useFolderLinks, useDeleteLinks, useDeleteLink } from '@/hooks/useLinks';
 import { formatDateAdded } from '@/utils/formatters';
+import { useFolderShares } from '@/hooks/useShares';
 
 export default function FolderPage() {
   const params = useParams();
@@ -26,6 +27,21 @@ export default function FolderPage() {
   // Mutations pour la suppression
   const deleteLinks = useDeleteLinks(folder?.id);
   const deleteLink = useDeleteLink(session?.user?.id, folder?.id);
+
+  // Récupérer les permissions du dossier actuel
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder?.id || null);
+
+  // Vérifier si l'utilisateur a la permission d'éditer (supprimer des liens)
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === session?.user?.email
+  );
+
+  // Logique de permission :
+  // - Si pas de dossier (folder?.id null/undefined) : peut éditer
+  // - Si dossier existe mais les shares sont en cours de chargement : on attend
+  // - Si dossier existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
+  // - Si dossier partagé : vérifier la permission (edit ou owner)
+  const canEdit = !folder?.id || (!isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner'));
 
   const loadingData = loadingFolder || loadingLinks;
   const selectedCount = selectedLinkIds.size;
@@ -187,6 +203,7 @@ export default function FolderPage() {
                     isSelectionMode={isSelectionMode}
                     onCheckChange={handleCheckChange}
                     onDelete={handleDeleteSingle}
+                    canDelete={canEdit}
                   />
                 );
               })}

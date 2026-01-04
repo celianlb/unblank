@@ -21,6 +21,7 @@ interface LinkCardProps {
   isSelected?: boolean;
   onCheckChange?: (id: string, checked: boolean) => void;
   onDelete?: (id: string) => void;
+  canDelete?: boolean;
 }
 
 export default function LinkCard({
@@ -38,7 +39,8 @@ export default function LinkCard({
   isSelectionMode = false,
   isSelected = false,
   onCheckChange,
-  onDelete
+  onDelete,
+  canDelete = true
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -168,15 +170,17 @@ export default function LinkCard({
         </div>
 
         {/* Delete button - hidden by default, shown on hover */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsDeleteModalOpen(true);
-          }}
-          className={`absolute right-3 top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
-        >
-          <Trash className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
-        </button>
+        {canDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDeleteModalOpen(true);
+            }}
+            className={`absolute right-3 top-3 ${showHoverElements ? 'flex' : 'hidden group-hover/card:flex'} flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
+          >
+            <Trash className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          </button>
+        )}
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (

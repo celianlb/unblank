@@ -16,6 +16,7 @@ interface DetailedLinkCardProps {
   isSelectionMode?: boolean;
   onCheckChange?: (linkId: string, checked: boolean) => void;
   onDelete?: (linkId: string) => void;
+  canDelete?: boolean;
 }
 
 export default function DetailedLinkCard({
@@ -28,7 +29,8 @@ export default function DetailedLinkCard({
   tags = [],
   isSelectionMode = false,
   onCheckChange,
-  onDelete
+  onDelete,
+  canDelete = true
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -167,15 +169,17 @@ export default function DetailedLinkCard({
           </button>
 
           {/* Delete button - Frame 73 */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteModalOpen(true);
-            }}
-            className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
-          >
-            <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
-          </button>
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteModalOpen(true);
+              }}
+              className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
+            >
+              <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* Tags - Frame 145 */}

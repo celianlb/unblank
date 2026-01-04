@@ -10,8 +10,58 @@ import LinkCard from '@/components/LinkCard';
 import { useFolders, useGroups } from '@/hooks/useFolders';
 import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/hooks/useLinks';
 import { useSharedFolders } from '@/hooks/useSharedFolders';
+import { useFolderShares } from '@/hooks/useShares';
 import { LinkService } from '@/domain/links/services/LinkService';
 import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
+
+// Helper component to render FolderCard with permission checking
+function SharedFolderCard({ folder, currentUserEmail }: { folder: any; currentUserEmail: string | undefined }) {
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
+
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === currentUserEmail
+  );
+
+  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  return (
+    <FolderCard
+      key={folder.id}
+      id={folder.id}
+      title={folder.name}
+      slug={folder.slug}
+      itemCount={folder.link_count || 0}
+      lastUpdate={formatLastUpdate(folder.updated_at)}
+      isSystem={false}
+      previewImages={folder.preview_images}
+      canDelete={canDelete}
+    />
+  );
+}
+
+// Helper component to render FolderGroupCard with permission checking
+function SharedGroupCard({ group, currentUserEmail }: { group: any; currentUserEmail: string | undefined }) {
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(group.id);
+
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === currentUserEmail
+  );
+
+  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  return (
+    <FolderGroupCard
+      key={group.id}
+      id={group.id}
+      title={group.name}
+      slug={group.slug}
+      itemCount={group.link_count || 0}
+      lastUpdate={formatLastUpdate(group.updated_at)}
+      images={group.preview_images || []}
+      canDelete={canDelete}
+    />
+  );
+}
 
 export default function AppPage() {
   const router = useRouter();
@@ -22,7 +72,7 @@ export default function AppPage() {
   // ✅ Utilisation de React Query pour le cache et auto-refresh
   const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
   const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
-  const { data: sharedData, isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id);
+  const { data: sharedData, isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id || null);
 
   // Extraire les groupes et dossiers partagés
   const sharedFolders = sharedData?.folders || [];
@@ -222,15 +272,10 @@ export default function AppPage() {
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {sharedGroups.map((group) => (
-                <FolderGroupCard
+                <SharedGroupCard
                   key={group.id}
-                  id={group.id}
-                  title={group.name}
-                  slug={group.slug}
-                  itemCount={group.link_count || 0}
-                  lastUpdate={formatLastUpdate(group.updated_at)}
-                  images={group.preview_images || []}
-                  isShared={true}
+                  group={group}
+                  currentUserEmail={session?.user?.email}
                 />
               ))}
             </div>
@@ -251,16 +296,10 @@ export default function AppPage() {
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {sharedFolders.map((folder) => (
-                <FolderCard
+                <SharedFolderCard
                   key={folder.id}
-                  id={folder.id}
-                  title={folder.name}
-                  slug={folder.slug}
-                  itemCount={folder.link_count || 0}
-                  lastUpdate={formatLastUpdate(folder.updated_at)}
-                  isSystem={false}
-                  previewImages={folder.preview_images}
-                  isShared={true}
+                  folder={folder}
+                  currentUserEmail={session?.user?.email}
                 />
               ))}
             </div>

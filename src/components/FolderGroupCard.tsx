@@ -18,9 +18,10 @@ interface FolderGroupCardProps {
   lastUpdate: string;
   images: string[];
   slug?: string;
+  canDelete?: boolean;
 }
 
-export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug }: FolderGroupCardProps) {
+export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug, canDelete = true }: FolderGroupCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -208,11 +209,23 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsDeleteModalOpen(true);
+            if (canDelete) setIsDeleteModalOpen(true);
           }}
-          className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer group"
+          disabled={!canDelete}
+          className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
+            !canDelete
+              ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+              : 'bg-[#C5C5C5] cursor-pointer'
+          }`}
         >
-          <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+          <Trash
+            className={`w-5 h-5 transition-colors ${
+              !canDelete
+                ? 'text-gray-400'
+                : 'text-black group-hover:text-[#FF5070]'
+            }`}
+            strokeWidth={2}
+          />
         </button>
       </div>
     </div>

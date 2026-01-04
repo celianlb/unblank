@@ -8,6 +8,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import FolderCard from '@/components/FolderCard';
 import { useGroupBySlug, useGroupFolders } from '@/hooks/useFolders';
 import { formatLastUpdate } from '@/utils/formatters';
+import { useFolderShares } from '@/hooks/useShares';
 
 export default function GroupPage() {
   const params = useParams();
@@ -18,6 +19,21 @@ export default function GroupPage() {
   // ✅ Utilisation de React Query
   const { data: group, isLoading: loadingGroup } = useGroupBySlug(session?.user?.id, slug);
   const { data: folders = [], isLoading: loadingFolders } = useGroupFolders(session?.user?.id, group?.id);
+
+  // Récupérer les permissions du groupe actuel
+  const { data: groupShares = [], isLoading: isLoadingGroupShares } = useFolderShares(group?.id || null);
+
+  // Vérifier si l'utilisateur a la permission d'éditer dans le groupe (pour supprimer des dossiers)
+  const currentUserGroupShare = groupShares.find((share: any) =>
+    share.user?.email === session?.user?.email
+  );
+
+  // Logique de permission :
+  // - Si pas de groupe (group?.id null/undefined) : peut éditer
+  // - Si groupe existe mais les shares sont en cours de chargement : on attend
+  // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
+  // - Si groupe partagé : vérifier la permission (edit ou owner)
+  const canCreateFolder = !group?.id || (!isLoadingGroupShares && (groupShares.length === 0 || currentUserGroupShare?.permission === 'edit' || currentUserGroupShare?.permission === 'owner'));
 
   const loadingData = loadingGroup || loadingFolders;
 
@@ -72,6 +88,7 @@ export default function GroupPage() {
                   groupSlug={slug}
                   isSystem={folder.is_system}
                   previewImages={folder.preview_images}
+                  canDelete={canCreateFolder}
                 />
               ))}
             </div>

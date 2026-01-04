@@ -9,6 +9,8 @@ import CreateGroupModal from './CreateGroupModal';
 import ProfileMenu from './ProfileMenu';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import SearchModal from './search/SearchModal';
+import Tooltip from './Tooltip';
+import { useFolderShares } from '@/hooks/useShares';
 
 interface HeaderProps {
   selectedCount?: number;
@@ -41,6 +43,43 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
   // Utiliser le context au lieu de fetcher à chaque fois
   const { session } = useAuthContext();
   const currentUser = session?.user || null;
+
+  // Récupérer les permissions du dossier actuel
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(currentFolderId || null);
+
+  // Récupérer les permissions du groupe actuel (pour le bouton "Créer un dossier")
+  const { data: groupShares = [], isLoading: isLoadingGroupShares } = useFolderShares(currentGroupId || null);
+
+  // Vérifier si l'utilisateur a la permission d'éditer dans le dossier (pour "Ajouter un lien")
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === currentUser?.email
+  );
+
+  // Vérifier si l'utilisateur a la permission d'éditer dans le groupe (pour "Créer un dossier")
+  const currentUserGroupShare = groupShares.find((share: any) =>
+    share.user?.email === currentUser?.email
+  );
+
+  // Logique de permission pour "Ajouter un lien" :
+  // - Si pas de dossier (currentFolderId null/undefined) : peut éditer
+  // - Si dossier existe mais les shares sont en cours de chargement : on attend (canEdit = false pour éviter le flash)
+  // - Si dossier existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
+  // - Si dossier partagé : vérifier la permission (edit ou owner)
+  const canEdit = !currentFolderId || (!isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner'));
+
+  // Logique de permission pour "Créer un dossier" (dans un groupe) :
+  // - Si pas de groupe (currentGroupId null/undefined) : peut créer
+  // - Si groupe existe mais les shares sont en cours de chargement : on attend
+  // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut créer
+  // - Si groupe partagé : vérifier la permission (edit ou owner)
+  const canCreateFolder = !currentGroupId || (!isLoadingGroupShares && (groupShares.length === 0 || currentUserGroupShare?.permission === 'edit' || currentUserGroupShare?.permission === 'owner'));
+
+  // Logique de permission pour "Supprimer" :
+  // - Si dans un dossier : utiliser canEdit (pour supprimer des liens)
+  // - Si dans un groupe : utiliser canCreateFolder (pour supprimer des dossiers)
+  // - Sinon (home/récents) : toujours autorisé
+  const canDelete = currentFolderId ? canEdit : currentGroupId ? canCreateFolder : true;
+  const isLoadingDeletePermissions = currentFolderId ? isLoadingShares : currentGroupId ? isLoadingGroupShares : false;
 
   // Global keyboard listener for Cmd+K / Ctrl+K
   useEffect(() => {
@@ -144,14 +183,26 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
 
         <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
           <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
-            <button
-              onClick={() => !isLoading && !currentFolderId && setIsCreateFolderModalOpen(true)}
-              disabled={isLoading || !!currentFolderId}
-              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || currentFolderId) ? 'bg-[#FF506F] opacity-50 cursor-not-allowed' : 'bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+            <Tooltip
+              content="Vous n'avez pas la permission de créer des dossiers dans ce groupe partagé"
+              disabled={canCreateFolder || isLoading}
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-              <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
-            </button>
+              <div className="relative inline-block">
+                <button
+                  onClick={() => !isLoading && !currentFolderId && canCreateFolder && setIsCreateFolderModalOpen(true)}
+                  disabled={isLoading || !!currentFolderId || !canCreateFolder}
+                  className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || currentFolderId || !canCreateFolder) ? 'bg-[#FF506F] opacity-50 cursor-not-allowed' : 'bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+                >
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+                  <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un dossier</span>
+                </button>
+                {!canCreateFolder && !isLoading && !isLoadingGroupShares && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">!</span>
+                  </div>
+                )}
+              </div>
+            </Tooltip>
 
             <button
               onClick={() => !isLoading && !isInGroup && !currentFolderId && setIsCreateGroupModalOpen(true)}
@@ -162,25 +213,50 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
               <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Créer un groupe</span>
             </button>
 
-            <button
-              onClick={() => !isLoading && !isInGroup && setIsAddLinkModalOpen(true)}
-              disabled={isLoading || isInGroup}
-              className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || isInGroup) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+            <Tooltip
+              content="Vous n'avez pas la permission d'ajouter des liens dans ce dossier partagé"
+              disabled={canEdit || isInGroup || isLoading}
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
-              <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
-            </button>
+              <div className="relative inline-block">
+                <button
+                  onClick={() => !isLoading && !isInGroup && canEdit && setIsAddLinkModalOpen(true)}
+                  disabled={isLoading || isInGroup || !canEdit}
+                  className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${(isLoading || isInGroup || !canEdit) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+                >
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0" strokeWidth={2} />
+                  <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">Ajouter un lien</span>
+                </button>
+                {!canEdit && !isInGroup && !isLoading && !isLoadingShares && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">!</span>
+                  </div>
+                )}
+              </div>
+            </Tooltip>
           </div>
 
           {/* Delete button - appears when items are selected */}
           {selectedCount > 0 && (
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="h-12 px-6 rounded-xl bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap cursor-pointer"
+            <Tooltip
+              content={currentFolderId ? "Vous n'avez pas la permission de supprimer des liens dans ce dossier partagé" : "Vous n'avez pas la permission de supprimer des dossiers dans ce groupe partagé"}
+              disabled={canDelete || isLoading}
             >
-              <Trash className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
-              <span className="text-black font-bold text-base">Supprimer</span>
-            </button>
+              <div className="relative inline-block">
+                <button
+                  onClick={() => canDelete && setIsDeleteModalOpen(true)}
+                  disabled={!canDelete || isLoading}
+                  className={`h-12 px-6 rounded-xl transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap ${(!canDelete || isLoading) ? 'bg-[#FEF8EE] opacity-50 cursor-not-allowed' : 'bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer'}`}
+                >
+                  <Trash className="w-6 h-6 text-black shrink-0" strokeWidth={2} />
+                  <span className="text-black font-bold text-base">Supprimer</span>
+                </button>
+                {!canDelete && !isLoading && !isLoadingDeletePermissions && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                    <span className="text-sm font-black text-black">!</span>
+                  </div>
+                )}
+              </div>
+            </Tooltip>
           )}
         </div>
       </div>

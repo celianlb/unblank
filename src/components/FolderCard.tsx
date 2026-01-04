@@ -19,6 +19,7 @@ interface FolderCardProps {
   slug?: string;
   isSystem?: boolean;
   previewImages?: string[];
+  canDelete?: boolean;
 }
 
 export default function FolderCard({
@@ -30,6 +31,7 @@ export default function FolderCard({
   slug,
   isSystem = false,
   previewImages = [],
+  canDelete = true,
 }: FolderCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
@@ -200,18 +202,18 @@ export default function FolderCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (!isSystem) setIsDeleteModalOpen(true);
+              if (!isSystem && canDelete) setIsDeleteModalOpen(true);
             }}
-            disabled={isSystem}
+            disabled={isSystem || !canDelete}
             className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
-              isSystem
+              (isSystem || !canDelete)
                 ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
                 : 'bg-[#C5C5C5] cursor-pointer'
             }`}
           >
             <Trash
               className={`w-5 h-5 transition-colors ${
-                isSystem
+                (isSystem || !canDelete)
                   ? 'text-gray-400'
                   : 'text-black group-hover:text-[#FF5070]'
               }`}
