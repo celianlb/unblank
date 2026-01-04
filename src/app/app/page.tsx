@@ -35,6 +35,7 @@ function SharedFolderCard({ folder, currentUserEmail }: { folder: any; currentUs
       isSystem={false}
       previewImages={folder.preview_images}
       canDelete={canDelete}
+      isShared={true}
     />
   );
 }
@@ -59,6 +60,7 @@ function SharedGroupCard({ group, currentUserEmail }: { group: any; currentUserE
       lastUpdate={formatLastUpdate(group.updated_at)}
       images={group.preview_images || []}
       canDelete={canDelete}
+      isShared={true}
     />
   );
 }

@@ -22,6 +22,11 @@ export interface ShareRepository {
   getShareByToken(token: string): Promise<Share | null>;
 
   /**
+   * Get a share by folder ID and user email
+   */
+  getShareByFolderAndEmail(folderId: string, userEmail: string): Promise<Share | null>;
+
+  /**
    * Update a share
    */
   updateShare(shareId: string, data: UpdateShareDTO): Promise<Share>;

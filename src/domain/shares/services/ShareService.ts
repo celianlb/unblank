@@ -137,4 +137,20 @@ export class ShareService {
         share_id: share.id,
       }));
   }
+
+  /**
+   * Exit a shared folder/group (revoke the share for the current user)
+   */
+  async exitFolder(folderId: string, userEmail: string): Promise<void> {
+    // Get the share for this user and folder
+    const share = await this.shareRepository.getShareByFolderAndEmail(folderId, userEmail);
+
+    if (!share) {
+      throw new Error('No active share found for this folder');
+    }
+
+    // Revoke the share (set is_active to false) instead of deleting
+    // This allows the user to exit without needing DELETE permission
+    await this.shareRepository.revokeShare(share.id);
+  }
 }

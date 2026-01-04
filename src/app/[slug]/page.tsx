@@ -11,7 +11,7 @@ import { formatLastUpdate } from '@/utils/formatters';
 import { useFolderShares } from '@/hooks/useShares';
 
 // Helper component to render FolderCard with permission checking for each folder
-function GroupFolderCard({ folder, groupSlug, currentUserEmail }: { folder: any; groupSlug: string; currentUserEmail: string | undefined }) {
+function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, groupId }: { folder: any; groupSlug: string; currentUserEmail: string | undefined; isGroupShared: boolean; groupId: string | undefined }) {
   const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
 
   const currentUserShare = shares.find((share: any) =>
@@ -32,6 +32,8 @@ function GroupFolderCard({ folder, groupSlug, currentUserEmail }: { folder: any;
       isSystem={folder.is_system}
       previewImages={folder.preview_images}
       canDelete={canDelete}
+      isShared={isGroupShared}
+      sharedGroupId={isGroupShared ? groupId : undefined}
     />
   );
 }
@@ -60,6 +62,9 @@ export default function GroupPage() {
   // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
   // - Si groupe partagé : vérifier la permission (edit ou owner)
   const canCreateFolder = !group?.id || (!isLoadingGroupShares && (groupShares.length === 0 || currentUserGroupShare?.permission === 'edit' || currentUserGroupShare?.permission === 'owner'));
+
+  // Vérifier si le groupe est partagé (l'utilisateur n'est pas le propriétaire)
+  const isGroupShared = !isLoadingGroupShares && groupShares.length > 0 && currentUserGroupShare?.permission !== 'owner';
 
   const loadingData = loadingGroup || loadingFolders;
 
@@ -109,6 +114,8 @@ export default function GroupPage() {
                   folder={folder}
                   groupSlug={slug}
                   currentUserEmail={session?.user?.email}
+                  isGroupShared={isGroupShared}
+                  groupId={group?.id}
                 />
               ))}
             </div>

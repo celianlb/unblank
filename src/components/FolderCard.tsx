@@ -1,14 +1,16 @@
 "use client";
 
-import { Pencil, Share2, Settings, Trash } from "lucide-react";
+import { Pencil, Share2, Settings, Trash, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DeleteConfirmModal from "./DeleteConfirmModal";
+import ExitConfirmModal from "./ExitConfirmModal";
 import FolderSettingsModal from "./FolderSettingsModal";
 import ShareLinkModal from "./ShareLinkModal";
 import RenameFolderModal from "./RenameFolderModal";
 import { useDeleteFolders, useRenameFolder } from "@/hooks/useFolders";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FolderCardProps {
   id: string;
@@ -20,6 +22,8 @@ interface FolderCardProps {
   isSystem?: boolean;
   previewImages?: string[];
   canDelete?: boolean;
+  isShared?: boolean;
+  sharedGroupId?: string; // ID du groupe parent partagé (pour quitter le groupe au lieu du dossier)
 }
 
 export default function FolderCard({
@@ -32,10 +36,14 @@ export default function FolderCard({
   isSystem = false,
   previewImages = [],
   canDelete = true,
+  isShared = false,
+  sharedGroupId,
 }: FolderCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
+  const queryClient = useQueryClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -74,6 +82,42 @@ export default function FolderCard({
     } catch (error) {
       console.error("Error renaming folder:", error);
       alert("Erreur lors du renommage du dossier");
+    }
+  };
+
+  const handleExit = async () => {
+    try {
+      // Si c'est un dossier dans un groupe partagé, on quitte le groupe parent
+      // Sinon, on quitte le dossier lui-même
+      const folderIdToExit = sharedGroupId || id;
+
+      const response = await fetch('/api/shares/exit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({ folderId: folderIdToExit }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to exit folder/group');
+      }
+
+      setIsExitModalOpen(false);
+
+      // ✅ Invalider le cache React Query pour les dossiers partagés
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+
+      // Si on quitte un groupe, rediriger vers la page d'accueil
+      if (sharedGroupId) {
+        router.push('/app');
+      } else {
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error exiting folder/group:", error);
+      alert("Erreur lors de la sortie du dossier/groupe");
     }
   };
 
@@ -194,28 +238,43 @@ export default function FolderCard({
               </button>
             </div>
 
-            {/* Frame 72 - Trash Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canDelete) setIsDeleteModalOpen(true);
-              }}
-              disabled={!canDelete}
-              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
-                !canDelete
-                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                  : 'bg-[#C5C5C5] cursor-pointer'
-              }`}
-            >
-              <Trash
-                className={`w-5 h-5 transition-colors ${
+            {/* Frame 72 - Exit/Trash Button */}
+            {isShared ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExitModalOpen(true);
+                }}
+                className="flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg bg-[#C5C5C5] cursor-pointer group"
+              >
+                <LogOut
+                  className="w-5 h-5 text-black transition-colors group-hover:text-[#FF5070]"
+                  strokeWidth={2}
+                />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canDelete) setIsDeleteModalOpen(true);
+                }}
+                disabled={!canDelete}
+                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
                   !canDelete
-                    ? 'text-gray-400'
-                    : 'text-black group-hover:text-[#FF5070]'
+                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                    : 'bg-[#C5C5C5] cursor-pointer'
                 }`}
-                strokeWidth={2}
-              />
-            </button>
+              >
+                <Trash
+                  className={`w-5 h-5 transition-colors ${
+                    !canDelete
+                      ? 'text-gray-400'
+                      : 'text-black group-hover:text-[#FF5070]'
+                  }`}
+                  strokeWidth={2}
+                />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -224,6 +283,12 @@ export default function FolderCard({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
+      />
+
+      <ExitConfirmModal
+        isOpen={isExitModalOpen}
+        onClose={() => setIsExitModalOpen(false)}
+        onConfirm={handleExit}
       />
 
       <FolderSettingsModal

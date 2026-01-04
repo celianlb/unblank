@@ -1,15 +1,17 @@
 'use client';
 
-import { Pencil, Share2, Settings, Trash } from 'lucide-react';
+import { Pencil, Share2, Settings, Trash, LogOut } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import ExitConfirmModal from './ExitConfirmModal';
 import FolderSettingsModal from './FolderSettingsModal';
 import ShareLinkModal from './ShareLinkModal';
 import RenameFolderModal from './RenameFolderModal';
 import { useDeleteFolders, useRenameFolder } from '@/hooks/useFolders';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FolderGroupCardProps {
   id: string;
@@ -19,12 +21,15 @@ interface FolderGroupCardProps {
   images: string[];
   slug?: string;
   canDelete?: boolean;
+  isShared?: boolean;
 }
 
-export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug, canDelete = true }: FolderGroupCardProps) {
+export default function FolderGroupCard({ id, title, itemCount, lastUpdate, images, slug, canDelete = true, isShared = false }: FolderGroupCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
+  const queryClient = useQueryClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -52,6 +57,33 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
     } catch (error) {
       console.error('Error renaming group:', error);
       alert('Erreur lors du renommage du groupe');
+    }
+  };
+
+  const handleExit = async () => {
+    try {
+      const response = await fetch('/api/shares/exit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({ folderId: id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to exit group');
+      }
+
+      setIsExitModalOpen(false);
+
+      // ✅ Invalider le cache React Query pour les dossiers partagés
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Error exiting group:", error);
+      alert("Erreur lors de la sortie du groupe");
     }
   };
 
@@ -215,28 +247,43 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
           </button>
         </div>
 
-        {/* Frame 72 - Trash Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (canDelete) setIsDeleteModalOpen(true);
-          }}
-          disabled={!canDelete}
-          className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
-            !canDelete
-              ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-              : 'bg-[#C5C5C5] cursor-pointer'
-          }`}
-        >
-          <Trash
-            className={`w-5 h-5 transition-colors ${
+        {/* Frame 72 - Exit/Trash Button */}
+        {isShared ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExitModalOpen(true);
+            }}
+            className="flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg bg-[#C5C5C5] cursor-pointer group"
+          >
+            <LogOut
+              className="w-5 h-5 text-black transition-colors group-hover:text-[#FF5070]"
+              strokeWidth={2}
+            />
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (canDelete) setIsDeleteModalOpen(true);
+            }}
+            disabled={!canDelete}
+            className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
               !canDelete
-                ? 'text-gray-400'
-                : 'text-black group-hover:text-[#FF5070]'
+                ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                : 'bg-[#C5C5C5] cursor-pointer'
             }`}
-            strokeWidth={2}
-          />
-        </button>
+          >
+            <Trash
+              className={`w-5 h-5 transition-colors ${
+                !canDelete
+                  ? 'text-gray-400'
+                  : 'text-black group-hover:text-[#FF5070]'
+              }`}
+              strokeWidth={2}
+            />
+          </button>
+        )}
       </div>
     </div>
 
@@ -244,6 +291,12 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
       isOpen={isDeleteModalOpen}
       onClose={() => setIsDeleteModalOpen(false)}
       onConfirm={handleDelete}
+    />
+
+    <ExitConfirmModal
+      isOpen={isExitModalOpen}
+      onClose={() => setIsExitModalOpen(false)}
+      onConfirm={handleExit}
     />
 
     <FolderSettingsModal
