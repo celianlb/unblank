@@ -44,6 +44,7 @@ export default function LinkCard({
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Proxy external images to avoid CORS issues
   const getProxiedImageUrl = (url?: string, size?: 'thumbnail' | 'full') => {
@@ -95,6 +96,8 @@ export default function LinkCard({
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleOpenLink = (e: React.MouseEvent) => {
@@ -203,8 +206,12 @@ export default function LinkCard({
           <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}
           </span>
-          <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center">
-            <Copy className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />
+          <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center transition-all">
+            {isCopied ? (
+              <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+            ) : (
+              <Copy className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+            )}
           </button>
           <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center">
             <ExternalLink className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />

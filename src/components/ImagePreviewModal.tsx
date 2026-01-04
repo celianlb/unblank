@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Pencil, Copy, ExternalLink } from 'lucide-react';
+import { X, Pencil, Copy, ExternalLink, Check } from 'lucide-react';
 import EditTagsModal from './EditTagsModal';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -35,10 +35,13 @@ export default function ImagePreviewModal({
   const [isEditTagsOpen, setIsEditTagsOpen] = useState(false);
   const [currentTags, setCurrentTags] = useState(tags);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const { session } = useAuthContext();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleOpenLink = () => {
@@ -128,8 +131,12 @@ export default function ImagePreviewModal({
             <span className="flex-1 text-sm sm:text-base md:text-xl lg:text-2xl xl:text-[29px] leading-tight tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {link.length > 25 ? link.substring(0, 25) + '...' : link}
             </span>
-            <button onClick={handleCopy} className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-[42px] xl:h-[42px] flex items-center justify-center cursor-pointer shrink-0">
-              <Copy className="w-full h-full text-[#0D0D0D]" strokeWidth={2} />
+            <button onClick={handleCopy} className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-[42px] xl:h-[42px] flex items-center justify-center cursor-pointer shrink-0 transition-all">
+              {isCopied ? (
+                <Check className="w-full h-full text-green-600" strokeWidth={2} />
+              ) : (
+                <Copy className="w-full h-full text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+              )}
             </button>
             <button onClick={handleOpenLink} className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-[42px] xl:h-[42px] flex items-center justify-center cursor-pointer shrink-0">
               <ExternalLink className="w-full h-full text-black" strokeWidth={2} />

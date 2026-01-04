@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, ExternalLink, Pencil, Trash } from 'lucide-react';
+import { Copy, ExternalLink, Pencil, Trash, Check } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditLinkModal from './EditLinkModal';
@@ -35,6 +35,7 @@ export default function DetailedLinkCard({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleDelete = () => {
     onDelete?.(linkId);
@@ -53,6 +54,8 @@ export default function DetailedLinkCard({
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleOpenLink = (e: React.MouseEvent) => {
@@ -152,8 +155,12 @@ export default function DetailedLinkCard({
             <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {displayLink}
             </span>
-            <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
-              <Copy className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />
+            <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all">
+              {isCopied ? (
+                <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+              ) : (
+                <Copy className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+              )}
             </button>
             <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
               <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />

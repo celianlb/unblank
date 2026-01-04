@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, ExternalLink, Trash } from 'lucide-react';
+import { Copy, ExternalLink, Trash, Check } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import ImagePreviewModal from './ImagePreviewModal';
@@ -39,6 +39,7 @@ export default function ImageCard({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Proxy external images to avoid CORS issues
   const getProxiedImageUrl = (url: string, size?: 'thumbnail' | 'full') => {
@@ -77,6 +78,8 @@ export default function ImageCard({
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleOpenLink = (e: React.MouseEvent) => {
@@ -177,8 +180,12 @@ export default function ImageCard({
           <span className="flex-1 text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}
           </span>
-          <button onClick={handleCopy} className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">
-            <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]" strokeWidth={2} />
+          <button onClick={handleCopy} className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer transition-all">
+            {isCopied ? (
+              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" strokeWidth={2} />
+            ) : (
+              <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D] hover:text-[#FF506F]" strokeWidth={2} />
+            )}
           </button>
           <button onClick={handleOpenLink} className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer">
             <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]" strokeWidth={2} />
