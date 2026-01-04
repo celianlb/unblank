@@ -214,7 +214,54 @@ export class SupabaseShareRepository implements ShareRepository {
     // Pour chaque folder, récupérer le nombre de links et les images preview
     const foldersWithDetails = await Promise.all(
       (folders || []).map(async (folder) => {
-        // Compter les links
+        // Si c'est un groupe, compter les links dans tous les sous-dossiers
+        if (folder.is_group) {
+          // Récupérer tous les sous-dossiers du groupe
+          const { data: childFolders } = await this.supabase
+            .from('folders')
+            .select('id')
+            .eq('parent_folder_id', folder.id);
+
+          const childFolderIds = (childFolders || []).map(f => f.id);
+
+          // Compter les links dans tous les sous-dossiers
+          let totalCount = 0;
+          if (childFolderIds.length > 0) {
+            const { count } = await this.supabase
+              .from('links')
+              .select('*', { count: 'exact', head: true })
+              .in('folder_id', childFolderIds);
+            totalCount = count || 0;
+          }
+
+          // Récupérer les images preview des sous-dossiers (max 4 dossiers, 1 image par dossier)
+          const limitedChildFolders = childFolderIds.slice(0, 4);
+          const previewImagesPromises = limitedChildFolders.map(async (folderId) => {
+            const { data: links } = await this.supabase
+              .from('links')
+              .select('original_image_url, screenshot_url')
+              .eq('folder_id', folderId)
+              .not('original_image_url', 'is', null)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (links && links.length > 0) {
+              return links[0].original_image_url || links[0].screenshot_url;
+            }
+            return null;
+          });
+
+          const allImages = await Promise.all(previewImagesPromises);
+          const previewImages = allImages.filter(Boolean) as string[];
+
+          return {
+            ...folder,
+            link_count: totalCount,
+            preview_images: previewImages,
+          };
+        }
+
+        // Pour les dossiers normaux, compter les links directement
         const { count } = await this.supabase
           .from('links')
           .select('*', { count: 'exact', head: true })
