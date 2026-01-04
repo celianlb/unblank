@@ -156,29 +156,61 @@ export default function FolderSettingsModal({
                     return (
                       <div
                         key={share.id}
-                        className="flex flex-row justify-between items-center w-full min-h-[64px] p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        className={`relative flex flex-row justify-between items-center w-full min-h-[64px] p-2 rounded-lg transition-colors ${
+                          openDropdownId === share.id ? 'bg-gray-50' : 'hover:bg-gray-50'
+                        }`}
                       >
                         {/* User Info */}
                         <div className="flex flex-col gap-1 flex-1">
-                          <div className="flex flex-row items-center gap-3">
+                          <div className="relative flex flex-row items-center gap-3">
                             <div className="w-12 h-12 rounded-full overflow-hidden border-[3px] border-black bg-gray-200 flex items-center justify-center flex-shrink-0">
                               <span className="text-xl font-bold text-gray-600">
                                 {displayName.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-[18px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
-                                {displayName}{isCurrentUser && ' (moi)'}
-                              </span>
-                              <span className="text-[14px] leading-[20px] font-normal text-[#A8A8A8] font-[Heebo]">
-                                {displayEmail}
-                              </span>
-                            </div>
+
+                            {/* Dropdown Menu - Horizontal overlay qui part après l'avatar */}
+                            {openDropdownId === share.id && share.permission !== 'owner' && isOwner ? (
+                              <div className="absolute left-16 flex flex-row gap-2 bg-white border-2 border-black rounded-lg shadow-lg z-[100] p-2">
+                                <button
+                                  onClick={() => handleChangePermission(share.id, 'view')}
+                                  className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap ${
+                                    share.permission === 'view' ? 'bg-gray-200 text-[#0D0D0D]' : 'text-[#0D0D0D]'
+                                  }`}
+                                >
+                                  Lecteur
+                                </button>
+                                <button
+                                  onClick={() => handleChangePermission(share.id, 'edit')}
+                                  className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap ${
+                                    share.permission === 'edit' ? 'bg-gray-200 text-[#0D0D0D]' : 'text-[#0D0D0D]'
+                                  }`}
+                                >
+                                  Éditeur
+                                </button>
+                                <div className="w-px bg-black" />
+                                <button
+                                  onClick={() => handleRemoveAccess(share.id)}
+                                  className="px-4 py-2 text-[14px] font-medium text-[#FF2F2F] font-[Heebo] rounded-lg hover:bg-red-50 transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                  Retirer
+                                </button>
+                              </div>
+                            ) : (
+                              <div className={`flex flex-col transition-opacity duration-200 ${openDropdownId === share.id ? 'opacity-0' : 'opacity-100'}`}>
+                                <span className="text-[18px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
+                                  {displayName}{isCurrentUser && ' (moi)'}
+                                </span>
+                                <span className="text-[14px] leading-[20px] font-normal text-[#A8A8A8] font-[Heebo]">
+                                  {displayEmail}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Permission Dropdown */}
-                        <div className="relative">
+                        <div className={`relative transition-opacity duration-200 ${openDropdownId === share.id ? 'opacity-0' : 'opacity-100'}`}>
                           {share.permission === 'owner' ? (
                             // Pour le propriétaire, afficher seulement le label sans dropdown
                             <div className="px-3 py-2 border-2 border-black rounded-lg bg-gray-50">
@@ -188,54 +220,23 @@ export default function FolderSettingsModal({
                             </div>
                           ) : isOwner ? (
                             // Si l'utilisateur courant est le propriétaire, afficher le dropdown
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleDropdown(share.id);
-                                }}
-                                className="flex flex-row items-center gap-2 px-3 py-2 border-2 border-black rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                              >
-                                <span className="text-[16px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
-                                  {getPermissionLabel(share.permission)}
-                                </span>
-                                <ChevronDown
-                                  className={`w-4 h-4 text-[#0D0D0D] transition-transform duration-200 ${
-                                    openDropdownId === share.id ? 'rotate-180' : ''
-                                  }`}
-                                  strokeWidth={2}
-                                />
-                              </button>
-
-                              {/* Dropdown Menu */}
-                              {openDropdownId === share.id && (
-                                <div className="absolute right-0 w-[200px] bg-white border-2 border-black rounded-lg shadow-lg z-[100] overflow-hidden" style={{ top: 'calc(100% + 8px)' }}>
-                                  <button
-                                    onClick={() => handleChangePermission(share.id, 'view')}
-                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${
-                                      share.permission === 'view' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
-                                    }`}
-                                  >
-                                    Lecteur
-                                  </button>
-                                  <button
-                                    onClick={() => handleChangePermission(share.id, 'edit')}
-                                    className={`w-full px-4 py-2.5 text-left text-[16px] font-medium font-[Heebo] hover:bg-gray-100 transition-colors cursor-pointer ${
-                                      share.permission === 'edit' ? 'bg-gray-50 text-[#0D0D0D]' : 'text-[#0D0D0D]'
-                                    }`}
-                                  >
-                                    Éditeur
-                                  </button>
-                                  <div className="border-t-2 border-black" />
-                                  <button
-                                    onClick={() => handleRemoveAccess(share.id)}
-                                    className="w-full px-4 py-2.5 text-left text-[16px] font-medium text-[#FF2F2F] font-[Heebo] hover:bg-red-50 transition-colors cursor-pointer"
-                                  >
-                                    Retirer l&apos;accès
-                                  </button>
-                                </div>
-                              )}
-                            </>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDropdown(share.id);
+                              }}
+                              className="flex flex-row items-center gap-2 px-3 py-2 border-2 border-black rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                            >
+                              <span className="text-[16px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
+                                {getPermissionLabel(share.permission)}
+                              </span>
+                              <ChevronDown
+                                className={`w-4 h-4 text-[#0D0D0D] transition-transform duration-200 ${
+                                  openDropdownId === share.id ? 'rotate-180' : ''
+                                }`}
+                                strokeWidth={2}
+                              />
+                            </button>
                           ) : (
                             // Si l'utilisateur courant n'est pas le propriétaire, afficher seulement le label en lecture seule
                             <div className="px-3 py-2 border-2 border-black rounded-lg bg-gray-50">
