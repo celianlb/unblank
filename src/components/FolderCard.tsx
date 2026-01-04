@@ -137,7 +137,7 @@ export default function FolderCard({
         </h3>
 
         {/* Frame 27 - Info */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 mt-auto">
           <p className="text-xs leading-[90%] font-normal text-[#0D0D0D] font-[Heebo]">
             {itemCount} éléments
           </p>
@@ -147,80 +147,77 @@ export default function FolderCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-row items-center justify-between w-full mt-auto">
-          <div className="flex flex-row items-center gap-2">
-            {/* Frame 173 - Edit Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isSystem) setIsRenameModalOpen(true);
-              }}
-              disabled={isSystem}
-              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
-                isSystem
-                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
-              }`}
-            >
-              <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-            </button>
+        {!isSystem && (
+          <div className="flex flex-row items-center justify-between w-full mt-auto">
+            <div className="flex flex-row items-center gap-2">
+              {/* Frame 173 - Edit Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canDelete) setIsRenameModalOpen(true);
+                }}
+                disabled={!canDelete}
+                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                  !canDelete
+                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                    : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+                }`}
+              >
+                <Pencil className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
+              </button>
 
-            {/* Frame 172 - Share Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isSystem) setIsShareModalOpen(true);
-              }}
-              disabled={isSystem}
-              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
-                isSystem
-                  ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
-              }`}
-            >
-              <Share2 className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-            </button>
+              {/* Frame 172 - Share Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canDelete) setIsShareModalOpen(true);
+                }}
+                disabled={!canDelete}
+                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                  !canDelete
+                    ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                    : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+                }`}
+              >
+                <Share2 className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
+              </button>
 
-            {/* Frame 170 - Settings Button (Groupement) */}
+              {/* Frame 170 - Settings Button (Groupement) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSettingsModalOpen(true);
+                }}
+                className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black cursor-pointer transition-colors"
+              >
+                <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+              </button>
+            </div>
+
+            {/* Frame 72 - Trash Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (!isSystem) setIsSettingsModalOpen(true);
+                if (canDelete) setIsDeleteModalOpen(true);
               }}
-              disabled={isSystem}
-              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
-                isSystem
+              disabled={!canDelete}
+              className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
+                !canDelete
                   ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                  : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+                  : 'bg-[#C5C5C5] cursor-pointer'
               }`}
             >
-              <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+              <Trash
+                className={`w-5 h-5 transition-colors ${
+                  !canDelete
+                    ? 'text-gray-400'
+                    : 'text-black group-hover:text-[#FF5070]'
+                }`}
+                strokeWidth={2}
+              />
             </button>
           </div>
-
-          {/* Frame 72 - Trash Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isSystem && canDelete) setIsDeleteModalOpen(true);
-            }}
-            disabled={isSystem || !canDelete}
-            className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
-              (isSystem || !canDelete)
-                ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
-                : 'bg-[#C5C5C5] cursor-pointer'
-            }`}
-          >
-            <Trash
-              className={`w-5 h-5 transition-colors ${
-                (isSystem || !canDelete)
-                  ? 'text-gray-400'
-                  : 'text-black group-hover:text-[#FF5070]'
-              }`}
-              strokeWidth={2}
-            />
-          </button>
-        </div>
+        )}
       </div>
 
       <DeleteConfirmModal

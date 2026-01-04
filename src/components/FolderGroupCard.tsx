@@ -175,22 +175,32 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsRenameModalOpen(true);
+              if (canDelete) setIsRenameModalOpen(true);
             }}
-            className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+            disabled={!canDelete}
+            className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+              !canDelete
+                ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+            }`}
           >
-            <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+            <Pencil className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
           </button>
 
           {/* Frame 172 - Share Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsShareModalOpen(true);
+              if (canDelete) setIsShareModalOpen(true);
             }}
-            className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+            disabled={!canDelete}
+            className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+              !canDelete
+                ? 'bg-[#C5C5C5] cursor-not-allowed opacity-50'
+                : 'bg-[#0D0D0D] hover:bg-black cursor-pointer'
+            }`}
           >
-            <Share2 className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+            <Share2 className={`w-5 h-5 ${!canDelete ? 'text-gray-400' : 'text-[#FEF8EE]'}`} strokeWidth={2} />
           </button>
 
           {/* Frame 170 - Settings Button */}
@@ -199,7 +209,7 @@ export default function FolderGroupCard({ id, title, itemCount, lastUpdate, imag
               e.stopPropagation();
               setIsSettingsModalOpen(true);
             }}
-            className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black transition-colors cursor-pointer"
+            className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black cursor-pointer transition-colors"
           >
             <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
           </button>
