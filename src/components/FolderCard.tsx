@@ -24,6 +24,7 @@ interface FolderCardProps {
   canDelete?: boolean;
   isShared?: boolean;
   sharedGroupId?: string; // ID du groupe parent partagé (pour quitter le groupe au lieu du dossier)
+  onExitSuccess?: () => void; // Callback appelé après un exit réussi
 }
 
 export default function FolderCard({
@@ -38,6 +39,7 @@ export default function FolderCard({
   canDelete = true,
   isShared = false,
   sharedGroupId,
+  onExitSuccess,
 }: FolderCardProps) {
   const router = useRouter();
   const { session } = useAuthContext();
@@ -108,6 +110,11 @@ export default function FolderCard({
 
       // ✅ Invalider le cache React Query pour les dossiers partagés
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+
+      // Appeler le callback si fourni (pour invalider les caches de la page parent)
+      if (onExitSuccess) {
+        onExitSuccess();
+      }
 
       // Si on quitte un groupe, rediriger vers la page d'accueil
       if (sharedGroupId) {

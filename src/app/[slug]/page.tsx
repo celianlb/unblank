@@ -9,9 +9,11 @@ import FolderCard from '@/components/FolderCard';
 import { useGroupBySlug, useGroupFolders } from '@/hooks/useFolders';
 import { formatLastUpdate } from '@/utils/formatters';
 import { useFolderShares } from '@/hooks/useShares';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Helper component to render FolderCard with permission checking for each folder
-function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, groupId }: { folder: any; groupSlug: string; currentUserEmail: string | undefined; isGroupShared: boolean; groupId: string | undefined }) {
+function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, groupId, userId }: { folder: any; groupSlug: string; currentUserEmail: string | undefined; isGroupShared: boolean; groupId: string | undefined; userId: string | undefined }) {
+  const queryClient = useQueryClient();
   const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
 
   const currentUserShare = shares.find((share: any) =>
@@ -20,6 +22,27 @@ function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, g
 
   // Logique de permission pour chaque dossier individuel
   const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  // Vérifier si le dossier individuel est partagé (shares.length > 1 car il y a toujours l'owner)
+  // Un dossier est considéré comme partagé individuellement si :
+  // - Il a des shares (> 1 car owner est toujours présent)
+  // - ET l'utilisateur actuel n'est pas l'owner
+  const isFolderShared = !isLoadingShares && shares.length > 1 && currentUserShare?.permission !== 'owner';
+
+  // Si le dossier est partagé individuellement, on quitte le dossier
+  // Sinon, si on est dans un groupe partagé, on quitte le groupe parent
+  const shouldShowExitButton = isFolderShared || isGroupShared;
+  const exitTargetId = isFolderShared ? undefined : (isGroupShared ? groupId : undefined);
+
+  // Callback pour invalider les caches de la page après un exit réussi
+  const handleExitSuccess = () => {
+    // Invalider les dossiers du groupe
+    queryClient.invalidateQueries({ queryKey: ['group-folders', groupId] });
+    // Invalider les shares du groupe
+    queryClient.invalidateQueries({ queryKey: ['shares', groupId] });
+    // Invalider les shares du dossier
+    queryClient.invalidateQueries({ queryKey: ['shares', folder.id] });
+  };
 
   return (
     <FolderCard
@@ -32,8 +55,9 @@ function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, g
       isSystem={folder.is_system}
       previewImages={folder.preview_images}
       canDelete={canDelete}
-      isShared={isGroupShared}
-      sharedGroupId={isGroupShared ? groupId : undefined}
+      isShared={shouldShowExitButton}
+      sharedGroupId={exitTargetId}
+      onExitSuccess={handleExitSuccess}
     />
   );
 }
@@ -116,6 +140,7 @@ export default function GroupPage() {
                   currentUserEmail={session?.user?.email}
                   isGroupShared={isGroupShared}
                   groupId={group?.id}
+                  userId={session?.user?.id}
                 />
               ))}
             </div>
