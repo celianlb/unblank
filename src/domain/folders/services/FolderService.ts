@@ -102,4 +102,13 @@ export class FolderService {
 
     return this.folderRepository.deleteFolders(folderIds);
   }
+
+  /**
+   * Récupère les IDs des dossiers enfants d'un groupe (retourne un tableau vide si ce n'est pas un groupe)
+   * Utilisé pour gérer les partages lors de la sortie d'un groupe
+   */
+  async getGroupFolderIds(userId: string, folderId: string): Promise<string[]> {
+    const folders = await this.folderRepository.getGroupFolders(userId, folderId);
+    return folders.map(f => f.id);
+  }
 }

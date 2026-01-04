@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
+import FolderFactory from '@/lib/folders/folderFactory';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,10 +42,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ✅ CLEAN ARCHITECTURE: Récupérer les infos du folder via FolderService
+    const folderService = FolderFactory.createFolderService(supabase);
+
+    // Récupérer les IDs des sous-dossiers si c'est un groupe
+    const childFolderIds = await folderService.getGroupFolderIds(user.id, folderId);
+
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const shareService = ShareFactory.createShareService(supabase);
 
-    await shareService.exitFolder(folderId, user.email!);
+    await shareService.exitFolder(folderId, user.email!, childFolderIds);
 
     return NextResponse.json({
       message: 'Successfully exited folder/group'

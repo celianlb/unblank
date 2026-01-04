@@ -50,4 +50,9 @@ export interface ShareRepository {
    * Get all folders shared with a specific user
    */
   getSharedWithUser(userEmail: string): Promise<ShareWithUser[]>;
+
+  /**
+   * Revoke all shares for a user in a group and its child folders
+   */
+  revokeGroupShares(groupId: string, userEmail: string, childFolderIds: string[]): Promise<void>;
 }

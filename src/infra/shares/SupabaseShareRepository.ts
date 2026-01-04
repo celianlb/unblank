@@ -328,4 +328,21 @@ export class SupabaseShareRepository implements ShareRepository {
       folders: foldersWithDetails.find(f => f.id === share.folder_id) || null,
     }));
   }
+
+  async revokeGroupShares(groupId: string, userEmail: string, childFolderIds: string[]): Promise<void> {
+    // Construire la liste des IDs: groupe + tous ses enfants (fournis par le FolderService)
+    const folderIds = [groupId, ...childFolderIds];
+
+    // Révoquer tous les shares de cet utilisateur pour ces dossiers
+    const { error } = await this.supabase
+      .from('shares')
+      .update({ is_active: false })
+      .in('folder_id', folderIds)
+      .eq('shared_with_email', userEmail)
+      .eq('is_active', true);
+
+    if (error) {
+      throw new Error(`Failed to revoke group shares: ${error.message}`);
+    }
+  }
 }
