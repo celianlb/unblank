@@ -168,11 +168,11 @@ export default function ShareLinkModal({
                 {/* Radio Buttons */}
                 <div className="flex flex-col items-start gap-2 w-full">
                   {/* Lecture seule */}
-                  <div className="flex flex-row items-center gap-2 w-full">
-                    <div
-                      onClick={() => setSelectedPermission('view')}
-                      className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                    >
+                  <div
+                    onClick={() => setSelectedPermission('view')}
+                    className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    <div className="flex items-center justify-center w-[31px] h-[31px]">
                       <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
                         {selectedPermission === 'view' && (
                           <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
@@ -185,11 +185,11 @@ export default function ShareLinkModal({
                   </div>
 
                   {/* Lecture et édition */}
-                  <div className="flex flex-row items-center gap-2 w-full">
-                    <div
-                      onClick={() => setSelectedPermission('edit')}
-                      className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                    >
+                  <div
+                    onClick={() => setSelectedPermission('edit')}
+                    className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    <div className="flex items-center justify-center w-[31px] h-[31px]">
                       <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
                         {selectedPermission === 'edit' && (
                           <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
@@ -267,11 +267,11 @@ export default function ShareLinkModal({
                   </label>
                   <div className="flex flex-col items-start gap-2 w-full">
                     {/* Lecture seule */}
-                    <div className="flex flex-row items-center gap-2 w-full">
-                      <div
-                        onClick={() => setInvitePermission('view')}
-                        className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                      >
+                    <div
+                      onClick={() => setInvitePermission('view')}
+                      className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center justify-center w-[31px] h-[31px]">
                         <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
                           {invitePermission === 'view' && (
                             <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
@@ -284,11 +284,11 @@ export default function ShareLinkModal({
                     </div>
 
                     {/* Lecture et édition */}
-                    <div className="flex flex-row items-center gap-2 w-full">
-                      <div
-                        onClick={() => setInvitePermission('edit')}
-                        className="flex items-center justify-center w-[31px] h-[31px] cursor-pointer"
-                      >
+                    <div
+                      onClick={() => setInvitePermission('edit')}
+                      className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center justify-center w-[31px] h-[31px]">
                         <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
                           {invitePermission === 'edit' && (
                             <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
