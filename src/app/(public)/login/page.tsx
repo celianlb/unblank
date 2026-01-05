@@ -84,11 +84,19 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     clearError();
+    // If there's a redirect parameter, store it in localStorage for OAuth callback
+    if (redirectTo) {
+      localStorage.setItem("oauth_redirect", redirectTo);
+    }
     await signInWithOAuth("google");
   };
 
   const handlePinterestLogin = async () => {
     clearError();
+    // If there's a redirect parameter, store it in localStorage for OAuth callback
+    if (redirectTo) {
+      localStorage.setItem("oauth_redirect", redirectTo);
+    }
     await signInWithOAuth("pinterest");
   };
 

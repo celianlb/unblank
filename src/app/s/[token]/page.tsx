@@ -41,7 +41,11 @@ export default function ShareTokenPage() {
         }
 
         // 2. User is authenticated - validate the share token
-        const response = await fetch(`/api/shares/validate?token=${token}`);
+        const response = await fetch(`/api/shares/validate?token=${token}`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
         const data = await response.json();
 
         if (!response.ok || !data.isValid) {
@@ -52,7 +56,44 @@ export default function ShareTokenPage() {
 
         setValidation(data);
 
-        // 3. Get folder info and redirect to the shared folder
+        // 3. Create a permanent share for this user (if not already exists)
+        // First, get the folder owner to use as shared_by
+        const { data: folderOwner } = await supabase
+          .from("folders")
+          .select("user_id")
+          .eq("id", data.share.folder_id)
+          .single();
+
+        if (folderOwner) {
+          // Check if user already has a share for this folder
+          const { data: existingUserShare } = await supabase
+            .from("shares")
+            .select("id")
+            .eq("folder_id", data.share.folder_id)
+            .eq("shared_with_email", session.user.email)
+            .maybeSingle();
+
+          if (!existingUserShare) {
+            // User doesn't have a share yet, create one
+            const { error: createShareError } = await supabase
+              .from("shares")
+              .insert({
+                folder_id: data.share.folder_id,
+                shared_by: folderOwner.user_id, // Owner of the folder
+                shared_with_email: session.user.email,
+                permission: data.share.permission,
+                is_active: true,
+                share_token: null, // This is a personal share, not a public link
+              });
+
+            if (createShareError) {
+              console.error("Error creating user share:", createShareError);
+              // Don't block the user, just log the error
+            }
+          }
+        }
+
+        // 4. Get folder info and redirect to the shared folder
         const { data: folderData, error: folderError } = await supabase
           .from("folders")
           .select("slug, user_id")
@@ -65,8 +106,8 @@ export default function ShareTokenPage() {
           return;
         }
 
-        // 4. Redirect to the shared folder
-        router.push(`/s/${folderData.slug}`);
+        // 5. Redirect to the shared folder (using slug route, not /s/)
+        router.push(`/${folderData.slug}`);
 
       } catch (err) {
         console.error("Error handling share link:", err);

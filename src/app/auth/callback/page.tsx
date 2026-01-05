@@ -30,8 +30,20 @@ export default function AuthCallbackPage() {
               email: session.user.email || '',
             });
           } else {
-            // Regular access: redirect to app
-            router.push('/app');
+            // Check if there's a redirect from OAuth flow (share link)
+            const oauthRedirect = typeof window !== 'undefined'
+              ? localStorage.getItem('oauth_redirect')
+              : null;
+
+            if (oauthRedirect) {
+              // Clear the stored redirect
+              localStorage.removeItem('oauth_redirect');
+              // Redirect to the share link
+              router.push(oauthRedirect);
+            } else {
+              // Regular access: redirect to app
+              router.push('/app');
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           // Déconnexion, retour au login
