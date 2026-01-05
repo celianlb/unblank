@@ -44,6 +44,9 @@ function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, g
     queryClient.invalidateQueries({ queryKey: ['shares', folder.id] });
   };
 
+  // Le dossier appartient à l'utilisateur actuel si son user_id correspond
+  const isOwned = folder.user_id === userId;
+
   return (
     <FolderCard
       id={folder.id}
@@ -56,6 +59,7 @@ function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, g
       previewImages={folder.preview_images}
       canDelete={canDelete}
       isShared={shouldShowExitButton}
+      isOwned={isOwned}
       sharedGroupId={exitTargetId}
       onExitSuccess={handleExitSuccess}
     />

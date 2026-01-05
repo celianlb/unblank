@@ -15,7 +15,7 @@ import { LinkService } from '@/domain/links/services/LinkService';
 import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
 
 // Helper component to render FolderCard with permission checking
-function SharedFolderCard({ folder, currentUserEmail }: { folder: any; currentUserEmail: string | undefined }) {
+function SharedFolderCard({ folder, currentUserEmail, currentUserId }: { folder: any; currentUserEmail: string | undefined; currentUserId: string | undefined }) {
   const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
 
   const currentUserShare = shares.find((share: any) =>
@@ -23,6 +23,9 @@ function SharedFolderCard({ folder, currentUserEmail }: { folder: any; currentUs
   );
 
   const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  // Le dossier appartient à l'utilisateur actuel si son user_id correspond
+  const isOwned = folder.user_id === currentUserId;
 
   return (
     <FolderCard
@@ -36,6 +39,7 @@ function SharedFolderCard({ folder, currentUserEmail }: { folder: any; currentUs
       previewImages={folder.preview_images}
       canDelete={canDelete}
       isShared={true}
+      isOwned={isOwned}
     />
   );
 }
@@ -302,6 +306,7 @@ export default function AppPage() {
                   key={folder.id}
                   folder={folder}
                   currentUserEmail={session?.user?.email}
+                  currentUserId={session?.user?.id}
                 />
               ))}
             </div>

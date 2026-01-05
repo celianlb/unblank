@@ -23,6 +23,7 @@ interface FolderCardProps {
   previewImages?: string[];
   canDelete?: boolean;
   isShared?: boolean;
+  isOwned?: boolean; // True si le dossier appartient à l'utilisateur actuel
   sharedGroupId?: string; // ID du groupe parent partagé (pour quitter le groupe au lieu du dossier)
   onExitSuccess?: () => void; // Callback appelé après un exit réussi
 }
@@ -38,6 +39,7 @@ export default function FolderCard({
   previewImages = [],
   canDelete = true,
   isShared = false,
+  isOwned = false,
   sharedGroupId,
   onExitSuccess,
 }: FolderCardProps) {
@@ -256,7 +258,13 @@ export default function FolderCard({
             </div>
 
             {/* Frame 72 - Exit/Trash Button */}
-            {isShared ? (
+            {/*
+              Logique:
+              - Si isOwned = true → toujours bouton Supprimer (même si isShared = true)
+              - Si isOwned = false ET isShared = true → bouton Quitter
+              - Sinon → bouton Supprimer
+            */}
+            {isShared && !isOwned ? (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
