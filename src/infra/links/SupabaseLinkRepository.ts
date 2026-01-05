@@ -38,11 +38,13 @@ export class SupabaseLinkRepository implements LinkRepository {
     // Transformer les données pour inclure les tags
     return (data || []).map((link: any) => ({
       ...link,
-      tags: link.link_tags?.map((lt: any) => ({
-        id: lt.tags.id,
-        name: lt.tags.name,
-        is_auto_generated: lt.is_auto_generated,
-      })) || [],
+      tags: link.link_tags
+        ?.filter((lt: any) => lt.tags !== null) // ✅ Filtrer les tags orphelins
+        .map((lt: any) => ({
+          id: lt.tags.id,
+          name: lt.tags.name,
+          is_auto_generated: lt.is_auto_generated,
+        })) || [],
     }));
   }
 
@@ -83,11 +85,13 @@ export class SupabaseLinkRepository implements LinkRepository {
 
     return (data || []).map((link: any) => ({
       ...link,
-      tags: link.link_tags?.map((lt: any) => ({
-        id: lt.tags.id,
-        name: lt.tags.name,
-        is_auto_generated: lt.is_auto_generated,
-      })) || [],
+      tags: link.link_tags
+        ?.filter((lt: any) => lt.tags !== null) // ✅ Filtrer les tags orphelins
+        .map((lt: any) => ({
+          id: lt.tags.id,
+          name: lt.tags.name,
+          is_auto_generated: lt.is_auto_generated,
+        })) || [],
     }));
   }
 

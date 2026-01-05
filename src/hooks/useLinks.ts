@@ -102,10 +102,11 @@ export function useDeleteLinks(folderId?: string) {
       // Invalider les liens de tous les utilisateurs (incluant infinite)
       queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
-      // Invalider tous les dossiers pour mettre à jour les compteurs
+      // Invalider tous les dossiers pour mettre à jour les compteurs et miniatures
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] }); // ✅ Invalider les dossiers des groupes (pour les miniatures)
       // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
@@ -154,10 +155,11 @@ export function useDeleteLink(userId?: string, folderId?: string) {
       // Invalider TOUS les liens de l'utilisateur (incluant infinite scroll)
       queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
-      // Invalider tous les dossiers pour mettre à jour les compteurs
+      // Invalider tous les dossiers pour mettre à jour les compteurs et miniatures
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] }); // ✅ Invalider les dossiers des groupes (pour les miniatures)
       // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
@@ -210,10 +212,11 @@ export function useCreateLink(userId: string, folderId?: string) {
       // Invalider TOUS les liens de l'utilisateur (incluant infinite scroll)
       queryClient.invalidateQueries({ queryKey: ['links', 'user'] });
 
-      // Invalider tous les dossiers pour mettre à jour les compteurs
+      // Invalider tous les dossiers pour mettre à jour les compteurs et miniatures
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] }); // ✅ Invalider les dossiers des groupes (pour les miniatures)
       // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },

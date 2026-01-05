@@ -14,7 +14,8 @@ export function useFolders(userId: string | undefined) {
     queryKey: ['folders', userId],
     queryFn: () => folderService.getUserFolders(userId!),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
   });
 }
 
@@ -26,7 +27,8 @@ export function useGroups(userId: string | undefined) {
     queryKey: ['groups', userId],
     queryFn: () => folderService.getUserGroups(userId!),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
   });
 }
 
@@ -62,7 +64,8 @@ export function useGroupFolders(userId: string | undefined, groupId: string | un
     queryKey: ['group-folders', groupId],
     queryFn: () => folderService.getGroupFolders(userId!, groupId!),
     enabled: !!userId && !!groupId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
   });
 }
 

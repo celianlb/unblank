@@ -41,7 +41,7 @@ BEGIN
   RETURN NEW;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| public      | auto_share_folder_with_creator             |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
+| public      | auto_share_folder_with_creator             |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  |
 DECLARE
   parent_owner_id uuid;
 BEGIN
@@ -51,19 +51,19 @@ BEGIN
     SELECT user_id INTO parent_owner_id
     FROM folders
     WHERE id = NEW.parent_folder_id;
-    
+
     -- Si le créateur du dossier n'est PAS le propriétaire du groupe parent
     -- Créer un partage 'edit' pour permettre au propriétaire du groupe de voir ce dossier
     IF parent_owner_id IS NOT NULL AND parent_owner_id != NEW.user_id THEN
       INSERT INTO shares (
-        folder_id, 
-        shared_by, 
-        shared_with_email, 
-        share_token, 
-        permission, 
+        folder_id,
+        shared_by,
+        shared_with_email,
+        share_token,
+        permission,
         is_active
       )
-      SELECT 
+      SELECT
         NEW.id,
         NEW.user_id,
         (SELECT email FROM auth.users WHERE id = parent_owner_id),
@@ -73,10 +73,37 @@ BEGIN
       WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = parent_owner_id);
     END IF;
   END IF;
-  
+
   RETURN NEW;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| public      | ensure_unique_folder_slug                  |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  |
+DECLARE
+  base_slug TEXT;
+  new_slug TEXT;
+  counter INT := 1;
+  parent_id UUID;
+BEGIN
+  base_slug := NEW.slug;
+  new_slug := base_slug;
+  parent_id := COALESCE(NEW.parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid);
+
+  -- Check if slug exists in same context (user + parent)
+  WHILE EXISTS (
+    SELECT 1 FROM folders
+    WHERE user_id = NEW.user_id
+    AND COALESCE(parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid) = parent_id
+    AND slug = new_slug
+    AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
+  ) LOOP
+    counter := counter + 1;
+    new_slug := base_slug || '-' || counter;
+  END LOOP;
+
+  NEW.slug := new_slug;
+  RETURN NEW;
+END;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | public      | check_duplicate_url                        | p_user_id uuid, p_url text                                                                                                                                                            | TABLE(link_exists boolean, link_id uuid, folder_name text, folder_id uuid)                                                                                                                                                                                                                                                | VOLATILE   | FUNCTION      | plpgsql  | 
 BEGIN
   RETURN QUERY
