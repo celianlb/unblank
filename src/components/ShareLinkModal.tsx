@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import { X, Copy, Check, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { useCreatePublicShare, useInviteByEmail, useFolderShares } from '@/hooks/useShares';
+import { X, Copy, Check, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  useCreatePublicShare,
+  useInviteByEmail,
+  useFolderShares,
+} from "@/hooks/useShares";
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -15,13 +19,19 @@ export default function ShareLinkModal({
   isOpen,
   onClose,
   folderId,
-  currentUserEmail
+  currentUserEmail,
 }: ShareLinkModalProps) {
-  const [selectedPermission, setSelectedPermission] = useState<'view' | 'edit'>('view');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
-  const [activeTab, setActiveTab] = useState<'link' | 'email'>('link');
-  const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(null);
+  const [selectedPermission, setSelectedPermission] = useState<"view" | "edit">(
+    "view"
+  );
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePermission, setInvitePermission] = useState<"view" | "edit">(
+    "view"
+  );
+  const [activeTab, setActiveTab] = useState<"link" | "email">("link");
+  const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(
+    null
+  );
   const [inviteSent, setInviteSent] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -45,8 +55,8 @@ export default function ShareLinkModal({
       });
       setGeneratedShareUrl(result.shareUrl);
     } catch (error) {
-      console.error('Error generating share link:', error);
-      alert('Erreur lors de la génération du lien de partage');
+      console.error("Error generating share link:", error);
+      alert("Erreur lors de la génération du lien de partage");
     }
   };
 
@@ -55,17 +65,20 @@ export default function ShareLinkModal({
     if (!email.trim()) return null;
 
     // Validation 1: Empêcher de s'inviter soi-même
-    if (currentUserEmail && email.toLowerCase() === currentUserEmail.toLowerCase()) {
-      return 'Vous ne pouvez pas vous inviter vous-même';
+    if (
+      currentUserEmail &&
+      email.toLowerCase() === currentUserEmail.toLowerCase()
+    ) {
+      return "Vous ne pouvez pas vous inviter vous-même";
     }
 
     // Validation 2: Vérifier si l'utilisateur est déjà invité
-    const existingShare = shares.find((share: any) =>
-      share.user?.email?.toLowerCase() === email.toLowerCase()
+    const existingShare = shares.find(
+      (share: any) => share.user?.email?.toLowerCase() === email.toLowerCase()
     );
 
     if (existingShare) {
-      return 'Cet utilisateur a déjà accès à ce dossier';
+      return "Cet utilisateur a déjà accès à ce dossier";
     }
 
     return null;
@@ -89,20 +102,20 @@ export default function ShareLinkModal({
 
       // Reset form after 2 seconds
       setTimeout(() => {
-        setInviteEmail('');
-        setInvitePermission('view');
+        setInviteEmail("");
+        setInvitePermission("view");
         setInviteSent(false);
       }, 2000);
     } catch (error: any) {
       // Détecter si c'est une erreur de limite de partage
-      if (error?.message?.includes('limite de partage')) {
-        setInviteError('Limite atteinte. Passez à Pro pour plus de membres');
+      if (error?.message?.includes("limite de partage")) {
+        setInviteError("Limite atteinte. Passez à Pro pour plus de membres");
       } else {
         // Logger uniquement les erreurs inattendues
-        console.error('Error inviting by email:', error);
-        setInviteError(error?.message || 'Erreur lors de l\'envoi');
+        console.error("Error inviting by email:", error);
+        setInviteError(error?.message || "Erreur lors de l'envoi");
       }
-      
+
       setTimeout(() => setInviteError(null), 4000);
     }
   };
@@ -110,10 +123,7 @@ export default function ShareLinkModal({
   return (
     <>
       {/* Overlay */}
-      <div
-        className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/70" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -126,7 +136,10 @@ export default function ShareLinkModal({
             onClick={onClose}
             className="absolute right-8 top-8 w-9 h-9 flex items-center justify-center cursor-pointer transition-colors"
           >
-            <X className="w-9 h-9 hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+            <X
+              className="w-9 h-9 hover:text-[#FF5070] transition-colors"
+              strokeWidth={2}
+            />
           </button>
 
           {/* Frame 61 */}
@@ -134,7 +147,7 @@ export default function ShareLinkModal({
             {/* Title */}
             <h2
               className="text-[32px] leading-[90%] font-extrabold text-[#0D0D0D] w-full"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Partager
             </h2>
@@ -142,21 +155,21 @@ export default function ShareLinkModal({
             {/* Tabs */}
             <div className="flex flex-row gap-2 w-full border-b-2 border-black">
               <button
-                onClick={() => setActiveTab('link')}
+                onClick={() => setActiveTab("link")}
                 className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
-                  activeTab === 'link'
-                    ? 'text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]'
-                    : 'text-[#A8A8A8] hover:text-[#0D0D0D]'
+                  activeTab === "link"
+                    ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
+                    : "text-[#A8A8A8] hover:text-[#0D0D0D]"
                 }`}
               >
                 Lien de partage
               </button>
               <button
-                onClick={() => setActiveTab('email')}
+                onClick={() => setActiveTab("email")}
                 className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
-                  activeTab === 'email'
-                    ? 'text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]'
-                    : 'text-[#A8A8A8] hover:text-[#0D0D0D]'
+                  activeTab === "email"
+                    ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
+                    : "text-[#A8A8A8] hover:text-[#0D0D0D]"
                 }`}
               >
                 Inviter par email
@@ -164,7 +177,7 @@ export default function ShareLinkModal({
             </div>
 
             {/* Tab Content - Link */}
-            {activeTab === 'link' && (
+            {activeTab === "link" && (
               <div className="flex flex-col items-start gap-4 w-full">
                 <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
                   Créez un lien que vous pouvez partager avec n&apos;importe qui
@@ -174,12 +187,12 @@ export default function ShareLinkModal({
                 <div className="flex flex-col items-start gap-2 w-full">
                   {/* Lecture seule */}
                   <div
-                    onClick={() => setSelectedPermission('view')}
+                    onClick={() => setSelectedPermission("view")}
                     className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
                   >
                     <div className="flex items-center justify-center w-[31px] h-[31px]">
                       <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                        {selectedPermission === 'view' && (
+                        {selectedPermission === "view" && (
                           <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
                         )}
                       </div>
@@ -191,12 +204,12 @@ export default function ShareLinkModal({
 
                   {/* Lecture et édition */}
                   <div
-                    onClick={() => setSelectedPermission('edit')}
+                    onClick={() => setSelectedPermission("edit")}
                     className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
                   >
                     <div className="flex items-center justify-center w-[31px] h-[31px]">
                       <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                        {selectedPermission === 'edit' && (
+                        {selectedPermission === "edit" && (
                           <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
                         )}
                       </div>
@@ -229,7 +242,10 @@ export default function ShareLinkModal({
                         onClick={handleCopyLink}
                         className="flex-shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
                       >
-                        <Copy className="w-6 h-6 text-[#0D0D0D]" strokeWidth={2} />
+                        <Copy
+                          className="w-6 h-6 text-[#0D0D0D]"
+                          strokeWidth={2}
+                        />
                       </button>
                     </div>
                   </div>
@@ -245,7 +261,7 @@ export default function ShareLinkModal({
             )}
 
             {/* Tab Content - Email */}
-            {activeTab === 'email' && (
+            {activeTab === "email" && (
               <div className="flex flex-col items-start gap-4 w-full">
                 <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
                   Invitez une personne spécifique par son adresse email
@@ -273,12 +289,12 @@ export default function ShareLinkModal({
                   <div className="flex flex-col items-start gap-2 w-full">
                     {/* Lecture seule */}
                     <div
-                      onClick={() => setInvitePermission('view')}
+                      onClick={() => setInvitePermission("view")}
                       className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
                     >
                       <div className="flex items-center justify-center w-[31px] h-[31px]">
                         <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                          {invitePermission === 'view' && (
+                          {invitePermission === "view" && (
                             <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
                           )}
                         </div>
@@ -290,12 +306,12 @@ export default function ShareLinkModal({
 
                     {/* Lecture et édition */}
                     <div
-                      onClick={() => setInvitePermission('edit')}
+                      onClick={() => setInvitePermission("edit")}
                       className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
                     >
                       <div className="flex items-center justify-center w-[31px] h-[31px]">
                         <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                          {invitePermission === 'edit' && (
+                          {invitePermission === "edit" && (
                             <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
                           )}
                         </div>
@@ -310,13 +326,19 @@ export default function ShareLinkModal({
                 {/* Invite Button */}
                 <button
                   onClick={handleInviteByEmail}
-                  disabled={!inviteEmail.trim() || !!validationError || !!inviteError || inviteByEmailMutation.isPending || inviteSent}
+                  disabled={
+                    !inviteEmail.trim() ||
+                    !!validationError ||
+                    !!inviteError ||
+                    inviteByEmailMutation.isPending ||
+                    inviteSent
+                  }
                   className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors flex items-center justify-center gap-2 ${
                     inviteSent
-                      ? 'bg-green-600 hover:bg-green-600'
-                      : (validationError || inviteError)
-                      ? 'bg-red-600 cursor-not-allowed'
-                      : 'bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed'
+                      ? "bg-green-600 hover:bg-green-600"
+                      : validationError || inviteError
+                      ? "bg-red-600 cursor-not-allowed"
+                      : "bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed"
                   }`}
                 >
                   {inviteSent ? (
@@ -324,15 +346,15 @@ export default function ShareLinkModal({
                       <Check className="w-5 h-5" strokeWidth={3} />
                       Invitation envoyée
                     </>
-                  ) : (validationError || inviteError) ? (
+                  ) : validationError || inviteError ? (
                     <>
                       <AlertCircle className="w-5 h-5" strokeWidth={2} />
                       {validationError || inviteError}
                     </>
                   ) : inviteByEmailMutation.isPending ? (
-                    'Envoi en cours...'
+                    "Envoi en cours..."
                   ) : (
-                    'Envoyer l\'invitation'
+                    "Envoyer l'invitation"
                   )}
                 </button>
               </div>
