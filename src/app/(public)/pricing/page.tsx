@@ -91,17 +91,17 @@ export default function PricingPage() {
 
           <div className="flex flex-col items-center gap-16 w-full">
             {/* Toggle Mensuel/Annuel */}
-            <div className="flex flex-row items-start p-2 gap-2 w-[231px] h-[68px] bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] rounded-xl">
+            <div className="flex flex-row items-center p-2 gap-2 w-[229px] h-[68px] bg-white border-[3px] border-black shadow-[4px_4px_0px_#000000] rounded-xl">
               <button
                 onClick={() => setBillingPeriod("monthly")}
-                className={`flex flex-row justify-center items-center py-[18px] px-5 gap-2 w-[110px] h-[52px] rounded border-2 border-black transition-colors ${
+                className={`box-border flex flex-row justify-center items-center py-[18px] px-5 min-w-[105px] h-[52px] rounded border-2 transition-all cursor-pointer ${
                   billingPeriod === "monthly"
-                    ? "bg-[#FF506F]"
-                    : "bg-transparent"
-                }`}
+                    ? "bg-[#FF506F] border-black"
+                    : "bg-transparent border-transparent hover:bg-[#FFE3E8]"
+                } active:translate-y-[1px]`}
               >
                 <span
-                  className="text-lg font-medium leading-[90%] text-center text-[#0D0D0D]"
+                  className="text-[18px] font-medium leading-[90%] text-center text-[#0D0D0D] whitespace-nowrap"
                   style={{ fontFamily: "Heebo, sans-serif" }}
                 >
                   Mensuel
@@ -109,14 +109,14 @@ export default function PricingPage() {
               </button>
               <button
                 onClick={() => setBillingPeriod("annual")}
-                className={`flex flex-row justify-center items-center py-[18px] px-5 gap-2 flex-1 h-[52px] rounded border-2 border-transparent transition-colors ${
+                className={`box-border flex flex-row items-center justify-center py-[18px] px-5 min-w-[92px] h-[52px] rounded border-2 transition-all cursor-pointer ${
                   billingPeriod === "annual"
                     ? "bg-[#FF506F] border-black"
-                    : "bg-transparent"
-                }`}
+                    : "bg-transparent border-transparent hover:bg-[#FFE3E8]"
+                } active:translate-y-[1px]`}
               >
                 <span
-                  className="text-lg font-medium leading-[90%] text-center text-[#0D0D0D]"
+                  className="text-[18px] font-medium leading-[90%] text-center text-[#0D0D0D]"
                   style={{ fontFamily: "Heebo, sans-serif" }}
                 >
                   Annuel
