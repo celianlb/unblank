@@ -2,6 +2,13 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { ShareRepository } from '@/domain/shares/ports/ShareRepository';
 import { Share, ShareWithUser, CreateShareDTO, UpdateShareDTO } from '@/domain/shares/models/Share';
 
+export class ShareLimitError extends Error {
+  constructor(message: string, public currentCount: number, public maxCount: number) {
+    super(message);
+    this.name = 'ShareLimitError';
+  }
+}
+
 export class SupabaseShareRepository implements ShareRepository {
   constructor(private supabase: SupabaseClient) {}
 
@@ -21,6 +28,18 @@ export class SupabaseShareRepository implements ShareRepository {
       .single();
 
     if (error) {
+      // Détecter l'erreur de limite de partage depuis la RLS policy
+      if (error.message.includes('Share members limit reached')) {
+        // Extraire les nombres du message d'erreur
+        const match = error.message.match(/Current: (\d+), Max: (\d+)/);
+        const currentCount = match ? parseInt(match[1]) : 0;
+        const maxCount = match ? parseInt(match[2]) : 0;
+        throw new ShareLimitError(
+          `La limite de partage a été atteinte pour votre plan (${maxCount} membres maximum)`,
+          currentCount,
+          maxCount
+        );
+      }
       throw new Error(`Failed to create share: ${error.message}`);
     }
 

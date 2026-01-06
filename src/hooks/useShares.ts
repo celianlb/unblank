@@ -109,13 +109,18 @@ export function useInviteByEmail() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to invite user');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to invite user');
       }
 
       return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['shares', variables.folderId] });
+    },
+    meta: {
+      // Désactiver les logs d'erreur automatiques de React Query
+      suppressErrorLogging: true,
     },
   });
 }

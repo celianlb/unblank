@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
 import { SharePermission } from '@/domain/shares/models/Share';
+import { ShareLimitError } from '@/infra/shares/SupabaseShareRepository';
 
 export async function POST(request: NextRequest) {
   try {
@@ -96,6 +97,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ share, message: 'Invitation sent successfully' });
   } catch (error) {
     console.error('Error inviting user:', error);
+    
+    // Gérer spécifiquement l'erreur de limite de partage
+    if (error instanceof ShareLimitError) {
+      return NextResponse.json(
+        { 
+          error: error.message,
+          currentCount: error.currentCount,
+          maxCount: error.maxCount,
+          code: 'SHARE_LIMIT_REACHED'
+        },
+        { status: 403 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to invite user' },
       { status: 500 }

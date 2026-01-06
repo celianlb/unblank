@@ -94,11 +94,16 @@ export default function ShareLinkModal({
         setInviteSent(false);
       }, 2000);
     } catch (error: any) {
-      console.error('Error inviting by email:', error);
-      // Afficher le message d'erreur dans le bouton
-      const errorMessage = error?.message || 'Erreur lors de l\'envoi';
-      setInviteError(errorMessage);
-      setTimeout(() => setInviteError(null), 3000);
+      // Détecter si c'est une erreur de limite de partage
+      if (error?.message?.includes('limite de partage')) {
+        setInviteError('Limite atteinte. Passez à Pro pour plus de membres');
+      } else {
+        // Logger uniquement les erreurs inattendues
+        console.error('Error inviting by email:', error);
+        setInviteError(error?.message || 'Erreur lors de l\'envoi');
+      }
+      
+      setTimeout(() => setInviteError(null), 4000);
     }
   };
 
