@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Subscription } from '@/domain/subscription/models/Subscription';
 
@@ -16,27 +16,14 @@ interface UseSubscriptionReturn {
 }
 
 export function useSubscription(): UseSubscriptionReturn {
-  const { session } = useAuthContext();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { session, refreshSession } = useAuthContext();
 
-  const fetchSubscription = async () => {
-    if (!session?.user) {
-      setSubscription(null);
-      setLoading(false);
-      return;
-    }
-
-    if (!session?.accessToken) {
-      setError('Not authenticated');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['subscription', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user || !session?.accessToken) {
+        return null;
+      }
 
       const response = await fetch('/api/subscription/status', {
         headers: {
@@ -48,25 +35,26 @@ export function useSubscription(): UseSubscriptionReturn {
         throw new Error('Failed to fetch subscription');
       }
 
-      const data = await response.json();
-      setSubscription(data.subscription);
-    } catch (err) {
-      console.error('Error fetching subscription:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setSubscription(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubscription();
-  }, [session]);
+      const result = await response.json();
+      return result.subscription as Subscription;
+    },
+    enabled: !!session?.user,
+    retry: (failureCount, error) => {
+      // Si c'est une erreur 401, on refresh la session et on réessaye
+      if (error instanceof Error && error.message.includes('401')) {
+        refreshSession();
+        return failureCount < 2; // Réessayer max 2 fois
+      }
+      return false;
+    },
+  });
 
   return {
-    subscription,
-    loading,
-    error,
-    refreshSubscription: fetchSubscription,
+    subscription: data ?? null,
+    loading: isLoading,
+    error: error instanceof Error ? error.message : null,
+    refreshSubscription: async () => {
+      await refetch();
+    },
   };
 }
