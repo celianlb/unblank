@@ -12,6 +12,7 @@ import {
   useDeleteLinks,
   useDeleteLink,
   useInfiniteUserLinks,
+  useUserLinksCount,
 } from "@/hooks/useLinks";
 import { useSharedFolders } from "@/hooks/useSharedFolders";
 import { useFolderShares } from "@/hooks/useShares";
@@ -131,6 +132,9 @@ export default function AppPage() {
     isFetchingNextPage,
     isLoading: loadingLinks,
   } = useInfiniteUserLinks(session?.user?.id, 12);
+
+  // ✅ Récupérer le count total de liens
+  const { data: totalLinksCount = 0 } = useUserLinksCount(session?.user?.id);
 
   const deleteLinks = useDeleteLinks();
   const deleteLink = useDeleteLink(session?.user?.id);
@@ -381,7 +385,7 @@ export default function AppPage() {
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
-              Liens récents ({uniqueLinks.length})
+              Liens récents ({totalLinksCount})
             </h1>
 
             {/* Contenu des cartes */}

@@ -32,6 +32,27 @@ export function useUserLinks(userId: string | undefined, limit?: number) {
 }
 
 /**
+ * Hook pour récupérer le nombre total de liens d'un utilisateur
+ */
+export function useUserLinksCount(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['links', 'user', 'count', userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('links')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId!)
+        .is('folder_id', null);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
  * Hook pour récupérer les liens d'un utilisateur avec pagination infinie
  * @param pageSize - Nombre de liens par page (défaut: 12)
  */
