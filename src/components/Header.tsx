@@ -19,9 +19,10 @@ interface HeaderProps {
   currentGroupId?: string;
   isInGroup?: boolean;  // Pour savoir si on est dans un groupe (pas un dossier)
   isLoading?: boolean;  // Pour désactiver les boutons pendant le chargement
+  minimal?: boolean;  // Pour afficher seulement le menu profil (sans recherche et actions)
 }
 
-export default function Header({ selectedCount = 0, onDeleteSelected, currentFolderId, currentGroupId, isInGroup = false, isLoading = false }: HeaderProps) {
+export default function Header({ selectedCount = 0, onDeleteSelected, currentFolderId, currentGroupId, isInGroup = false, isLoading = false, minimal = false }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
@@ -120,10 +121,10 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
       />
-    <header className="w-full h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px] bg-white border-b-[3px] border-black">
-      <div className="w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8">
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8">
-          <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
+    <header className={`w-full bg-white border-b-[3px] border-black ${minimal ? 'h-auto' : 'h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px]'}`}>
+      <div className={`w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 ${minimal ? 'py-4' : 'py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8'}`}>
+        <div className={`flex flex-row items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8 ${minimal ? 'justify-end' : 'justify-between'}`}>
+          {!minimal && (<div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
             <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 pointer-events-none">
               <Search className="w-full h-full" strokeWidth={2} />
             </div>
@@ -142,13 +143,13 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
               readOnly
               className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
             />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-end gap-2 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 shrink-0">
+          <div className="flex items-center justify-end gap-2 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 shrink-0 ml-auto">
             {/* Bouton Extension - Visible uniquement sur desktop (md et plus) */}
-            <button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
+            {!minimal && (<button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
               Installer l&apos;extension
-            </button>
+            </button>)}
 
             <div className="relative shrink-0">
               <button
@@ -181,7 +182,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
+        {!minimal && (<div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
           <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
             <Tooltip
               content="Vous n'avez pas la permission de créer des dossiers dans ce groupe partagé"
@@ -258,7 +259,7 @@ export default function Header({ selectedCount = 0, onDeleteSelected, currentFol
               </div>
             </Tooltip>
           )}
-        </div>
+        </div>)}
       </div>
     </header>
     </>

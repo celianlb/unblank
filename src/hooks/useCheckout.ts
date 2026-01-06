@@ -9,7 +9,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { SubscriptionPlanType } from '@/domain/subscription/models/SubscriptionPlan';
 
 interface UseCheckoutReturn {
-  createCheckoutSession: (planType: SubscriptionPlanType) => Promise<void>;
+  createCheckoutSession: (planType: SubscriptionPlanType, billingPeriod?: 'monthly' | 'annual') => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -19,7 +19,7 @@ export function useCheckout(): UseCheckoutReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createCheckoutSession = async (planType: SubscriptionPlanType) => {
+  const createCheckoutSession = async (planType: SubscriptionPlanType, billingPeriod: 'monthly' | 'annual' = 'monthly') => {
     try {
       setLoading(true);
       setError(null);
@@ -34,7 +34,7 @@ export function useCheckout(): UseCheckoutReturn {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify({ planType }),
+        body: JSON.stringify({ planType, billingPeriod }),
       });
 
       if (!response.ok) {
