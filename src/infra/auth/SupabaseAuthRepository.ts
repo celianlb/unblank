@@ -11,6 +11,7 @@ import {
   UpdateProfileData,
 } from '@/domain/auth/models';
 import { GetUserAvatarUrlUseCase } from '@/application/auth/GetUserAvatarUrlUseCase';
+import { AvatarUrlService } from '@/application/auth/AvatarUrlService';
 
 /**
  * Implémentation Supabase du repository d'authentification
@@ -19,9 +20,12 @@ import { GetUserAvatarUrlUseCase } from '@/application/auth/GetUserAvatarUrlUseC
 export class SupabaseAuthRepository implements AuthRepository {
   private readonly getUserAvatarUrlUseCase: GetUserAvatarUrlUseCase;
 
-  constructor(private readonly supabase: SupabaseClient) {
-    // Injecter le Use Case qui gère le cache (Application layer)
-    this.getUserAvatarUrlUseCase = new GetUserAvatarUrlUseCase(supabase);
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly avatarUrlService: AvatarUrlService
+  ) {
+    // Injecter le Use Case qui délègue à AvatarUrlService (Application layer)
+    this.getUserAvatarUrlUseCase = new GetUserAvatarUrlUseCase(avatarUrlService);
   }
 
   /**
@@ -99,10 +103,9 @@ export class SupabaseAuthRepository implements AuthRepository {
          (avatarUrl.startsWith('http') && !avatarUrl.includes('supabase.co')))) {
       // Utiliser directement l'URL externe (Google, Pinterest, etc.)
       avatarUrl = externalAvatarUrl;
-    } else if (avatarUrl && !avatarUrl.startsWith('http')) {
-      // Si c'est un path relatif dans le storage Supabase, générer une signed URL
-      const signedUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
-      avatarUrl = signedUrl || avatarUrl;
+    } else if (avatarUrl) {
+      // Path Supabase ou URL externe → AvatarUrlService gère tout
+      avatarUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
     }
 
     return {

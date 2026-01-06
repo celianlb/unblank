@@ -57,12 +57,13 @@ serve(async (req) => {
 
     const fileName = `${userId}/avatar.${extension}`
 
-    // 3. Uploader dans Supabase Storage
+    // 3. Uploader dans Supabase Storage (nouveau bucket public)
     console.log(`Uploading to storage: ${fileName}`)
     const { error: uploadError } = await supabase.storage
-      .from('avatars')
+      .from('unblank-avatars')
       .upload(fileName, imageBuffer, {
         contentType,
+        cacheControl: '3600', // Cache CDN 1h
         upsert: true, // Remplace si existe déjà
       })
 
@@ -70,20 +71,10 @@ serve(async (req) => {
       throw new Error(`Failed to upload avatar: ${uploadError.message}`)
     }
 
-    // 4. Générer une URL signée (valide 1 an)
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from('avatars')
-      .createSignedUrl(fileName, 31536000) // 1 an en secondes
+    console.log(`Avatar uploaded successfully to unblank-avatars bucket`)
 
-    if (signedUrlError) {
-      throw new Error(`Failed to create signed URL: ${signedUrlError.message}`)
-    }
-
-    const signedUrl = signedUrlData.signedUrl
-    console.log(`Avatar uploaded successfully with signed URL`)
-
-    // 5. Mettre à jour public.users avec le path relatif
-    // On stocke juste le path, les signed URLs seront générées à la demande
+    // 4. Mettre à jour public.users avec le path relatif
+    // On stocke juste le path, les URLs publiques seront générées côté client
     const { error: updateError } = await supabase
       .from('users')
       .update({

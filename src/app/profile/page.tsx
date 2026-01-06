@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuth } from '@/lib/auth';
-import { SupabaseStorageService } from '@/infra/storage/SupabaseStorageService';
+import AuthFactory from '@/lib/auth/authFactory';
 import { Camera, Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -87,7 +88,9 @@ export default function ProfilePage() {
 
       // 1. Upload de l'avatar si un nouveau fichier a été sélectionné
       if (selectedFile && session?.user.id) {
-        avatarPath = await SupabaseStorageService.uploadAvatar(selectedFile, session.user.id);
+        const uploadAvatarUseCase = AuthFactory.createUploadAvatarUseCase();
+        const { path } = await uploadAvatarUseCase.execute(selectedFile, session.user.id);
+        avatarPath = path;
       }
 
       // 2. Mise à jour du profil
@@ -177,12 +180,20 @@ export default function ProfilePage() {
               </label>
               <div className="flex items-center gap-4 sm:gap-5 md:gap-6">
                 <div className="relative cursor-pointer" onClick={handleAvatarClick}>
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-3 md:border-4 border-black overflow-hidden bg-gradient-to-br from-gray-300 to-gray-400">
-                    {previewUrl || avatarUrl ? (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-3 md:border-4 border-black overflow-hidden bg-gradient-to-br from-gray-300 to-gray-400 relative">
+                    {previewUrl ? (
                       <img
-                        src={previewUrl || avatarUrl}
-                        alt="Avatar"
+                        src={previewUrl}
+                        alt="Avatar preview"
                         className="w-full h-full object-cover"
+                      />
+                    ) : avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt="Avatar"
+                        fill
+                        sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl sm:text-3xl md:text-4xl font-bold text-white">

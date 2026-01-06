@@ -12,6 +12,10 @@ import {
   UpdateProfileUseCase,
   DeleteAccountUseCase,
 } from '@/domain/auth/usecases';
+import { AvatarUrlService } from '@/application/auth/AvatarUrlService';
+import { SupabaseAvatarStorageService } from '@/infra/storage/SupabaseAvatarStorageService';
+import { UploadAvatarUseCase } from '@/application/auth/UploadAvatarUseCase';
+import { AvatarStoragePort } from '@/application/auth/ports/AvatarStoragePort';
 
 /**
  * Factory pour créer les instances d'authentification
@@ -21,12 +25,40 @@ class AuthFactory {
   private static authRepository: SupabaseAuthRepository | null = null;
   private static authService: AuthService | null = null;
 
+  // Nouveaux services pour avatars (singletons)
+  private static avatarUrlService: AvatarUrlService | null = null;
+  private static avatarStorageService: AvatarStoragePort | null = null;
+
+  /**
+   * Récupère l'instance de AvatarUrlService (Singleton)
+   */
+  private static getAvatarUrlService(): AvatarUrlService {
+    if (!this.avatarUrlService) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      this.avatarUrlService = new AvatarUrlService(supabaseUrl);
+    }
+    return this.avatarUrlService;
+  }
+
+  /**
+   * Récupère l'instance de AvatarStorageService (Singleton)
+   */
+  private static getAvatarStorageService(): AvatarStoragePort {
+    if (!this.avatarStorageService) {
+      this.avatarStorageService = new SupabaseAvatarStorageService(supabase);
+    }
+    return this.avatarStorageService;
+  }
+
   /**
    * Récupère l'instance du repository (Singleton)
    */
   static getAuthRepository(): SupabaseAuthRepository {
     if (!this.authRepository) {
-      this.authRepository = new SupabaseAuthRepository(supabase);
+      this.authRepository = new SupabaseAuthRepository(
+        supabase,
+        this.getAvatarUrlService()
+      );
     }
     return this.authRepository;
   }
@@ -80,7 +112,7 @@ class AuthFactory {
    * Crée une nouvelle instance du use case ResetPassword
    */
   static createResetPasswordUseCase(): ResetPasswordUseCase {
-    return new ResetPasswordUseCase(this.getAuthService());
+    return new ResetPasswordUseCase();
   }
 
   /**
@@ -102,6 +134,16 @@ class AuthFactory {
    */
   static createDeleteAccountUseCase(): DeleteAccountUseCase {
     return new DeleteAccountUseCase(this.getAuthService());
+  }
+
+  /**
+   * Crée une nouvelle instance du use case UploadAvatar
+   */
+  static createUploadAvatarUseCase(): UploadAvatarUseCase {
+    return new UploadAvatarUseCase(
+      this.getAvatarStorageService(),
+      this.getAvatarUrlService()
+    );
   }
 }
 
