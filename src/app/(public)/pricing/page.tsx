@@ -7,11 +7,13 @@
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCheckout } from "@/hooks/useCheckout";
+import { usePricing } from "@/hooks/usePricing";
 import Header from "@/components/Header";
 
 export default function PricingPage() {
   const { subscription, loading } = useSubscription();
   const { createCheckoutSession, loading: checkoutLoading } = useCheckout();
+  const { pricing } = usePricing();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "monthly"
   );
@@ -40,8 +42,8 @@ export default function PricingPage() {
     },
     {
       name: "Pro",
-      priceMonthly: "6,99€",
-      priceAnnual: "69,99€",
+      priceMonthly: pricing.pro.monthly?.formatted || "6,99€",
+      priceAnnual: pricing.pro.annual?.formatted || "69,99€",
       planType: "pro" as const,
       description: "Tester l'expérience complète",
       features: [
@@ -57,8 +59,8 @@ export default function PricingPage() {
     },
     {
       name: "Team",
-      priceMonthly: "18,99€",
-      priceAnnual: "189,99€",
+      priceMonthly: pricing.team.monthly?.formatted || "18,99€",
+      priceAnnual: pricing.team.annual?.formatted || "189,99€",
       planType: "team" as const,
       description: "Pour les équipes de 3 à 5 membres",
       features: ["Toutes les features du plan pro", "Collaboration illimité"],

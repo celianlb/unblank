@@ -19,8 +19,9 @@ export async function POST(request: NextRequest) {
 
     // 2. Parser et valider le body
     const body = await request.json();
-    const { planType } = body as {
+    const { planType, billingPeriod } = body as {
       planType: 'pro' | 'team';
+      billingPeriod?: 'monthly' | 'annual';
     };
 
     if (!planType) {
@@ -29,6 +30,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Convertir billingPeriod en billingInterval (monthly → monthly, annual → yearly)
+    const billingInterval: BillingInterval = billingPeriod === 'annual' ? 'yearly' : 'monthly';
 
     // 3. Créer le use case via la Factory (Clean Architecture)
     const createCheckoutUseCase = SubscriptionFactory.createCheckoutSessionUseCase(supabase);
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       userEmail: user.email!,
       planType,
-      billingInterval: 'monthly' as BillingInterval, // Par défaut mensuel
+      billingInterval,
       successUrl: `${origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing`,
     });
