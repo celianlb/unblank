@@ -41,7 +41,7 @@ BEGIN
   RETURN NEW;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| public      | auto_share_folder_with_creator             |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  |
+| public      | auto_share_folder_with_creator             |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
 DECLARE
   parent_owner_id uuid;
 BEGIN
@@ -51,19 +51,19 @@ BEGIN
     SELECT user_id INTO parent_owner_id
     FROM folders
     WHERE id = NEW.parent_folder_id;
-
+    
     -- Si le créateur du dossier n'est PAS le propriétaire du groupe parent
     -- Créer un partage 'edit' pour permettre au propriétaire du groupe de voir ce dossier
     IF parent_owner_id IS NOT NULL AND parent_owner_id != NEW.user_id THEN
       INSERT INTO shares (
-        folder_id,
-        shared_by,
-        shared_with_email,
-        share_token,
-        permission,
+        folder_id, 
+        shared_by, 
+        shared_with_email, 
+        share_token, 
+        permission, 
         is_active
       )
-      SELECT
+      SELECT 
         NEW.id,
         NEW.user_id,
         (SELECT email FROM auth.users WHERE id = parent_owner_id),
@@ -73,37 +73,10 @@ BEGIN
       WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = parent_owner_id);
     END IF;
   END IF;
-
+  
   RETURN NEW;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| public      | ensure_unique_folder_slug                  |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  |
-DECLARE
-  base_slug TEXT;
-  new_slug TEXT;
-  counter INT := 1;
-  parent_id UUID;
-BEGIN
-  base_slug := NEW.slug;
-  new_slug := base_slug;
-  parent_id := COALESCE(NEW.parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid);
-
-  -- Check if slug exists in same context (user + parent)
-  WHILE EXISTS (
-    SELECT 1 FROM folders
-    WHERE user_id = NEW.user_id
-    AND COALESCE(parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid) = parent_id
-    AND slug = new_slug
-    AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
-  ) LOOP
-    counter := counter + 1;
-    new_slug := base_slug || '-' || counter;
-  END LOOP;
-
-  NEW.slug := new_slug;
-  RETURN NEW;
-END;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | public      | check_duplicate_url                        | p_user_id uuid, p_url text                                                                                                                                                            | TABLE(link_exists boolean, link_id uuid, folder_name text, folder_id uuid)                                                                                                                                                                                                                                                | VOLATILE   | FUNCTION      | plpgsql  | 
 BEGIN
   RETURN QUERY
@@ -119,6 +92,70 @@ BEGIN
   LIMIT 1;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| public      | check_monthly_links_limit                  |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
+DECLARE
+  user_plan text;
+  user_limit integer;
+  user_used integer;
+BEGIN
+  -- Récupérer plan et usage de l'utilisateur
+  SELECT subscription_plan, monthly_links_limit, monthly_links_used
+  INTO user_plan, user_limit, user_used
+  FROM public.users
+  WHERE id = NEW.user_id;
+
+  -- Vérifier limite uniquement pour plan gratuit
+  IF user_plan = 'free' AND user_used >= user_limit THEN
+    RAISE EXCEPTION 'Monthly links limit reached. Upgrade to Pro to continue.';
+  END IF;
+
+  -- Incrémenter le compteur
+  UPDATE public.users
+  SET monthly_links_used = monthly_links_used + 1
+  WHERE id = NEW.user_id;
+
+  RETURN NEW;
+END;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| public      | check_share_members_limit                  |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
+DECLARE
+  user_plan text;
+  max_members integer;
+  current_members integer;
+  folder_owner_id uuid;
+BEGIN
+  -- Récupérer le propriétaire du dossier
+  SELECT user_id INTO folder_owner_id
+  FROM public.folders
+  WHERE id = NEW.folder_id;
+
+  -- Récupérer le plan du propriétaire
+  SELECT subscription_plan INTO user_plan
+  FROM public.users
+  WHERE id = folder_owner_id;
+
+  -- Définir limite selon le plan
+  max_members := CASE
+    WHEN user_plan = 'free' THEN 2
+    WHEN user_plan = 'pro' THEN 4
+    ELSE 999999 -- team = illimité
+  END;
+
+  -- Compter membres actuels (actifs)
+  SELECT COUNT(*)
+  INTO current_members
+  FROM public.shares
+  WHERE folder_id = NEW.folder_id
+    AND is_active = true;
+
+  -- Vérifier limite
+  IF current_members >= max_members THEN
+    RAISE EXCEPTION 'Share members limit reached for % plan. Current: %, Max: %', user_plan, current_members, max_members;
+  END IF;
+
+  RETURN NEW;
+END;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | public      | cleanup_orphan_tags                        | p_user_id uuid                                                                                                                                                                        | integer                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
 DECLARE
   v_deleted_count integer;
@@ -218,6 +255,33 @@ BEGIN
   DELETE FROM auth.users WHERE id = v_user_id;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| public      | ensure_unique_folder_slug                  |                                                                                                                                                                                       | trigger                                                                                                                                                                                                                                                                                                                   | VOLATILE   | FUNCTION      | plpgsql  | 
+DECLARE
+  base_slug TEXT;
+  new_slug TEXT;
+  counter INT := 1;
+  parent_id UUID;
+BEGIN
+  base_slug := NEW.slug;
+  new_slug := base_slug;
+  parent_id := COALESCE(NEW.parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid);
+
+  -- Check if slug exists in same context (user + parent)
+  WHILE EXISTS (
+    SELECT 1 FROM folders
+    WHERE user_id = NEW.user_id
+    AND COALESCE(parent_folder_id, '00000000-0000-0000-0000-000000000000'::uuid) = parent_id
+    AND slug = new_slug
+    AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
+  ) LOOP
+    counter := counter + 1;
+    new_slug := base_slug || '-' || counter;
+  END LOOP;
+
+  NEW.slug := new_slug;
+  RETURN NEW;
+END;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | public      | generate_slug                              | name text                                                                                                                                                                             | text                                                                                                                                                                                                                                                                                                                      | VOLATILE   | FUNCTION      | plpgsql  | 
 DECLARE
   slug text;
@@ -589,6 +653,17 @@ BEGIN
   RETURN true;
 END;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| public      | reset_monthly_links                        |                                                                                                                                                                                       | void                                                                                                                                                                                                                                                                                                                      | VOLATILE   | FUNCTION      | plpgsql  | 
+BEGIN
+  UPDATE public.users
+  SET 
+    monthly_links_used = 0,
+    last_reset_at = now()
+  WHERE 
+    last_reset_at < date_trunc('month', now())
+    AND subscription_plan IN ('free', 'pro', 'team');
+END;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | public      | search_links                               | p_user_id uuid, p_query text DEFAULT NULL::text, p_tag_names text[] DEFAULT NULL::text[], p_folder_id uuid DEFAULT NULL::uuid, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0 | TABLE(id uuid, user_id uuid, folder_id uuid, url text, title text, description text, screenshot_url text, original_image_url text, image_format text, content_type text, is_duplicate boolean, "position" integer, created_at timestamp with time zone, updated_at timestamp with time zone, folder_name text, tags json) | VOLATILE   | FUNCTION      | plpgsql  | 
 BEGIN
   -- If tag filtering is requested, use a subquery to filter links that have ALL required tags

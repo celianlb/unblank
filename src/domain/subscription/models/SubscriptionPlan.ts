@@ -22,7 +22,7 @@ export interface SubscriptionPlanPricing {
   yearlyDiscount: number; // en pourcentage
 }
 
-export class SubscriptionPlan {
+export class  SubscriptionPlan {
   constructor(
     public readonly type: SubscriptionPlanType,
     public readonly name: string,
