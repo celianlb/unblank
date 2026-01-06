@@ -237,7 +237,7 @@ export default function FolderSettingsModal({
                                   Lecteur
                                 </button>
                                 <Tooltip
-                                content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                                  content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
                                   disabled={!isFreeUser}
                                 >
                                   <button

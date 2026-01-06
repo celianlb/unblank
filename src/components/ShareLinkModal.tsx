@@ -213,7 +213,9 @@ export default function ShareLinkModal({
                     disabled={!isFreeUser}
                   >
                     <div
-                      onClick={() => !isFreeUser && setSelectedPermission("edit")}
+                      onClick={() =>
+                        !isFreeUser && setSelectedPermission("edit")
+                      }
                       className={`flex flex-row items-center gap-2 w-full transition-opacity ${
                         isFreeUser
                           ? "opacity-50 cursor-not-allowed"
@@ -324,7 +326,9 @@ export default function ShareLinkModal({
                       disabled={!isFreeUser}
                     >
                       <div
-                        onClick={() => !isFreeUser && setInvitePermission("edit")}
+                        onClick={() =>
+                          !isFreeUser && setInvitePermission("edit")
+                        }
                         className={`flex flex-row items-center gap-2 w-full transition-opacity ${
                           isFreeUser
                             ? "opacity-50 cursor-not-allowed"
