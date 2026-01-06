@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import LinkFactory from '@/lib/links/linkFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
+import { LinkLimitError } from '@/infra/links/SupabaseLinkRepository';
 
 // Handle CORS preflight
 export async function OPTIONS(request: NextRequest) {
@@ -125,23 +126,28 @@ export async function POST(request: NextRequest) {
       tags
     });
 
-    if (!link) {
-      const response = NextResponse.json(
-        { error: 'Failed to create link' },
-        { status: 500 }
-      );
-      return addCorsHeaders(response, origin);
-    }
-
     const response = NextResponse.json({
       success: true,
       link
     });
     return addCorsHeaders(response, origin);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in links API:', error);
+    
+    // Gérer l'erreur de limite de liens
+    if (error instanceof LinkLimitError || error.name === 'LinkLimitError' || error.message?.includes('Limite mensuelle de liens atteinte')) {
+      const response = NextResponse.json(
+        { 
+          error: error.message || 'Limite mensuelle de liens atteinte (50 liens/mois). Passez au plan Pro pour continuer.',
+          code: 'LINK_LIMIT_REACHED'
+        },
+        { status: 403 }
+      );
+      return addCorsHeaders(response, origin);
+    }
+    
     const response = NextResponse.json(
-      { error: 'Failed to create link' },
+      { error: error.message || 'Failed to create link' },
       { status: 500 }
     );
     return addCorsHeaders(response, origin);

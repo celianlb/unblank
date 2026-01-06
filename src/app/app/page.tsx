@@ -4,25 +4,43 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
-import FolderGroupCard from '@/components/FolderGroupCard';
-import FolderCard from '@/components/FolderCard';
-import LinkCard from '@/components/LinkCard';
-import { useFolders, useGroups } from '@/hooks/useFolders';
-import { useDeleteLinks, useDeleteLink, useInfiniteUserLinks } from '@/hooks/useLinks';
-import { useSharedFolders } from '@/hooks/useSharedFolders';
-import { useFolderShares } from '@/hooks/useShares';
-import { LinkService } from '@/domain/links/services/LinkService';
-import { formatLastUpdate, formatDateAdded } from '@/utils/formatters';
+import FolderGroupCard from "@/components/FolderGroupCard";
+import FolderCard from "@/components/FolderCard";
+import LinkCard from "@/components/LinkCard";
+import { useFolders, useGroups } from "@/hooks/useFolders";
+import {
+  useDeleteLinks,
+  useDeleteLink,
+  useInfiniteUserLinks,
+} from "@/hooks/useLinks";
+import { useSharedFolders } from "@/hooks/useSharedFolders";
+import { useFolderShares } from "@/hooks/useShares";
+import { LinkService } from "@/domain/links/services/LinkService";
+import { formatLastUpdate, formatDateAdded } from "@/utils/formatters";
 
 // Helper component to render FolderCard with permission checking
-function SharedFolderCard({ folder, currentUserEmail, currentUserId }: { folder: any; currentUserEmail: string | undefined; currentUserId: string | undefined }) {
-  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
-
-  const currentUserShare = shares.find((share: any) =>
-    share.user?.email === currentUserEmail
+function SharedFolderCard({
+  folder,
+  currentUserEmail,
+  currentUserId,
+}: {
+  folder: any;
+  currentUserEmail: string | undefined;
+  currentUserId: string | undefined;
+}) {
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(
+    folder.id
   );
 
-  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+  const currentUserShare = shares.find(
+    (share: any) => share.user?.email === currentUserEmail
+  );
+
+  const canDelete =
+    !isLoadingShares &&
+    (shares.length === 0 ||
+      currentUserShare?.permission === "edit" ||
+      currentUserShare?.permission === "owner");
 
   // Le dossier appartient à l'utilisateur actuel si son user_id correspond
   const isOwned = folder.user_id === currentUserId;
@@ -45,14 +63,26 @@ function SharedFolderCard({ folder, currentUserEmail, currentUserId }: { folder:
 }
 
 // Helper component to render FolderGroupCard with permission checking
-function SharedGroupCard({ group, currentUserEmail }: { group: any; currentUserEmail: string | undefined }) {
-  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(group.id);
-
-  const currentUserShare = shares.find((share: any) =>
-    share.user?.email === currentUserEmail
+function SharedGroupCard({
+  group,
+  currentUserEmail,
+}: {
+  group: any;
+  currentUserEmail: string | undefined;
+}) {
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(
+    group.id
   );
 
-  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+  const currentUserShare = shares.find(
+    (share: any) => share.user?.email === currentUserEmail
+  );
+
+  const canDelete =
+    !isLoadingShares &&
+    (shares.length === 0 ||
+      currentUserShare?.permission === "edit" ||
+      currentUserShare?.permission === "owner");
 
   return (
     <FolderGroupCard
@@ -72,13 +102,22 @@ function SharedGroupCard({ group, currentUserEmail }: { group: any; currentUserE
 export default function AppPage() {
   const router = useRouter();
   const { session, loading } = useAuthContext();
-  const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set());
-  const [loadMoreElement, setLoadMoreElement] = useState<HTMLDivElement | null>(null);
+  const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [loadMoreElement, setLoadMoreElement] = useState<HTMLDivElement | null>(
+    null
+  );
 
   // ✅ Utilisation de React Query pour le cache et auto-refresh
-  const { data: folders = [], isLoading: loadingFolders } = useFolders(session?.user?.id);
-  const { data: groups = [], isLoading: loadingGroups } = useGroups(session?.user?.id);
-  const { data: sharedData, isLoading: loadingSharedFolders } = useSharedFolders(session?.user?.id || null);
+  const { data: folders = [], isLoading: loadingFolders } = useFolders(
+    session?.user?.id
+  );
+  const { data: groups = [], isLoading: loadingGroups } = useGroups(
+    session?.user?.id
+  );
+  const { data: sharedData, isLoading: loadingSharedFolders } =
+    useSharedFolders(session?.user?.id || null);
 
   // Extraire les groupes et dossiers partagés
   const sharedFolders = sharedData?.folders || [];
@@ -97,9 +136,9 @@ export default function AppPage() {
   const deleteLink = useDeleteLink(session?.user?.id);
 
   // Flatten les pages en un seul array et dédupliquer par ID
-  const userLinks = linksData?.pages.flatMap(page => page.links) || [];
+  const userLinks = linksData?.pages.flatMap((page) => page.links) || [];
   const uniqueLinks = Array.from(
-    new Map(userLinks.map(link => [link.id, link])).values()
+    new Map(userLinks.map((link) => [link.id, link])).values()
   );
 
   const loadingData = loadingFolders || loadingGroups;
@@ -135,7 +174,7 @@ export default function AppPage() {
       },
       {
         threshold: 0.1,
-        rootMargin: '100px'
+        rootMargin: "100px",
       }
     );
 
@@ -144,7 +183,13 @@ export default function AppPage() {
     return () => {
       observer.disconnect();
     };
-  }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, uniqueLinks.length]);
+  }, [
+    loadMoreElement,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    uniqueLinks.length,
+  ]);
 
   // ✅ Désélectionner en cliquant hors des cartes
   useEffect(() => {
@@ -153,23 +198,27 @@ export default function AppPage() {
     const handleClickOutsideCards = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       // Ne pas désélectionner si on clique sur le header ou dans une modale
-      if (target.closest('header') || target.closest('[role="dialog"]') || target.closest('.fixed')) {
+      if (
+        target.closest("header") ||
+        target.closest('[role="dialog"]') ||
+        target.closest(".fixed")
+      ) {
         return;
       }
       // Si on ne clique pas sur une carte (LinkCard), désélectionner
-      if (!target.closest('.group\\/card')) {
+      if (!target.closest(".group\\/card")) {
         setSelectedLinkIds(new Set());
       }
     };
 
-    document.addEventListener('click', handleClickOutsideCards);
+    document.addEventListener("click", handleClickOutsideCards);
     return () => {
-      document.removeEventListener('click', handleClickOutsideCards);
+      document.removeEventListener("click", handleClickOutsideCards);
     };
   }, [isSelectionMode]);
 
   const handleCheckChange = (id: string, checked: boolean) => {
-    setSelectedLinkIds(prev => {
+    setSelectedLinkIds((prev) => {
       const newSet = new Set(prev);
       if (checked) {
         newSet.add(id);
@@ -191,15 +240,19 @@ export default function AppPage() {
       setSelectedLinkIds(new Set());
       // Plus besoin de router.refresh() - React Query invalide automatiquement le cache !
     } catch (error) {
-      console.error('Error deleting links:', error);
-      alert('Erreur lors de la suppression des liens');
+      console.error("Error deleting links:", error);
+      alert("Erreur lors de la suppression des liens");
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-white">
-        <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} isLoading={true} />
+        <Header
+          selectedCount={selectedLinkIds.size}
+          onDeleteSelected={handleDeleteSelected}
+          isLoading={true}
+        />
         <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
@@ -207,7 +260,11 @@ export default function AppPage() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header selectedCount={selectedLinkIds.size} onDeleteSelected={handleDeleteSelected} isLoading={loadingData} />
+      <Header
+        selectedCount={selectedLinkIds.size}
+        onDeleteSelected={handleDeleteSelected}
+        isLoading={loadingData}
+      />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
@@ -216,7 +273,7 @@ export default function AppPage() {
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Groupe de dossier ({groups.length})
             </h1>
@@ -244,7 +301,7 @@ export default function AppPage() {
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Dossiers ({sortedFolders.length})
             </h1>
@@ -273,7 +330,7 @@ export default function AppPage() {
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Groupes partagés ({sharedGroups.length})
             </h1>
@@ -297,7 +354,7 @@ export default function AppPage() {
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Dossiers partagés ({sharedFolders.length})
             </h1>
@@ -322,7 +379,7 @@ export default function AppPage() {
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Liens récents ({uniqueLinks.length})
             </h1>
@@ -333,12 +390,14 @@ export default function AppPage() {
                 <LinkCard
                   key={link.id}
                   id={link.id}
-                  imageUrl={link.screenshot_url || link.original_image_url || undefined}
+                  imageUrl={
+                    link.screenshot_url || link.original_image_url || undefined
+                  }
                   link={link.url}
-                  title={link.title || ''}
-                  description={link.description || ''}
-                  tags={link.tags?.map(t => t.name) || []}
-                  fileType={link.image_format || 'JPG'}
+                  title={link.title || ""}
+                  description={link.description || ""}
+                  tags={link.tags?.map((t) => t.name) || []}
+                  fileType={link.image_format || "JPG"}
                   dateAdded={formatDateAdded(link.created_at)}
                   isSelectionMode={isSelectionMode}
                   isSelected={selectedLinkIds.has(link.id)}
@@ -350,7 +409,10 @@ export default function AppPage() {
 
             {/* Infinite scroll trigger */}
             {hasNextPage && (
-              <div ref={setLoadMoreElement} className="w-full flex items-center justify-center py-8 min-h-[100px]" />
+              <div
+                ref={setLoadMoreElement}
+                className="w-full flex items-center justify-center py-8 min-h-[100px]"
+              />
             )}
           </section>
         ) : null}
@@ -358,4 +420,3 @@ export default function AppPage() {
     </div>
   );
 }
-

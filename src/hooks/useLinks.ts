@@ -193,8 +193,10 @@ export function useCreateLink(userId: string, folderId?: string) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create link');
+        const errorData = await response.json();
+        const error = new Error(errorData.error || 'Failed to create link');
+        (error as any).code = errorData.code;
+        throw error;
       }
 
       const result = await response.json();

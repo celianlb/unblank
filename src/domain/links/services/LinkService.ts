@@ -68,18 +68,17 @@ export class LinkService {
   async createLink(userId: string, data: CreateLinkData): Promise<Link | null> {
     // Validation métier: l'URL est requise
     if (!data.url || data.url.trim().length === 0) {
-      console.error('URL is required');
-      return null;
+      throw new Error('URL is required');
     }
 
     // Validation métier: l'URL doit être valide
     try {
       new URL(data.url);
     } catch (error) {
-      console.error('Invalid URL format');
-      return null;
+      throw new Error('Invalid URL format');
     }
 
+    // Laisser les erreurs du repository remonter (notamment LinkLimitError)
     return this.linkRepository.createLink(userId, data);
   }
 

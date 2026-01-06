@@ -21,6 +21,7 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
   const [tags, setTags] = useState<string[]>([]);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [metadata, setMetadata] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Mutation React Query
   const createLink = useCreateLink(session?.user?.id || '', folderId);
@@ -34,6 +35,7 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
       setTags([]);
       setTagInput('');
       setMetadata(null);
+      setErrorMessage(null);
     }
   }, [isOpen]);
 
@@ -73,9 +75,15 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
 
       // Fermer la modale
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating link:', error);
-      alert('Erreur lors de l\'ajout du lien');
+      
+      // Gérer l'erreur de limite de liens
+      if (error.code === 'LINK_LIMIT_REACHED') {
+        setErrorMessage(error.message || 'Limite mensuelle de liens atteinte. Passez à un plan Pro pour continuer.');
+      } else {
+        setErrorMessage('Erreur lors de l\'ajout du lien. Veuillez réessayer.');
+      }
     }
   };
 
@@ -144,6 +152,15 @@ export default function AddLinkModal({ isOpen, onClose, folderId }: AddLinkModal
                 autoFocus
               />
             </div>
+
+            {/* Message d'erreur */}
+            {errorMessage && (
+              <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-500 rounded-xl">
+                <span className="text-sm font-medium text-red-700 font-[Heebo]">
+                  {errorMessage}
+                </span>
+              </div>
+            )}
 
             {/* Titre */}
             <div className="flex flex-col gap-2">

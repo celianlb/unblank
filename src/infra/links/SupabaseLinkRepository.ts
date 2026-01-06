@@ -3,6 +3,13 @@ import { LinkRepository } from '@/domain/links/ports/LinkRepository';
 import { Link, CreateLinkData } from '@/domain/links/models';
 import { TagService } from '@/domain/tags/services/TagService';
 
+export class LinkLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LinkLimitError';
+  }
+}
+
 /**
  * Implémentation Supabase du repository de liens
  * Adapter entre Supabase et notre domaine métier
@@ -134,9 +141,21 @@ export class SupabaseLinkRepository implements LinkRepository {
         .select()
         .single();
 
-      if (linkError || !link) {
+      if (linkError) {
         console.error('Error creating link:', linkError);
-        return null;
+        
+        // Détecter l'erreur de limite mensuelle de liens
+        if (linkError.message?.includes('Monthly links limit reached')) {
+          throw new LinkLimitError(
+            'Limite mensuelle de liens atteinte (50 liens/mois). Passez au plan Pro pour continuer.'
+          );
+        }
+        
+        throw new Error(linkError.message || 'Failed to create link');
+      }
+
+      if (!link) {
+        throw new Error('Failed to create link');
       }
 
       // 3. Ajouter les tags si fournis
@@ -190,7 +209,8 @@ export class SupabaseLinkRepository implements LinkRepository {
       return link as Link;
     } catch (error) {
       console.error('Error creating link:', error);
-      return null;
+      // Laisser remonter les erreurs métier (comme LinkLimitError)
+      throw error;
     }
   }
 
