@@ -96,8 +96,11 @@ export default function AppPage() {
   const deleteLinks = useDeleteLinks();
   const deleteLink = useDeleteLink(session?.user?.id);
 
-  // Flatten les pages en un seul array
+  // Flatten les pages en un seul array et dédupliquer par ID
   const userLinks = linksData?.pages.flatMap(page => page.links) || [];
+  const uniqueLinks = Array.from(
+    new Map(userLinks.map(link => [link.id, link])).values()
+  );
 
   const loadingData = loadingFolders || loadingGroups;
   const isSelectionMode = selectedLinkIds.size > 0;
@@ -141,7 +144,7 @@ export default function AppPage() {
     return () => {
       observer.disconnect();
     };
-  }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, userLinks.length]);
+  }, [loadMoreElement, fetchNextPage, hasNextPage, isFetchingNextPage, uniqueLinks.length]);
 
   // ✅ Désélectionner en cliquant hors des cartes
   useEffect(() => {
@@ -314,19 +317,19 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Liens récents */}
-        {loadingLinks ? null : userLinks.length > 0 ? (
+        {loadingLinks ? null : uniqueLinks.length > 0 ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
             {/* Titre */}
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: 'Area Inktrap, sans-serif' }}
             >
-              Liens récents ({userLinks.length})
+              Liens récents ({uniqueLinks.length})
             </h1>
 
             {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
-              {userLinks.map((link) => (
+              {uniqueLinks.map((link) => (
                 <LinkCard
                   key={link.id}
                   id={link.id}
