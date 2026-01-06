@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { X, Search, ChevronDown } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useFolderShares, useUpdateSharePermission, useRevokeShare } from '@/hooks/useShares';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { X, Search, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  useFolderShares,
+  useUpdateSharePermission,
+  useRevokeShare,
+} from "@/hooks/useShares";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import Tooltip from "./Tooltip";
 
 interface FolderSettingsModalProps {
   isOpen: boolean;
@@ -16,18 +22,25 @@ export default function FolderSettingsModal({
   isOpen,
   onClose,
   folderName = "Graphic tools",
-  folderId
+  folderId,
 }: FolderSettingsModalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const { session } = useAuthContext();
-  const { data: shares = [], isLoading } = useFolderShares(isOpen ? folderId : null);
+  const { data: shares = [], isLoading } = useFolderShares(
+    isOpen ? folderId : null
+  );
   const updatePermission = useUpdateSharePermission();
   const revokeShare = useRevokeShare();
+  const { subscription } = useSubscription();
+
+  const isFreeUser = !subscription || subscription.planType === "free";
 
   // Vérifier si l'utilisateur courant est le propriétaire
-  const isOwner = shares.find((share: any) => share.permission === 'owner')?.user?.email === session?.user?.email;
+  const isOwner =
+    shares.find((share: any) => share.permission === "owner")?.user?.email ===
+    session?.user?.email;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,14 +49,17 @@ export default function FolderSettingsModal({
     };
 
     if (openDropdownId) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [openDropdownId]);
 
   if (!isOpen) return null;
 
-  const handleChangePermission = async (shareId: string, newPermission: 'view' | 'edit') => {
+  const handleChangePermission = async (
+    shareId: string,
+    newPermission: "view" | "edit"
+  ) => {
     try {
       await updatePermission.mutateAsync({
         shareId,
@@ -51,8 +67,8 @@ export default function FolderSettingsModal({
       });
       setOpenDropdownId(null);
     } catch (error) {
-      console.error('Error updating permission:', error);
-      alert('Erreur lors de la modification de la permission');
+      console.error("Error updating permission:", error);
+      alert("Erreur lors de la modification de la permission");
     }
   };
 
@@ -61,8 +77,8 @@ export default function FolderSettingsModal({
       await revokeShare.mutateAsync(shareId);
       setOpenDropdownId(null);
     } catch (error) {
-      console.error('Error revoking access:', error);
-      alert('Erreur lors de la révocation de l\'accès');
+      console.error("Error revoking access:", error);
+      alert("Erreur lors de la révocation de l'accès");
     }
   };
 
@@ -70,9 +86,9 @@ export default function FolderSettingsModal({
     setOpenDropdownId(openDropdownId === userId ? null : userId);
   };
 
-  const getPermissionLabel = (permission: 'view' | 'edit' | 'owner') => {
-    if (permission === 'owner') return 'Propriétaire';
-    return permission === 'view' ? 'Lecteur' : 'Éditeur';
+  const getPermissionLabel = (permission: "view" | "edit" | "owner") => {
+    if (permission === "owner") return "Propriétaire";
+    return permission === "view" ? "Lecteur" : "Éditeur";
   };
 
   const handleOverlayClick = () => {
@@ -104,7 +120,10 @@ export default function FolderSettingsModal({
             onClick={onClose}
             className="absolute right-8 top-8 w-9 h-9 flex items-center justify-center cursor-pointer transition-colors"
           >
-            <X className="w-9 h-9 hover:text-[#FF5070] transition-colors" strokeWidth={2} />
+            <X
+              className="w-9 h-9 hover:text-[#FF5070] transition-colors"
+              strokeWidth={2}
+            />
           </button>
 
           {/* Frame 61 */}
@@ -112,7 +131,7 @@ export default function FolderSettingsModal({
             {/* Title */}
             <h2
               className="text-[32px] leading-[90%] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Paramètre du dossier
             </h2>
@@ -144,20 +163,31 @@ export default function FolderSettingsModal({
                 </div>
               ) : (
                 shares
-                  .filter((share: any) =>
-                    (share.user?.name || share.shared_with_email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    (share.shared_with_email || '').toLowerCase().includes(searchQuery.toLowerCase())
+                  .filter(
+                    (share: any) =>
+                      (share.user?.name || share.shared_with_email || "")
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      (share.shared_with_email || "")
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
                   )
                   .map((share: any) => {
-                    const displayName = share.user?.name || share.shared_with_email?.split('@')[0] || 'Utilisateur';
-                    const displayEmail = share.shared_with_email || share.user?.email || '';
+                    const displayName =
+                      share.user?.name ||
+                      share.shared_with_email?.split("@")[0] ||
+                      "Utilisateur";
+                    const displayEmail =
+                      share.shared_with_email || share.user?.email || "";
                     const isCurrentUser = displayEmail === session?.user?.email;
 
                     return (
                       <div
                         key={share.id}
                         className={`relative flex flex-row justify-between items-center w-full min-h-[64px] p-2 rounded-lg transition-colors ${
-                          openDropdownId === share.id ? 'bg-gray-50' : 'hover:bg-gray-50'
+                          openDropdownId === share.id
+                            ? "bg-gray-50"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         {/* User Info */}
@@ -169,9 +199,16 @@ export default function FolderSettingsModal({
                               </span>
                             </div>
 
-                            <div className={`flex flex-col transition-opacity duration-200 ${openDropdownId === share.id ? 'opacity-0' : 'opacity-100'}`}>
+                            <div
+                              className={`flex flex-col transition-opacity duration-200 ${
+                                openDropdownId === share.id
+                                  ? "opacity-0"
+                                  : "opacity-100"
+                              }`}
+                            >
                               <span className="text-[18px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
-                                {displayName}{isCurrentUser && ' (moi)'}
+                                {displayName}
+                                {isCurrentUser && " (moi)"}
                               </span>
                               <span className="text-[14px] leading-[20px] font-normal text-[#A8A8A8] font-[Heebo]">
                                 {displayEmail}
@@ -183,36 +220,61 @@ export default function FolderSettingsModal({
                         {/* Permission Dropdown */}
                         <div className="relative">
                           {/* Dropdown Menu - Horizontal overlay aligné à droite avec le bouton */}
-                          {openDropdownId === share.id && share.permission !== 'owner' && isOwner && (
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-row gap-2 bg-white border-2 border-black rounded-lg shadow-lg z-[100] p-2">
-                              <button
-                                onClick={() => handleChangePermission(share.id, 'view')}
-                                className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap ${
-                                  share.permission === 'view' ? 'bg-gray-200 text-[#0D0D0D]' : 'text-[#0D0D0D]'
-                                }`}
-                              >
-                                Lecteur
-                              </button>
-                              <button
-                                onClick={() => handleChangePermission(share.id, 'edit')}
-                                className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap ${
-                                  share.permission === 'edit' ? 'bg-gray-200 text-[#0D0D0D]' : 'text-[#0D0D0D]'
-                                }`}
-                              >
-                                Éditeur
-                              </button>
-                              <div className="w-px bg-black" />
-                              <button
-                                onClick={() => handleRemoveAccess(share.id)}
-                                className="px-4 py-2 text-[14px] font-medium text-[#FF2F2F] font-[Heebo] rounded-lg hover:bg-red-50 transition-colors cursor-pointer whitespace-nowrap"
-                              >
-                                Retirer
-                              </button>
-                            </div>
-                          )}
+                          {openDropdownId === share.id &&
+                            share.permission !== "owner" &&
+                            isOwner && (
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-row gap-2 bg-white border-2 border-black rounded-lg shadow-lg z-[100] p-2">
+                                <button
+                                  onClick={() =>
+                                    handleChangePermission(share.id, "view")
+                                  }
+                                  className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap ${
+                                    share.permission === "view"
+                                      ? "bg-gray-200 text-[#0D0D0D]"
+                                      : "text-[#0D0D0D]"
+                                  }`}
+                                >
+                                  Lecteur
+                                </button>
+                                <Tooltip
+                                content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                                  disabled={!isFreeUser}
+                                >
+                                  <button
+                                    onClick={() =>
+                                      !isFreeUser &&
+                                      handleChangePermission(share.id, "edit")
+                                    }
+                                    className={`px-4 py-2 text-[14px] font-medium font-[Heebo] rounded-lg transition-colors whitespace-nowrap ${
+                                      isFreeUser
+                                        ? "opacity-50 cursor-not-allowed text-[#0D0D0D]"
+                                        : share.permission === "edit"
+                                        ? "bg-gray-200 text-[#0D0D0D] hover:bg-gray-100 cursor-pointer"
+                                        : "text-[#0D0D0D] hover:bg-gray-100 cursor-pointer"
+                                    }`}
+                                    disabled={isFreeUser}
+                                  >
+                                    Éditeur
+                                  </button>
+                                </Tooltip>
+                                <div className="w-px bg-black" />
+                                <button
+                                  onClick={() => handleRemoveAccess(share.id)}
+                                  className="px-4 py-2 text-[14px] font-medium text-[#FF2F2F] font-[Heebo] rounded-lg hover:bg-red-50 transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                  Retirer
+                                </button>
+                              </div>
+                            )}
 
-                          <div className={`transition-opacity duration-200 ${openDropdownId === share.id ? 'opacity-0' : 'opacity-100'}`}>
-                            {share.permission === 'owner' ? (
+                          <div
+                            className={`transition-opacity duration-200 ${
+                              openDropdownId === share.id
+                                ? "opacity-0"
+                                : "opacity-100"
+                            }`}
+                          >
+                            {share.permission === "owner" ? (
                               // Pour le propriétaire, afficher seulement le label sans dropdown
                               <div className="px-3 py-2 border-2 border-black rounded-lg bg-gray-50">
                                 <span className="text-[16px] leading-[24px] font-medium text-[#0D0D0D] font-[Heebo]">
@@ -233,7 +295,9 @@ export default function FolderSettingsModal({
                                 </span>
                                 <ChevronDown
                                   className={`w-4 h-4 text-[#0D0D0D] transition-transform duration-200 ${
-                                    openDropdownId === share.id ? 'rotate-180' : ''
+                                    openDropdownId === share.id
+                                      ? "rotate-180"
+                                      : ""
                                   }`}
                                   strokeWidth={2}
                                 />

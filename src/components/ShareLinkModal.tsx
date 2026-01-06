@@ -7,6 +7,8 @@ import {
   useInviteByEmail,
   useFolderShares,
 } from "@/hooks/useShares";
+import { useSubscription } from "@/hooks/useSubscription";
+import Tooltip from "./Tooltip";
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -38,6 +40,9 @@ export default function ShareLinkModal({
   const createPublicShare = useCreatePublicShare();
   const inviteByEmailMutation = useInviteByEmail();
   const { data: shares = [] } = useFolderShares(folderId);
+  const { subscription } = useSubscription();
+
+  const isFreeUser = !subscription || subscription.planType === "free";
 
   if (!isOpen) return null;
 
@@ -203,21 +208,30 @@ export default function ShareLinkModal({
                   </div>
 
                   {/* Lecture et édition */}
-                  <div
-                    onClick={() => setSelectedPermission("edit")}
-                    className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                  <Tooltip
+                    content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                    disabled={!isFreeUser}
                   >
-                    <div className="flex items-center justify-center w-[31px] h-[31px]">
-                      <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                        {selectedPermission === "edit" && (
-                          <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
-                        )}
+                    <div
+                      onClick={() => !isFreeUser && setSelectedPermission("edit")}
+                      className={`flex flex-row items-center gap-2 w-full transition-opacity ${
+                        isFreeUser
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer hover:opacity-70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-center w-[31px] h-[31px]">
+                        <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
+                          {selectedPermission === "edit" && (
+                            <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
+                          )}
+                        </div>
                       </div>
+                      <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
+                        Lecture et édition
+                      </span>
                     </div>
-                    <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                      Lecture et édition
-                    </span>
-                  </div>
+                  </Tooltip>
                 </div>
 
                 {/* Generate Button */}
@@ -305,21 +319,30 @@ export default function ShareLinkModal({
                     </div>
 
                     {/* Lecture et édition */}
-                    <div
-                      onClick={() => setInvitePermission("edit")}
-                      className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                    <Tooltip
+                      content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                      disabled={!isFreeUser}
                     >
-                      <div className="flex items-center justify-center w-[31px] h-[31px]">
-                        <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                          {invitePermission === "edit" && (
-                            <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
-                          )}
+                      <div
+                        onClick={() => !isFreeUser && setInvitePermission("edit")}
+                        className={`flex flex-row items-center gap-2 w-full transition-opacity ${
+                          isFreeUser
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer hover:opacity-70"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center w-[31px] h-[31px]">
+                          <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
+                            {invitePermission === "edit" && (
+                              <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
+                            )}
+                          </div>
                         </div>
+                        <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
+                          Lecture et édition
+                        </span>
                       </div>
-                      <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                        Lecture et édition
-                      </span>
-                    </div>
+                    </Tooltip>
                   </div>
                 </div>
 
