@@ -109,7 +109,7 @@ export default function ShareLinkModal({
     } catch (error: any) {
       // Détecter si c'est une erreur de limite de partage
       if (error?.message?.includes("limite de partage")) {
-        setInviteError("Limite atteinte. Passez à Pro pour plus de membres");
+        setInviteError("Limite atteinte.\nPassez à Pro pour plus de membres");
       } else {
         // Logger uniquement les erreurs inattendues
         console.error("Error inviting by email:", error);
@@ -333,7 +333,7 @@ export default function ShareLinkModal({
                     inviteByEmailMutation.isPending ||
                     inviteSent
                   }
-                  className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors flex items-center justify-center gap-2 ${
+                  className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[15px] font-bold font-[Heebo] transition-colors flex items-center justify-center gap-2 ${
                     inviteSent
                       ? "bg-green-600 hover:bg-green-600"
                       : validationError || inviteError
@@ -347,10 +347,9 @@ export default function ShareLinkModal({
                       Invitation envoyée
                     </>
                   ) : validationError || inviteError ? (
-                    <>
-                      <AlertCircle className="w-5 h-5" strokeWidth={2} />
+                    <span className="whitespace-pre-line text-center">
                       {validationError || inviteError}
-                    </>
+                    </span>
                   ) : inviteByEmailMutation.isPending ? (
                     "Envoi en cours..."
                   ) : (
