@@ -202,6 +202,14 @@ export default function Header({
                   Installer l&apos;extension
                 </button>
               )}
+              {minimal && (
+                <button
+                  onClick={() => window.location.href = '/app'}
+                  className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center"
+                >
+                  Retour
+                </button>
+              )}
 
               <div className="relative shrink-0">
                 <button

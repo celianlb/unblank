@@ -151,24 +151,35 @@ export default function PricingPage() {
                         {plan.name}
                       </h3>
                       <div className="flex flex-col gap-1.5 w-full">
+                        <div className="flex items-baseline gap-1">
+                          <span
+                            className={`text-[42px] font-extrabold leading-[90%] ${
+                              plan.cardStyle === "black"
+                                ? "text-[#FEF8EE]"
+                                : "text-[#0D0D0D]"
+                            }`}
+                            style={{ fontFamily: "Area Inktrap, sans-serif" }}
+                          >
+                            {billingPeriod === "monthly"
+                              ? plan.priceMonthly
+                              : plan.priceAnnual}
+                          </span>
+                          <span
+                            className={`text-[14px] font-medium leading-[120%] ${
+                              plan.cardStyle === "black"
+                                ? "text-[#FEF8EE]"
+                                : "text-[#0D0D0D]"
+                            }`}
+                            style={{ fontFamily: "Heebo, sans-serif" }}
+                          >
+                            {billingPeriod === "annual" &&
+                            plan.planType !== "free"
+                              ? "/an"
+                              : "/mois"}
+                          </span>
+                        </div>
                         <p
-                          className={`text-[42px] font-extrabold leading-[90%] ${
-                            plan.cardStyle === "black"
-                              ? "text-[#FEF8EE]"
-                              : "text-[#0D0D0D]"
-                          }`}
-                          style={{ fontFamily: "Area Inktrap, sans-serif" }}
-                        >
-                          {billingPeriod === "monthly"
-                            ? plan.priceMonthly
-                            : plan.priceAnnual}
-                          {billingPeriod === "annual" &&
-                          plan.planType !== "free"
-                            ? "/an"
-                            : "/mois"}
-                        </p>
-                        <p
-                          className={`text-sm font-medium leading-[120%] ${
+                          className={`text-[14px] font-medium leading-[120%] ${
                             plan.cardStyle === "black"
                               ? "text-[#FEF8EE]"
                               : "text-[#0D0D0D]"
@@ -193,6 +204,7 @@ export default function PricingPage() {
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
+                            className="flex-shrink-0"
                           >
                             <path
                               d="M5 13l4 4L19 7"
@@ -203,7 +215,7 @@ export default function PricingPage() {
                             />
                           </svg>
                           <span
-                            className={`text-sm font-normal leading-[120%] flex-1 ${
+                            className={`text-[14px] font-normal leading-[120%] flex-1 ${
                               plan.cardStyle === "black"
                                 ? "text-[#FEF8EE]"
                                 : "text-[#0D0D0D]"
@@ -227,7 +239,7 @@ export default function PricingPage() {
                       checkoutLoading ||
                       (!loading && plan.planType === currentPlanType)
                     }
-                    className={`flex flex-row justify-center items-center py-2.5 px-7 gap-2.5 w-full h-[54px] border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] rounded-xl transition-all ${
+                    className={`flex flex-row justify-center items-center py-2.5 px-[27px] gap-2.5 w-full h-[54px] border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] rounded-xl transition-all ${
                       plan.buttonStyle === "primary"
                         ? "bg-[#FF506F] text-[#0D0D0D]"
                         : "bg-[#FEF8EE] text-[#0D0D0D]"
@@ -239,7 +251,7 @@ export default function PricingPage() {
                     }`}
                   >
                     <span
-                      className="text-base font-semibold leading-[23px] text-center"
+                      className="text-[16px] font-semibold leading-[23px] text-center"
                       style={{ fontFamily: "Heebo, sans-serif" }}
                     >
                       {!loading && plan.planType === currentPlanType

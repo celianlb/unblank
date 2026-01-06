@@ -51,6 +51,12 @@ export default function ProfileMenu({ isOpen, onClose }: ProfileMenuProps) {
       <div className="absolute top-[calc(100%+8px)] right-0 z-40 flex flex-col items-start p-2 gap-2 w-[220px] bg-[#FEF8EE] border-2 border-black rounded-xl shadow-[4px_4px_0px_#000000]">
         {/* Menu Items */}
         <button
+          onClick={() => handleNavigate("/app")}
+          className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full"
+        >
+          Accueil
+        </button>
+        <button
           onClick={() => handleNavigate("/profile")}
           className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full"
         >
