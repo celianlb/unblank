@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Invalid email format' },
+        { error: 'Format d\'email invalide' },
         { status: 400 }
       );
     }
@@ -62,9 +62,35 @@ export async function POST(request: NextRequest) {
     // Validation 1: Empêcher de s'inviter soi-même
     if (user.email && email.toLowerCase() === user.email.toLowerCase()) {
       return NextResponse.json(
-        { error: 'You cannot invite yourself' },
+        { error: 'Vous ne pouvez pas vous inviter vous-même' },
         { status: 400 }
       );
+    }
+
+    // Validation 2: Vérifier le plan de l'utilisateur pour les permissions d'édition
+    if (permission === 'edit') {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_plan')
+        .eq('id', user.id)
+        .single();
+
+      if (userError || !userData) {
+        return NextResponse.json(
+          { error: 'Failed to verify user subscription' },
+          { status: 500 }
+        );
+      }
+
+      if (userData.subscription_plan === 'free') {
+        return NextResponse.json(
+          {
+            error: 'Edit permission requires Pro or Team plan',
+            code: 'UPGRADE_REQUIRED'
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory

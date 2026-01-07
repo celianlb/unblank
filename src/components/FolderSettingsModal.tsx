@@ -35,7 +35,7 @@ export default function FolderSettingsModal({
   const revokeShare = useRevokeShare();
   const { subscription } = useSubscription();
 
-  const isFreeUser = !subscription || subscription.planType === "free";
+  const isFreeUser = !subscription || subscription.plan === "free";
 
   // Vérifier si l'utilisateur courant est le propriétaire
   const isOwner =

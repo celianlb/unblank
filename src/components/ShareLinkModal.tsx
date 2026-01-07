@@ -42,7 +42,7 @@ export default function ShareLinkModal({
   const { data: shares = [] } = useFolderShares(folderId);
   const { subscription } = useSubscription();
 
-  const isFreeUser = !subscription || subscription.planType === "free";
+  const isFreeUser = !subscription || subscription.plan === "free";
 
   if (!isOpen) return null;
 
@@ -63,6 +63,13 @@ export default function ShareLinkModal({
       console.error("Error generating share link:", error);
       alert("Erreur lors de la génération du lien de partage");
     }
+  };
+
+  // Validation du format email
+  const isValidEmailFormat = (email: string): boolean => {
+    if (!email.trim()) return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   // Live validation de l'email
@@ -91,6 +98,9 @@ export default function ShareLinkModal({
 
   // Calculer l'erreur de validation en temps réel
   const validationError = validateEmail(inviteEmail);
+
+  // Vérifier si on peut activer le bouton d'envoi
+  const canSendInvite = inviteEmail.trim() && isValidEmailFormat(inviteEmail) && !validationError;
 
   const handleInviteByEmail = async () => {
     if (!inviteEmail.trim() || validationError) return;
@@ -161,7 +171,7 @@ export default function ShareLinkModal({
             <div className="flex flex-row gap-2 w-full border-b-2 border-black">
               <button
                 onClick={() => setActiveTab("link")}
-                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${
                   activeTab === "link"
                     ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
                     : "text-[#A8A8A8] hover:text-[#0D0D0D]"
@@ -171,7 +181,7 @@ export default function ShareLinkModal({
               </button>
               <button
                 onClick={() => setActiveTab("email")}
-                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${
                   activeTab === "email"
                     ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
                     : "text-[#A8A8A8] hover:text-[#0D0D0D]"
@@ -293,7 +303,7 @@ export default function ShareLinkModal({
                     placeholder="exemple@email.com"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full h-[44px] px-3 bg-white border-2 border-black rounded-xl text-base leading-[23px] tracking-[-0.03em] font-normal text-[#0D0D0D] placeholder-[#A8A8A8] focus:outline-none focus:border-[#FF5070] transition-colors font-[Heebo]"
+                    className="w-full h-[44px] px-3 bg-white border-2 border-black rounded-xl text-base leading-[23px] tracking-[-0.03em] font-normal text-[#0D0D0D] placeholder-[#A8A8A8] focus:outline-none transition-colors font-[Heebo]"
                   />
                 </div>
 
@@ -354,8 +364,7 @@ export default function ShareLinkModal({
                 <button
                   onClick={handleInviteByEmail}
                   disabled={
-                    !inviteEmail.trim() ||
-                    !!validationError ||
+                    !canSendInvite ||
                     !!inviteError ||
                     inviteByEmailMutation.isPending ||
                     inviteSent
