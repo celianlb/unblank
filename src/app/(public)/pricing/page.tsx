@@ -4,9 +4,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCheckout } from "@/hooks/useCheckout";
+import { useUpdateSubscription } from "@/hooks/useUpdateSubscription";
 import { usePricing } from "@/hooks/usePricing";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
@@ -14,7 +15,8 @@ import Header from "@/components/Header";
 export default function PricingPage() {
   const { session } = useAuthContext();
   const { subscription, loading } = useSubscription();
-  const { createCheckoutSession, loading: checkoutLoading } = useCheckout();
+  const { createCheckoutSession, loading: checkoutLoading, hasActiveSubscription } = useCheckout();
+  const { updateSubscription, loading: updateLoading, success: updateSuccess } = useUpdateSubscription();
   const { pricing } = usePricing();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "monthly"
@@ -24,8 +26,8 @@ export default function PricingPage() {
   const currentPlanType = subscription?.plan || "free";
 
   // Fonction pour ouvrir le portail Stripe
-  const handleManageSubscription = async () => {
-    if (!subscription?.stripeCustomerId || !session?.accessToken) return;
+  const handleManageSubscription = useCallback(async () => {
+    if (!session?.accessToken) return;
 
     setManagingSubscription(true);
     try {
@@ -50,7 +52,15 @@ export default function PricingPage() {
       console.error("Error opening customer portal:", error);
       setManagingSubscription(false);
     }
-  };
+  }, [session?.accessToken]);
+
+  // Si une tentative de checkout échoue car il y a déjà un abonnement actif, ouvrir le portail
+  useEffect(() => {
+    if (hasActiveSubscription && !managingSubscription) {
+      console.log('[PricingPage] Active subscription detected, redirecting to portal...');
+      handleManageSubscription();
+    }
+  }, [hasActiveSubscription, managingSubscription, handleManageSubscription]);
 
   const plans = [
     {
@@ -132,7 +142,7 @@ export default function PricingPage() {
           </div>
 
           {/* Pricing Cards */}
-          <div className="flex flex-row justify-between items-start gap-8 w-full">
+          <div className="flex flex-row justify-center items-start gap-8 w-full">
             {displayedPlans.map((plan, index) => (
               <div
                 key={plan.planType}
@@ -236,21 +246,32 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => {
-                    // Si c'est le plan actuel, ouvrir le portail de gestion
-                    if (!loading && plan.planType === currentPlanType) {
+                  onClick={async () => {
+                    // Si c'est le plan actuel (et pas gratuit), ouvrir le portail de gestion
+                    if (!loading && plan.planType === currentPlanType && plan.planType !== "free") {
                       handleManageSubscription();
                     } else if (plan.planType !== "free") {
-                      createCheckoutSession(plan.planType, billingPeriod);
+                      // Si on a déjà un abonnement actif, mettre à jour au lieu de créer
+                      if (subscription && subscription.plan !== "free" && subscription.status === "active") {
+                        await updateSubscription(plan.planType, billingPeriod);
+                      } else {
+                        // Sinon créer un nouveau checkout
+                        createCheckoutSession(plan.planType, billingPeriod);
+                      }
                     }
                   }}
-                  disabled={checkoutLoading || managingSubscription}
+                  disabled={
+                    checkoutLoading || 
+                    updateLoading ||
+                    managingSubscription ||
+                    (!loading && plan.planType === currentPlanType && plan.planType === "free")
+                  }
                   className={`flex flex-row justify-center items-center py-2.5 px-[27px] gap-2.5 w-full h-[54px] border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] rounded-xl transition-all ${
                     plan.buttonStyle === "primary"
                       ? "bg-[#FF506F] text-[#0D0D0D]"
                       : "bg-[#FEF8EE] text-[#0D0D0D]"
                   } ${
-                    checkoutLoading || managingSubscription
+                    checkoutLoading || updateLoading || managingSubscription || (!loading && plan.planType === currentPlanType && plan.planType === "free")
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer"
                   }`}
@@ -259,9 +280,11 @@ export default function PricingPage() {
                     className="text-[16px] font-semibold leading-[23px] text-center"
                     style={{ fontFamily: "Heebo, sans-serif" }}
                   >
-                    {!loading && plan.planType === currentPlanType
+                    {!loading && plan.planType === currentPlanType && plan.planType !== "free"
                       ? "Gérer l'abonnement"
-                      : checkoutLoading || managingSubscription
+                      : !loading && plan.planType === currentPlanType && plan.planType === "free"
+                      ? "Plan actuel"
+                      : checkoutLoading || updateLoading || managingSubscription
                       ? "Chargement..."
                       : plan.buttonText}
                   </span>

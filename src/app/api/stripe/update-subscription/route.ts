@@ -4,8 +4,8 @@ import { authenticateRequest, handleApiError } from '@/lib/api/auth';
 import { BillingInterval } from '@/domain/subscription/models';
 
 /**
- * API Route: POST /api/stripe/create-checkout-session
- * Crée une session Stripe Checkout pour souscrire à un plan
+ * API Route: POST /api/stripe/update-subscription
+ * Met à jour un abonnement existant (upgrade/downgrade)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -31,38 +31,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convertir billingPeriod en billingInterval (monthly → monthly, annual → yearly)
+    // Convertir billingPeriod en billingInterval
     const billingInterval: BillingInterval = billingPeriod === 'annual' ? 'yearly' : 'monthly';
 
-    // 3. Créer le use case via la Factory (Clean Architecture)
-    const createCheckoutUseCase = SubscriptionFactory.createCheckoutSessionUseCase(supabase);
+    // 3. Créer le use case via la Factory
+    const updateSubscriptionUseCase = SubscriptionFactory.createUpdateSubscriptionUseCase(supabase);
 
     // 4. Exécuter le use case
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const result = await createCheckoutUseCase.execute({
+    const result = await updateSubscriptionUseCase.execute({
       userId: user.id,
-      userEmail: user.email!,
       planType,
       billingInterval,
-      successUrl: `${origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/pricing`,
     });
 
     return NextResponse.json({
-      sessionId: result.sessionId,
-      url: result.checkoutUrl,
+      success: true,
+      subscription: result,
     });
   } catch (error) {
-    console.error('[CreateCheckoutSession] Error:', error);
+    console.error('[UpdateSubscription] Error:', error);
     
-    // Si c'est une erreur d'abonnement actif existant
-    if (error instanceof Error && error.message.includes('ACTIVE_SUBSCRIPTION_EXISTS')) {
+    if (error instanceof Error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 409 } // 409 Conflict
+        { status: 400 }
       );
     }
     
-    return handleApiError(error, 'create-checkout-session');
+    return handleApiError(error, 'stripe/update-subscription');
   }
 }

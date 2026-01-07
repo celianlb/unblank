@@ -66,4 +66,16 @@ export interface SubscriptionPaymentPort {
    * Annuler un abonnement Stripe
    */
   cancelSubscription(subscriptionId: string): Promise<void>;
+
+  /**
+   * Mettre à jour un abonnement existant (changer de plan)
+   */
+  updateSubscription(params: {
+    subscriptionId: string;
+    priceId: string;
+  }): Promise<{
+    subscriptionId: string;
+    status: string;
+    currentPeriodEnd: number;
+  }>;
 }

@@ -291,4 +291,64 @@ export class StripePaymentService implements SubscriptionPaymentPort {
 
     return data;
   }
+
+  /**
+   * Mettre à jour un abonnement existant (upgrade/downgrade)
+   */
+  async updateSubscription(params: {
+    subscriptionId: string;
+    priceId: string;
+  }): Promise<{
+    subscriptionId: string;
+    status: string;
+    currentPeriodEnd: number;
+  }> {
+    console.log('[StripePaymentService] Updating subscription:', {
+      subscriptionId: params.subscriptionId,
+      newPriceId: params.priceId,
+    });
+
+    try {
+      // Récupérer l'abonnement actuel pour obtenir l'item ID
+      const subscription = await this.stripe.subscriptions.retrieve(params.subscriptionId);
+
+      if (!subscription.items.data[0]) {
+        throw new Error('No subscription items found');
+      }
+
+      console.log('[StripePaymentService] Current subscription:', {
+        id: subscription.id,
+        status: subscription.status,
+        currentPriceId: subscription.items.data[0].price.id,
+        itemId: subscription.items.data[0].id,
+      });
+
+      // Mettre à jour l'abonnement avec le nouveau prix
+      const updated = await this.stripe.subscriptions.update(params.subscriptionId, {
+        items: [
+          {
+            id: subscription.items.data[0].id,
+            price: params.priceId,
+          },
+        ],
+        proration_behavior: 'create_prorations', // Créer automatiquement les prorations
+      });
+
+      console.log('[StripePaymentService] Subscription updated successfully:', {
+        subscriptionId: updated.id,
+        status: updated.status,
+        currentPeriodEnd: updated.current_period_end,
+        newPriceId: updated.items.data[0].price.id,
+      });
+
+      return {
+        subscriptionId: updated.id,
+        status: updated.status,
+        currentPeriodEnd: updated.current_period_end,
+      };
+    } catch (error) {
+      console.error('[StripePaymentService] Error updating subscription:', error);
+      throw error;
+    }
+  }
 }

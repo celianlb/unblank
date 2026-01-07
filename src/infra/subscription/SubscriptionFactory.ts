@@ -7,6 +7,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { StripePaymentService } from './StripePaymentService';
 import { SubscriptionService } from '@/domain/subscription/services/SubscriptionService';
 import { CreateCheckoutSessionUseCase } from '@/application/subscription/usecases/CreateCheckoutSessionUseCase';
+import { UpdateSubscriptionUseCase } from '@/application/subscription/usecases/UpdateSubscriptionUseCase';
 import { HandleWebhookUseCase } from '@/application/subscription/usecases/HandleWebhookUseCase';
 import { GetSubscriptionStatusUseCase } from '@/application/subscription/usecases/GetSubscriptionStatusUseCase';
 
@@ -35,6 +36,15 @@ export class SubscriptionFactory {
     const stripeService = this.createStripeService();
 
     return new CreateCheckoutSessionUseCase(stripeService, supabase);
+  }
+
+  /**
+   * Crée le use case pour mettre à jour un abonnement existant
+   */
+  static createUpdateSubscriptionUseCase(supabase: SupabaseClient): UpdateSubscriptionUseCase {
+    const stripeService = this.createStripeService();
+
+    return new UpdateSubscriptionUseCase(stripeService, supabase);
   }
 
   /**
