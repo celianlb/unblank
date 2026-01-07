@@ -26,6 +26,7 @@ export default function AddLinkModal({
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [metadata, setMetadata] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [metadataError, setMetadataError] = useState<boolean>(false);
 
   // Mutation React Query
   const createLink = useCreateLink(session?.user?.id || "", folderId);
@@ -40,15 +41,29 @@ export default function AddLinkModal({
       setTagInput("");
       setMetadata(null);
       setErrorMessage(null);
+      setMetadataError(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // Extraction automatique des métadonnées quand l'URL change (avec debounce)
+  // Gérer le changement d'URL - réinitialiser les métadonnées si l'URL change
+  const handleUrlChange = (newUrl: string) => {
+    setUrl(newUrl);
+    // Si l'URL change et qu'on avait déjà des métadonnées, les réinitialiser
+    if (metadata) {
+      setMetadata(null);
+      setTitle("");
+      setDescription("");
+      setMetadataError(false);
+    }
+  };
+
+  // Extraction automatique des métadonnées quand l'URL change
   const handleUrlBlur = async () => {
     if (url && url.startsWith("http") && !metadata) {
       setIsLoadingMetadata(true);
+      setMetadataError(false);
       const meta = await extractMetadata(url);
       setIsLoadingMetadata(false);
 
@@ -56,7 +71,21 @@ export default function AddLinkModal({
         setMetadata(meta);
         if (!title) setTitle(meta.title || "");
         if (!description) setDescription(meta.description || "");
+      } else {
+        // L'extraction a échoué, on affiche un warning mais on permet de continuer
+        setMetadataError(true);
       }
+    }
+  };
+
+  // Gérer le paste dans l'input URL - sortir de l'input et déclencher l'extraction
+  const handleUrlPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData("text");
+    if (pastedText && pastedText.startsWith("http")) {
+      // On laisse le paste se faire, puis on blur pour déclencher l'extraction
+      setTimeout(() => {
+        (e.target as HTMLInputElement).blur();
+      }, 0);
     }
   };
 
@@ -161,13 +190,23 @@ export default function AddLinkModal({
                 type="url"
                 placeholder="URL"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => handleUrlChange(e.target.value)}
                 onBlur={handleUrlBlur}
+                onPaste={handleUrlPaste}
                 className="w-full h-12 px-4 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
                 required
                 autoFocus
               />
             </div>
+
+            {/* Warning métadonnées */}
+            {metadataError && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border-2 border-amber-500 rounded-xl">
+                <span className="text-sm font-medium text-amber-700 font-[Heebo]">
+                  Impossible d'extraire les métadonnées. Vous pouvez continuer en remplissant les champs manuellement.
+                </span>
+              </div>
+            )}
 
             {/* Message d'erreur */}
             {errorMessage && (
@@ -262,10 +301,14 @@ export default function AddLinkModal({
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={createLink.isPending || !url.trim()}
+              disabled={createLink.isPending || isLoadingMetadata || !url.trim()}
               className="w-full h-14 rounded-xl bg-[#FF506F] transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:bg-[#FF6080] enabled:active:translate-y-[2px] enabled:active:shadow-none enabled:cursor-pointer"
             >
-              {createLink.isPending ? "Ajout en cours..." : "Ajouter le lien"}
+              {createLink.isPending
+                ? "Ajout en cours..."
+                : isLoadingMetadata
+                  ? "Extraction en cours..."
+                  : "Ajouter le lien"}
             </button>
           </form>
         </div>
