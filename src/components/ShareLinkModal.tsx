@@ -25,6 +25,7 @@ export default function ShareLinkModal({
 }: ShareLinkModalProps) {
   const { subscription } = useSubscription();
   const isFreeUser = !subscription || subscription.plan === "free";
+  const isProUser = subscription?.plan === "pro";
 
   const [selectedPermission, setSelectedPermission] = useState<"view" | "edit">(
     "view"
@@ -126,7 +127,10 @@ export default function ShareLinkModal({
     } catch (error: any) {
       // Détecter si c'est une erreur de limite de partage
       if (error?.message?.includes("limite de partage")) {
-        setInviteError("Limite atteinte.\nPassez à Pro pour plus de membres");
+        const upgradeMessage = isProUser
+          ? "Limite atteinte.\nPassez à Team pour plus de membres"
+          : "Limite atteinte.\nPassez à Pro pour plus de membres";
+        setInviteError(upgradeMessage);
       } else {
         // Logger uniquement les erreurs inattendues
         console.error("Error inviting by email:", error);
