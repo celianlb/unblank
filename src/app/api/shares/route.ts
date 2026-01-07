@@ -1,53 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
+import { GetFolderSharesUseCase } from '@/application/shares/usecases/GetFolderSharesUseCase';
+import { handleApiError, authenticateRequest } from '@/lib/api/auth';
 
+/**
+ * API Route: GET /api/shares?folderId=xxx
+ * Récupère tous les shares (membres) d'un dossier
+ */
 export async function GET(request: NextRequest) {
   try {
-    // Get the access token from the Authorization header
-    const authHeader = request.headers.get('Authorization');
-    const accessToken = authHeader?.replace('Bearer ', '');
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 1. Authentifier la requête
+    const authResult = await authenticateRequest(request);
+    if (!authResult.success) {
+      return authResult.error;
     }
 
-    // Create Supabase client with the user's access token
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      }
-    );
+    const { supabase: userSupabase } = authResult.data;
 
-    // Verify the token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const folderId = searchParams.get('folderId');
-
+    // 2. Valider les paramètres
+    const folderId = request.nextUrl.searchParams.get('folderId');
     if (!folderId) {
       return NextResponse.json({ error: 'folderId is required' }, { status: 400 });
     }
 
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
-    const shareService = ShareFactory.createShareService(supabase);
-    const shares = await shareService.getFolderShares(folderId);
+    // 3. Créer le client admin pour bypasser RLS
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
+    // 4. Créer le service et le use case
+    const shareService = ShareFactory.createShareService(adminSupabase);
+    const useCase = new GetFolderSharesUseCase(userSupabase, adminSupabase, shareService);
+
+    // 5. Exécuter le use case
+    const shares = await useCase.execute(folderId);
 
     return NextResponse.json(shares);
   } catch (error) {
-    console.error('Error fetching shares:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch shares' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'shares');
   }
 }
