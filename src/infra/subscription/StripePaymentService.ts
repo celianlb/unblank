@@ -156,6 +156,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
   private async parseStripeEvent(event: Stripe.Event): Promise<WebhookEventData> {
     const data: WebhookEventData = {
       type: event.type,
+      eventId: event.id, // Vrai ID d'événement Stripe
     };
 
     switch (event.type) {
@@ -163,6 +164,8 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         const session = event.data.object as Stripe.Checkout.Session;
         data.customerId = session.customer as string;
         data.subscriptionId = session.subscription as string;
+        data.amount = session.amount_total || 0; // Montant total de la session
+        data.currency = session.currency || 'eur';
 
         // Récupérer les détails depuis la subscription
         if (session.subscription) {
@@ -177,25 +180,90 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         break;
       }
 
-      case 'customer.subscription.updated':
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        data.customerId = subscription.customer as string;
+        data.subscriptionId = subscription.id;
+        data.priceId = subscription.items.data[0].price.id;
+        data.status = subscription.status;
+        data.currentPeriodEnd = (subscription as any).current_period_end as number;
+        data.cancelAtPeriodEnd = (subscription as any).cancel_at_period_end;
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const previousAttributes = (event.data as any).previous_attributes;
+
+        data.customerId = subscription.customer as string;
+        data.subscriptionId = subscription.id;
+        data.priceId = subscription.items.data[0].price.id;
+        data.status = subscription.status;
+        data.currentPeriodEnd = (subscription as any).current_period_end as number;
+        data.cancelAtPeriodEnd = (subscription as any).cancel_at_period_end;
+
+        // Tracker le changement de plan si présent
+        if (previousAttributes?.items?.data?.[0]?.price?.id) {
+          data.previousPriceId = previousAttributes.items.data[0].price.id;
+        }
+        break;
+      }
+
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         data.customerId = subscription.customer as string;
         data.subscriptionId = subscription.id;
         data.priceId = subscription.items.data[0].price.id;
         data.status = subscription.status;
-        data.currentPeriodEnd = subscription.current_period_end as number;
+        data.currentPeriodEnd = (subscription as any).current_period_end as number;
         break;
       }
 
       case 'invoice.paid':
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        data.customerId = invoice.customer as string;
+        data.subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : undefined;
+        data.amount = (invoice as any).amount_paid;
+        data.currency = invoice.currency;
+        data.status = invoice.status ? String(invoice.status) : undefined;
+        break;
+      }
+
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         data.customerId = invoice.customer as string;
-        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
-        data.amount = invoice.amount_paid;
+        data.subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : undefined;
+        data.amount = (invoice as any).amount_due; // Montant dû pour les échecs
         data.currency = invoice.currency;
         data.status = invoice.status ? String(invoice.status) : undefined;
+        break;
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        data.customerId = charge.customer as string;
+        data.amount = charge.amount_refunded;
+        data.currency = charge.currency;
+        data.status = 'refunded';
+        break;
+      }
+
+      case 'charge.dispute.created': {
+        const dispute = event.data.object as Stripe.Dispute;
+        data.amount = dispute.amount;
+        data.currency = dispute.currency;
+        data.status = dispute.status;
+        break;
+      }
+
+      case 'customer.subscription.trial_will_end': {
+        const subscription = event.data.object as Stripe.Subscription;
+        data.customerId = subscription.customer as string;
+        data.subscriptionId = subscription.id;
+        data.priceId = subscription.items.data[0].price.id;
+        data.status = subscription.status;
+        data.currentPeriodEnd = (subscription as any).trial_end as number;
         break;
       }
     }

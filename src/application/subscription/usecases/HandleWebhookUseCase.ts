@@ -29,6 +29,10 @@ export class HandleWebhookUseCase {
         await this.handleCheckoutCompleted(event);
         break;
 
+      case 'customer.subscription.created':
+        await this.handleSubscriptionCreated(event);
+        break;
+
       case 'customer.subscription.updated':
         await this.handleSubscriptionUpdated(event);
         break;
@@ -38,11 +42,24 @@ export class HandleWebhookUseCase {
         break;
 
       case 'invoice.paid':
+      case 'invoice.payment_succeeded':
         await this.handleInvoicePaid(event);
         break;
 
       case 'invoice.payment_failed':
         await this.handleInvoicePaymentFailed(event);
+        break;
+
+      case 'charge.refunded':
+        await this.handleChargeRefunded(event);
+        break;
+
+      case 'charge.dispute.created':
+        await this.handleChargeDispute(event);
+        break;
+
+      case 'customer.subscription.trial_will_end':
+        await this.handleTrialWillEnd(event);
         break;
 
       default:
@@ -228,13 +245,85 @@ export class HandleWebhookUseCase {
   }
 
   /**
+   * Abonnement créé (premier événement lors d'une nouvelle souscription)
+   */
+  private async handleSubscriptionCreated(event: WebhookEventData): Promise<void> {
+    if (!event.subscriptionId || !event.customerId) return;
+
+    const { data: user } = await this.supabase
+      .from('users')
+      .select('id')
+      .eq('stripe_customer_id', event.customerId)
+      .single();
+
+    if (user) {
+      await this.logSubscriptionEvent(user.id, event);
+      console.log(`[Webhook] Subscription created for user ${user.id}`);
+    }
+  }
+
+  /**
+   * Remboursement émis
+   */
+  private async handleChargeRefunded(event: WebhookEventData): Promise<void> {
+    if (!event.customerId) return;
+
+    const { data: user } = await this.supabase
+      .from('users')
+      .select('id')
+      .eq('stripe_customer_id', event.customerId)
+      .single();
+
+    if (user) {
+      await this.logSubscriptionEvent(user.id, event);
+      console.log(`[Webhook] ⚠️ Charge refunded for user ${user.id}, amount: ${event.amount}`);
+    }
+  }
+
+  /**
+   * Litige bancaire créé
+   */
+  private async handleChargeDispute(event: WebhookEventData): Promise<void> {
+    // Les disputes n'ont pas toujours de customerId directement
+    await this.supabase.from('subscription_events').insert({
+      user_id: null,
+      event_type: event.type,
+      stripe_event_id: event.eventId,
+      amount: event.amount,
+      currency: event.currency,
+      status: event.status,
+      metadata: event as any,
+    });
+
+    console.log(`[Webhook] ⚠️ Dispute created, amount: ${event.amount}`);
+  }
+
+  /**
+   * Période d'essai bientôt terminée
+   */
+  private async handleTrialWillEnd(event: WebhookEventData): Promise<void> {
+    if (!event.subscriptionId) return;
+
+    const { data: user } = await this.supabase
+      .from('users')
+      .select('id')
+      .eq('stripe_subscription_id', event.subscriptionId)
+      .single();
+
+    if (user) {
+      await this.logSubscriptionEvent(user.id, event);
+      console.log(`[Webhook] Trial will end soon for user ${user.id}`);
+    }
+  }
+
+  /**
    * Logger l'événement dans subscription_events
    */
   private async logSubscriptionEvent(userId: string, event: WebhookEventData): Promise<void> {
     await this.supabase.from('subscription_events').insert({
       user_id: userId,
       event_type: event.type,
-      stripe_event_id: `evt_${Date.now()}`, // Simplified, use real event ID in production
+      stripe_event_id: event.eventId, // Vrai Stripe event ID
       amount: event.amount,
       currency: event.currency,
       status: event.status,

@@ -13,6 +13,7 @@ export interface CheckoutSessionData {
 
 export interface WebhookEventData {
   type: string;
+  eventId: string; // Stripe event ID
   customerId?: string;
   subscriptionId?: string;
   priceId?: string;
@@ -20,6 +21,8 @@ export interface WebhookEventData {
   currentPeriodEnd?: number;
   amount?: number;
   currency?: string;
+  cancelAtPeriodEnd?: boolean; // Pour savoir si l'abonnement va être annulé
+  previousPriceId?: string; // Pour tracker les changements de plan
 }
 
 export interface SubscriptionPaymentPort {
