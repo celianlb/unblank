@@ -23,6 +23,9 @@ export default function ShareLinkModal({
   folderId,
   currentUserEmail,
 }: ShareLinkModalProps) {
+  const { subscription } = useSubscription();
+  const isFreeUser = !subscription || subscription.plan === "free";
+
   const [selectedPermission, setSelectedPermission] = useState<"view" | "edit">(
     "view"
   );
@@ -30,7 +33,9 @@ export default function ShareLinkModal({
   const [invitePermission, setInvitePermission] = useState<"view" | "edit">(
     "view"
   );
-  const [activeTab, setActiveTab] = useState<"link" | "email">("link");
+  const [activeTab, setActiveTab] = useState<"link" | "email">(
+    isFreeUser ? "email" : "link"
+  );
   const [generatedShareUrl, setGeneratedShareUrl] = useState<string | null>(
     null
   );
@@ -40,9 +45,6 @@ export default function ShareLinkModal({
   const createPublicShare = useCreatePublicShare();
   const inviteByEmailMutation = useInviteByEmail();
   const { data: shares = [] } = useFolderShares(folderId);
-  const { subscription } = useSubscription();
-
-  const isFreeUser = !subscription || subscription.plan === "free";
 
   if (!isOpen) return null;
 
@@ -169,16 +171,25 @@ export default function ShareLinkModal({
 
             {/* Tabs */}
             <div className="flex flex-row gap-2 w-full border-b-2 border-black">
-              <button
-                onClick={() => setActiveTab("link")}
-                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${
-                  activeTab === "link"
-                    ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
-                    : "text-[#A8A8A8] hover:text-[#0D0D0D]"
-                }`}
+              <Tooltip
+                content="Le partage par lien nécessite le plan Pro ou Team"
+                disabled={!isFreeUser}
+                className="flex-1"
               >
-                Lien de partage
-              </button>
+                <button
+                  onClick={() => !isFreeUser && setActiveTab("link")}
+                  disabled={isFreeUser}
+                  className={`w-full pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                    isFreeUser
+                      ? "text-[#A8A8A8] opacity-50 cursor-not-allowed"
+                      : activeTab === "link"
+                      ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px] cursor-pointer"
+                      : "text-[#A8A8A8] hover:text-[#0D0D0D] cursor-pointer"
+                  }`}
+                >
+                  Lien de partage
+                </button>
+              </Tooltip>
               <button
                 onClick={() => setActiveTab("email")}
                 className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${

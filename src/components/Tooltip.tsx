@@ -7,6 +7,7 @@ interface TooltipProps {
   content: string;
   disabled?: boolean;
   position?: "top" | "bottom";
+  className?: string;
 }
 
 export default function Tooltip({
@@ -14,6 +15,7 @@ export default function Tooltip({
   content,
   disabled = false,
   position = "top",
+  className = "",
 }: TooltipProps) {
   if (disabled) {
     return <>{children}</>;
@@ -22,7 +24,7 @@ export default function Tooltip({
   const isTop = position === "top";
 
   return (
-    <div className="relative group inline-block">
+    <div className={`relative group inline-block ${className}`}>
       {children}
       <div
         className={`absolute ${
