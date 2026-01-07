@@ -26,14 +26,14 @@ export default function PricingPage() {
   // Fonction pour ouvrir le portail Stripe
   const handleManageSubscription = async () => {
     if (!subscription?.stripeCustomerId || !session?.accessToken) return;
-    
+
     setManagingSubscription(true);
     try {
-      const response = await fetch('/api/stripe/customer-portal', {
-        method: 'POST',
+      const response = await fetch("/api/stripe/customer-portal", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify({
           returnUrl: window.location.href,
@@ -41,13 +41,13 @@ export default function PricingPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        throw new Error("Failed to create portal session");
       }
 
       const { url } = await response.json();
       window.location.href = url;
     } catch (error) {
-      console.error('Error opening customer portal:', error);
+      console.error("Error opening customer portal:", error);
       setManagingSubscription(false);
     }
   };
@@ -103,9 +103,9 @@ export default function PricingPage() {
   ];
 
   // Filtrer les plans : ne pas afficher "free" si l'utilisateur a un plan payant
-  const displayedPlans = plans.filter(plan => {
-    if (currentPlanType === 'pro' || currentPlanType === 'team') {
-      return plan.planType !== 'free';
+  const displayedPlans = plans.filter((plan) => {
+    if (currentPlanType === "pro" || currentPlanType === "team") {
+      return plan.planType !== "free";
     }
     return true;
   });
@@ -244,10 +244,7 @@ export default function PricingPage() {
                       createCheckoutSession(plan.planType, billingPeriod);
                     }
                   }}
-                  disabled={
-                    checkoutLoading ||
-                    managingSubscription
-                  }
+                  disabled={checkoutLoading || managingSubscription}
                   className={`flex flex-row justify-center items-center py-2.5 px-[27px] gap-2.5 w-full h-[54px] border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] rounded-xl transition-all ${
                     plan.buttonStyle === "primary"
                       ? "bg-[#FF506F] text-[#0D0D0D]"
