@@ -31,15 +31,15 @@ export default function SubscriptionSuccessPage() {
       // Petit délai pour laisser le temps au webhook de terminer
       const timer = setTimeout(async () => {
         // Invalider le cache pour forcer un refetch
-        await queryClient.invalidateQueries({ queryKey: ['subscription'] });
-        
+        await queryClient.invalidateQueries({ queryKey: ["subscription"] });
+
         // Rafraîchir la session pour obtenir les nouvelles données
         await refreshSession();
-        
+
         // Forcer un refetch immédiat
-        await queryClient.refetchQueries({ queryKey: ['subscription'] });
+        await queryClient.refetchQueries({ queryKey: ["subscription"] });
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [sessionId, queryClient, refreshSession]);
