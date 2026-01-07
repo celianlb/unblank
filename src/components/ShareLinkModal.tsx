@@ -183,7 +183,7 @@ export default function ShareLinkModal({
                 <button
                   onClick={() => !isFreeUser && setActiveTab("link")}
                   disabled={isFreeUser}
-                  className={`w-full pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                  className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
                     isFreeUser
                       ? "text-[#A8A8A8] opacity-50 cursor-not-allowed"
                       : activeTab === "link"
