@@ -11,6 +11,9 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 import SearchModal from "./search/SearchModal";
 import Tooltip from "./Tooltip";
 import { useFolderShares } from "@/hooks/useShares";
+import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionService } from "@/domain/subscription/services/SubscriptionService";
+import { Subscription } from "@/domain/subscription/models/Subscription";
 
 interface HeaderProps {
   selectedCount?: number;
@@ -58,6 +61,9 @@ export default function Header({
     currentFolderId || null
   );
 
+  // Récupérer l'abonnement pour vérifier les limites
+  const { subscription } = useSubscription();
+
   // Récupérer les permissions du groupe actuel (pour le bouton "Créer un dossier")
   const { data: groupShares = [], isLoading: isLoadingGroupShares } =
     useFolderShares(currentGroupId || null);
@@ -83,6 +89,15 @@ export default function Header({
       (shares.length === 0 ||
         currentUserShare?.permission === "edit" ||
         currentUserShare?.permission === "owner"));
+
+  // Vérifier si l'utilisateur peut ajouter un lien (logique métier)
+  const subscriptionService = new SubscriptionService();
+  const canAddLinkResult = subscription
+    ? subscriptionService.canAddLink(subscription)
+    : { allowed: true, reason: undefined }; // Nouvel utilisateur, pas encore de limite
+
+  const canAddLink = canEdit && canAddLinkResult.allowed;
+  const linkLimitReason = canAddLinkResult.reason;
 
   // Logique de permission pour "Créer un dossier" (dans un groupe) :
   // - Si pas de groupe (currentGroupId null/undefined) : peut créer
@@ -317,20 +332,24 @@ export default function Header({
                 </button>
 
                 <Tooltip
-                  content="Vous n'avez pas la permission d'ajouter des liens dans ce dossier partagé"
-                  disabled={canEdit || isInGroup || isLoading}
+                  content={
+                    linkLimitReason
+                      ? linkLimitReason
+                      : "Vous n'avez pas la permission d'ajouter des liens dans ce dossier partagé"
+                  }
+                  disabled={canAddLink || isInGroup || isLoading}
                 >
                   <div className="relative inline-block">
                     <button
                       onClick={() =>
                         !isLoading &&
                         !isInGroup &&
-                        canEdit &&
+                        canAddLink &&
                         setIsAddLinkModalOpen(true)
                       }
-                      disabled={isLoading || isInGroup || !canEdit}
+                      disabled={isLoading || isInGroup || !canAddLink}
                       className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${
-                        isLoading || isInGroup || !canEdit
+                        isLoading || isInGroup || !canAddLink
                           ? "opacity-50 cursor-not-allowed"
                           : "hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer"
                       }`}
@@ -343,7 +362,7 @@ export default function Header({
                         Ajouter un lien
                       </span>
                     </button>
-                    {!canEdit &&
+                    {!canAddLink &&
                       !isInGroup &&
                       !isLoading &&
                       !isLoadingShares && (

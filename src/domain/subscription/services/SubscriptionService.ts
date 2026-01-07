@@ -10,14 +10,11 @@ export class SubscriptionService {
    * Vérifier si un utilisateur peut ajouter un lien
    */
   canAddLink(subscription: Subscription): { allowed: boolean; reason?: string } {
-    if (!subscription.isActive()) {
-      return { allowed: false, reason: 'Subscription is not active' };
-    }
-
+    // Pour le free tier, on vérifie uniquement la limite mensuelle, pas le statut
     if (subscription.hasReachedLinksLimit()) {
       return {
         allowed: false,
-        reason: `Monthly links limit reached (${subscription.monthlyLinksLimit}). Upgrade to Pro to continue.`,
+        reason: `Limite mensuelle atteinte (${subscription.monthlyLinksUsed}/${subscription.monthlyLinksLimit}). Passez à Pro pour continuer.`,
       };
     }
 

@@ -1,5 +1,5 @@
 import { Subscription } from '@/domain/subscription/models';
-import { supabase } from '@/infra/db/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Use Case: Récupérer le statut d'abonnement d'un utilisateur
@@ -7,8 +7,10 @@ import { supabase } from '@/infra/db/supabase';
  */
 
 export class GetSubscriptionStatusUseCase {
+  constructor(private supabase: SupabaseClient) {}
+
   async execute(userId: string): Promise<Subscription | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('users')
       .select(
         'id, subscription_plan, subscription_status, stripe_customer_id, stripe_subscription_id, stripe_price_id, subscription_expires_at, monthly_links_used, monthly_links_limit, last_reset_at'

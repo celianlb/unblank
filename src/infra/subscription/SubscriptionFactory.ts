@@ -63,8 +63,6 @@ export class SubscriptionFactory {
    * Crée le use case pour récupérer le status de subscription
    */
   static createGetSubscriptionStatusUseCase(supabase: SupabaseClient): GetSubscriptionStatusUseCase {
-    const subscriptionService = this.createSubscriptionService(supabase);
-
-    return new GetSubscriptionStatusUseCase(subscriptionService);
+    return new GetSubscriptionStatusUseCase(supabase);
   }
 }

@@ -36,7 +36,24 @@ export function useSubscription(): UseSubscriptionReturn {
       }
 
       const result = await response.json();
-      return result.subscription as Subscription;
+      
+      // Recréer une vraie instance de Subscription avec les méthodes
+      if (result.subscription) {
+        return Subscription.fromDatabase({
+          id: result.subscription.userId,
+          subscription_plan: result.subscription.plan,
+          subscription_status: result.subscription.status,
+          stripe_customer_id: result.subscription.stripeCustomerId,
+          stripe_subscription_id: result.subscription.stripeSubscriptionId,
+          stripe_price_id: result.subscription.stripePriceId,
+          subscription_expires_at: result.subscription.expiresAt,
+          monthly_links_used: result.subscription.monthlyLinksUsed,
+          monthly_links_limit: result.subscription.monthlyLinksLimit,
+          last_reset_at: result.subscription.lastResetAt,
+        });
+      }
+      
+      return null;
     },
     enabled: !!session?.user,
     retry: (failureCount, error) => {
