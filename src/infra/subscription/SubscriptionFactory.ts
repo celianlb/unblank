@@ -18,25 +18,14 @@ export class SubscriptionFactory {
    * Crée le service Stripe (Infrastructure Layer)
    */
   static createStripeService(): StripePaymentService {
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!stripeSecretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
-    }
-
-    if (!webhookSecret) {
-      throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
-    }
-
-    return new StripePaymentService(stripeSecretKey, webhookSecret);
+    return new StripePaymentService();
   }
 
   /**
    * Crée le service Domain
    */
-  static createSubscriptionService(supabase: SupabaseClient): SubscriptionService {
-    return new SubscriptionService(supabase);
+  static createSubscriptionService(): SubscriptionService {
+    return new SubscriptionService();
   }
 
   /**
@@ -44,9 +33,8 @@ export class SubscriptionFactory {
    */
   static createCheckoutSessionUseCase(supabase: SupabaseClient): CreateCheckoutSessionUseCase {
     const stripeService = this.createStripeService();
-    const subscriptionService = this.createSubscriptionService(supabase);
 
-    return new CreateCheckoutSessionUseCase(stripeService, subscriptionService);
+    return new CreateCheckoutSessionUseCase(stripeService, supabase);
   }
 
   /**
@@ -54,9 +42,9 @@ export class SubscriptionFactory {
    */
   static createHandleWebhookUseCase(supabase: SupabaseClient): HandleWebhookUseCase {
     const stripeService = this.createStripeService();
-    const subscriptionService = this.createSubscriptionService(supabase);
+    const subscriptionService = this.createSubscriptionService();
 
-    return new HandleWebhookUseCase(stripeService, subscriptionService);
+    return new HandleWebhookUseCase(stripeService, subscriptionService, supabase);
   }
 
   /**

@@ -20,7 +20,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     }
 
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
   }
 
@@ -34,9 +34,29 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     successUrl: string;
     cancelUrl: string;
   }): Promise<CheckoutSessionData> {
+    // Créer ou récupérer le customer Stripe
+    const customers = await this.stripe.customers.list({
+      email: params.userEmail,
+      limit: 1,
+    });
+
+    let customerId: string;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      const customer = await this.stripe.customers.create({
+        email: params.userEmail,
+        metadata: {
+          userId: params.userId,
+        },
+      });
+      customerId = customer.id;
+    }
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
+      customer: customerId,
       line_items: [
         {
           price: params.priceId,
@@ -45,8 +65,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       ],
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
-      customer_email: params.userEmail,
-      client_reference_id: params.userId, // Pour lier au user après checkout
+      client_reference_id: params.userId,
       metadata: {
         userId: params.userId,
       },
@@ -64,6 +83,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     return {
       sessionId: session.id,
       url: session.url,
+      customerId,
     };
   }
 
@@ -103,7 +123,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     );
 
     // Parser les données selon le type d'événement
-    return this.parseStripeEvent(event);
+    return await this.parseStripeEvent(event);
   }
 
   /**
@@ -119,7 +139,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     return {
       status: subscription.status,
       priceId: subscription.items.data[0].price.id,
-      currentPeriodEnd: subscription.current_period_end,
+      currentPeriodEnd: subscription.current_period_end as number,
     };
   }
 
@@ -133,7 +153,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
   /**
    * Parser un événement Stripe en WebhookEventData
    */
-  private parseStripeEvent(event: Stripe.Event): WebhookEventData {
+  private async parseStripeEvent(event: Stripe.Event): Promise<WebhookEventData> {
     const data: WebhookEventData = {
       type: event.type,
     };
@@ -144,9 +164,13 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         data.customerId = session.customer as string;
         data.subscriptionId = session.subscription as string;
 
-        // Récupérer le price ID depuis line_items
-        if (session.line_items?.data[0]) {
-          data.priceId = session.line_items.data[0].price?.id;
+        // Récupérer les détails depuis la subscription
+        if (session.subscription) {
+          const subscription = await this.stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
+          data.priceId = subscription.items.data[0].price.id;
+          data.currentPeriodEnd = (subscription as any).current_period_end as number;
         }
 
         data.status = 'active';
@@ -160,7 +184,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         data.subscriptionId = subscription.id;
         data.priceId = subscription.items.data[0].price.id;
         data.status = subscription.status;
-        data.currentPeriodEnd = subscription.current_period_end;
+        data.currentPeriodEnd = subscription.current_period_end as number;
         break;
       }
 
@@ -168,10 +192,10 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         data.customerId = invoice.customer as string;
-        data.subscriptionId = invoice.subscription as string;
+        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
         data.amount = invoice.amount_paid;
         data.currency = invoice.currency;
-        data.status = invoice.status || undefined;
+        data.status = invoice.status ? String(invoice.status) : undefined;
         break;
       }
     }

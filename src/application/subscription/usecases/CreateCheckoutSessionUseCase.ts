@@ -1,5 +1,6 @@
 import { SubscriptionPaymentPort } from '../ports/SubscriptionPaymentPort';
 import { SubscriptionPlan, BillingInterval } from '@/domain/subscription/models';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Use Case: Créer une session Stripe Checkout
@@ -22,7 +23,8 @@ export interface CreateCheckoutSessionOutput {
 
 export class CreateCheckoutSessionUseCase {
   constructor(
-    private readonly paymentService: SubscriptionPaymentPort
+    private readonly paymentService: SubscriptionPaymentPort,
+    private readonly supabase: SupabaseClient
   ) {}
 
   async execute(input: CreateCheckoutSessionInput): Promise<CreateCheckoutSessionOutput> {
@@ -44,6 +46,17 @@ export class CreateCheckoutSessionUseCase {
       successUrl: input.successUrl,
       cancelUrl: input.cancelUrl,
     });
+
+    // 4. Sauvegarder le stripe_customer_id dans la DB
+    const { error } = await this.supabase
+      .from('users')
+      .update({ stripe_customer_id: session.customerId })
+      .eq('id', input.userId);
+
+    if (error) {
+      console.error('[CreateCheckout] Failed to save stripe_customer_id:', error);
+      // On ne throw pas pour ne pas bloquer le checkout
+    }
 
     return {
       sessionId: session.sessionId,

@@ -1,6 +1,6 @@
 import { SubscriptionPaymentPort, WebhookEventData } from '../ports/SubscriptionPaymentPort';
 import { SubscriptionService } from '@/domain/subscription/services/SubscriptionService';
-import { supabase } from '@/infra/db/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Use Case: Gérer les webhooks Stripe
@@ -10,7 +10,8 @@ import { supabase } from '@/infra/db/supabase';
 export class HandleWebhookUseCase {
   constructor(
     private readonly paymentService: SubscriptionPaymentPort,
-    private readonly subscriptionService: SubscriptionService
+    private readonly subscriptionService: SubscriptionService,
+    private readonly supabase: SupabaseClient
   ) {}
 
   async execute(body: string | Buffer, signature: string): Promise<void> {
@@ -64,20 +65,20 @@ export class HandleWebhookUseCase {
       ? this.subscriptionService.computeExpirationDate(event.currentPeriodEnd)
       : undefined;
 
-    // Trouver l'utilisateur par stripe_customer_id ou créer le lien
-    const { data: user, error: userError } = await supabase
+    // Trouver l'utilisateur par stripe_customer_id
+    const { data: user, error: userError } = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_customer_id', event.customerId)
       .single();
 
     if (userError || !user) {
-      console.error('[Webhook] User not found for customer:', event.customerId);
+      console.error('[Webhook] User not found for customer:', event.customerId, userError);
       return;
     }
 
     // Mettre à jour l'abonnement
-    const { error: updateError } = await supabase
+    const { error: updateError } = await this.supabase
       .from('users')
       .update({
         subscription_plan: plan,
@@ -96,7 +97,7 @@ export class HandleWebhookUseCase {
     // Logger l'événement
     await this.logSubscriptionEvent(user.id, event);
 
-    console.log(`[Webhook] Checkout completed for user ${user.id}, plan: ${plan}`);
+    console.log(`[Webhook] ✅ Checkout completed for user ${user.id}, plan: ${plan}`);
   }
 
   /**
@@ -114,7 +115,7 @@ export class HandleWebhookUseCase {
       : undefined;
 
     // Trouver l'utilisateur
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_subscription_id', event.subscriptionId)
@@ -126,7 +127,7 @@ export class HandleWebhookUseCase {
     }
 
     // Mettre à jour
-    const { error: updateError } = await supabase
+    const { error: updateError } = await this.supabase
       .from('users')
       .update({
         subscription_plan: plan,
@@ -153,7 +154,7 @@ export class HandleWebhookUseCase {
       throw new Error('Missing subscription ID in customer.subscription.deleted');
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_subscription_id', event.subscriptionId)
@@ -165,7 +166,7 @@ export class HandleWebhookUseCase {
     }
 
     // Révoquer l'abonnement → retour au plan gratuit
-    const { error: updateError } = await supabase
+    const { error: updateError } = await this.supabase
       .from('users')
       .update({
         subscription_plan: 'free',
@@ -189,7 +190,7 @@ export class HandleWebhookUseCase {
   private async handleInvoicePaid(event: WebhookEventData): Promise<void> {
     if (!event.subscriptionId) return;
 
-    const { data: user } = await supabase
+    const { data: user } = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_subscription_id', event.subscriptionId)
@@ -207,7 +208,7 @@ export class HandleWebhookUseCase {
   private async handleInvoicePaymentFailed(event: WebhookEventData): Promise<void> {
     if (!event.subscriptionId) return;
 
-    const { data: user } = await supabase
+    const { data: user } = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_subscription_id', event.subscriptionId)
@@ -215,7 +216,7 @@ export class HandleWebhookUseCase {
 
     if (user) {
       // Marquer comme past_due
-      await supabase
+      await this.supabase
         .from('users')
         .update({ subscription_status: 'past_due' })
         .eq('id', user.id);
@@ -230,7 +231,7 @@ export class HandleWebhookUseCase {
    * Logger l'événement dans subscription_events
    */
   private async logSubscriptionEvent(userId: string, event: WebhookEventData): Promise<void> {
-    await supabase.from('subscription_events').insert({
+    await this.supabase.from('subscription_events').insert({
       user_id: userId,
       event_type: event.type,
       stripe_event_id: `evt_${Date.now()}`, // Simplified, use real event ID in production

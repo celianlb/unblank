@@ -8,6 +8,7 @@ import { BillingInterval } from '@/domain/subscription/models';
 export interface CheckoutSessionData {
   sessionId: string;
   url: string;
+  customerId: string;
 }
 
 export interface WebhookEventData {
