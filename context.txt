@@ -1,0 +1,259 @@
+# Cahier des charges UnBlank
+
+### 🌐 **Contexte global de Unblank**
+
+**Unblank** est un **SaaS créatif** conçu pour les **designers, artistes visuels, créateurs, étudiants et studios** qui accumulent une montagne de liens, d’images, et de références visuelles.
+
+C’est à la fois :
+
+- un **gestionnaire intelligent de favoris** (bookmarks visuels),
+- un **outil de veille graphique**,
+- et une **plateforme de partage sélectif** entre créatifs.
+
+Son objectif : **centraliser, organiser et valoriser l’inspiration visuelle du web**, tout en rendant la recherche et le partage plus fluides, plus esthétiques et plus sûrs.
+
+
+# 🧱 **Fonctionnalités principales – Unblank (MVP détaillé)**
+
+## 0. Landing page
+
+- Inscription ou connexion
+
+### 1. **Création de compte (Inscription / Connexion classique)**
+
+**Objectif :** permettre à l’utilisateur d’accéder à son espace personnel sécurisé.
+
+**Détails :**
+
+- Inscription avec **pseudo** + **e-mail + mot de passe**.
+- Connexion persistante (“Rester connecté”).
+- Déconnexion manuelle depuis le menu profil.
+
+### 2. **Connexion via Google et Pinterest**
+
+**Objectif :** simplifier l’inscription et enrichir le profil automatiquement.
+
+**Détails :**
+
+- Authentification OAuth2 (Google & Pinterest).
+- Lors d’une première connexion, création automatique d’un compte Unblank.
+- Option pour **importer les données Pinterest** (tableaux, visuels, tags) → à condition d’autorisation API de l’utilisateur.
+
+### 3. **Réinitialisation du mot de passe**
+
+**Objectif :** assurer la récupération de compte.
+
+**Détails :**
+
+- Page “Mot de passe oublié” → saisie e-mail.
+- Envoi d’un lien temporaire de réinitialisation (valable 24h).
+- Choix d’un nouveau mot de passe.
+
+### 4. **Paramètres du compte utilisateur**
+
+**Objectif :** permettre à chaque utilisateur de personnaliser et gérer ses données personnelles.
+
+**Détails :**
+
+- Modifier sa **photo de profil** (upload image / suppression).
+- Modifier son **pseudo** (unique sur la plateforme).
+- Changer la **langue** (FR/EN).
+- Modifier e-mail / mot de passe.
+- Supprimer son compte définitivement.
+
+### 5. **Historique d’activité**
+
+**Objectif :** donner à l’utilisateur une vue rapide de ses dernières sauvegardes.
+
+**Détails :**
+
+- Dossier automatique “Historique”.
+- Classement des liens par **ordre chronologique inversé** (plus récent en haut).
+- Visualisation rapide : miniature, titre, source, date d’ajout.
+- Possibilité de déplacer un lien de l’historique vers un dossier manuel.
+
+### 6. **Gestion des droits de partage**
+
+**Objectif :** permettre une collaboration contrôlée.
+
+**Détails :**
+
+- Partage d’un dossier via un lien unique ou invitation par e-mail.
+- Choix entre :
+    - **Lecture seule** (consultation sans modification),
+    - **Modification autorisée** (ajout / édition de contenu par les invités).
+- Possibilité de retirer l’accès à tout moment.
+
+### 7. **Recherche globale et par tags**
+
+**Objectif :** retrouver rapidement n’importe quelle ressource.
+
+**Détails :**
+
+- Barre de recherche accessible partout.
+- Recherche par :
+    - **Tag** (auto-complétion et filtres combinables),
+    - **Nom de dossier**,
+    - **Contenu de lien** (métadonnées : titre, description, source).
+
+### 8. **Création et gestion de dossiers, groupes et sous-dossiers**
+
+**Objectif :** permettre une organisation hiérarchique claire.
+
+**Détails :**
+
+- Création manuelle de dossiers personnalisés (nom).
+- Possibilité de regrouper plusieurs dossiers en un **groupe de dossiers** (ex : “Projets 2025”).
+- Sous-dossiers imbriqués pour affiner l’organisation.
+- Drag & drop des liens entre dossiers.
+
+### 9. **Suppression et édition**
+
+**Objectif :** gestion complète et intuitive de l’espace personnel.
+
+**Détails :**
+
+- Renommer.
+- Supprimer un dossier (avec confirmation).
+
+### 10. **Visualisation de l’image en taille et format d’origine**
+
+**Objectif :** préserver la qualité et la fidélité des visuels sauvegardés.
+
+**Détails :**
+
+- Lorsqu’un lien correspond à une image, affichage miniature + possibilité d’ouvrir l’image en taille réelle.
+- Support des formats JPEG, PNG, GIF, WebP, SVG.
+- Ouverture de l’image en overlay avec ses information lié (tags, lien, bouton d’édition de tags)
+
+# 🔗 **Extension Web**
+
+### 1. **Sauvegarde d’URL avec capture d’écran**
+
+L’utilisateur clique sur l’icône de l’extension quand il tombe sur une ressource intéressante, copie colle l’URL directement dans l’extension (site, image, article, portfolio…).
+
+L’extension enregistre automatiquement :
+
+- le lien de la page,
+- son titre,
+- une courte description,
+- et une **capture visuelle** de la page ou de l’image principale.
+    
+    Cela permet de créer une **bibliothèque visuelle claire et agréable** plutôt qu’une simple liste de liens.
+    
+    Chaque nouvel élément est ajouté à un dossier par défaut (ex. “Récents”) si l’utilisateur ne précise pas de destination.
+    
+
+### 2. **Organisation : choix du dossier de destination**
+
+Au moment de la sauvegarde, une petite fenêtre s’ouvre dans l’extension :
+
+l’utilisateur choisit **dans quel dossier** enregistrer son lien.
+
+Il peut :
+
+- sélectionner un dossier existant,
+- rechercher un dossier par nom,
+- ou créer un **nouveau dossier instantanément** sans quitter la page.
+
+Le but est de rendre le tri fluide et immédiat, sans interrompre la navigation.
+
+### 3. **Ajout de tags manuellement**
+
+Avant de valider la sauvegarde, l’utilisateur peut ajouter **ses propres tags** (mots-clés).
+
+Exemples : “affiche typographique”, “design suisse”, “inspiration landing page”.
+
+Les tags permettent ensuite de **retrouver facilement** une ressource par mot-clé, peu importe dans quel dossier elle se trouve.
+
+L’extension propose aussi les tags déjà utilisés pour éviter les doublons (ex. “typo” / “typographie”).
+
+C’est la base du futur moteur de recherche d’Unblank.
+
+### 4. **Tagging automatique (version Pro)**
+
+Pour les utilisateurs du plan **Pro**, les tags sont proposés automatiquement.
+
+Lorsqu’ils sauvegardent un lien, l’extension affiche une liste de **tags suggérés** analysés à partir :
+
+- du contenu de la page,
+- du texte et des images visibles.
+
+L’utilisateur peut ensuite confirmer, modifier ou supprimer ces tags avant d’enregistrer.
+
+Cette fonction rend la sauvegarde **instantanée et intelligente**, sans effort de classement manuel.
+
+### 5. **Détection de doublons**
+
+Si l’utilisateur essaye d’enregistrer une URL qu’il possède déjà dans sa bibliothèque,
+
+l’extension affiche une **alerte claire et non bloquante** :
+
+> “Ce lien existe déjà dans ton dossier Affiches 2025.”
+> 
+> 
+> → [Ouvrir le lien existant] ou [L’ajouter quand même]
+> 
+
+Cela évite les répétitions inutiles tout en laissant la liberté de dupliquer un lien dans plusieurs dossiers si besoin.
+
+Le but est d’éviter le désordre sans frustrer l’utilisateur.
+
+# 💸 **Plans et Tarification**
+
+### **Objectif global**
+
+Proposer un modèle d’abonnement simple, lisible et adapté à chaque profil de créatif.
+
+La tarification doit inciter à la montée en gamme, tout en permettant aux utilisateurs de découvrir 80 % des fonctionnalités gratuitement.
+
+---
+
+### 1. Plan **1 : Gratuit – 0 €/mois**
+
+**Cible :** créatifs curieux ou débutants souhaitant tester la plateforme.
+
+**Positionnement :** plan découverte, pour créer l’habitude d’usage.
+
+**Fonctionnalités incluses :**
+
+- Extension navigateur Chrome.
+- Capture multi-sources (Instagram, Pinterest, Behance…).
+- Ajout de tags manuels.
+- Création de dossiers illimitée.
+- Sauvegarde de **50 liens par mois maximum**.
+- Partage de dossiers en **lecture seule** uniquement.
+- 2 membres max par dossier partager
+
+### 2. Plan **2 : Pro – 6,99 €/mois ou 59 €/an (-40%)**
+
+**Cible :** créatifs réguliers, indépendants, designers, photographes ou étudiants.
+
+**Positionnement :** plan central, pour une expérience complète et rapide.
+
+**Fonctionnalités :**
+
+- Toutes les features du plan gratuit.
+- **Tag automatique par IA** (liens et images).
+- Création de **groupes de dossiers et sous-dossiers** sans limite.
+- Partage de dossiers avec **droits d’édition**.
+- 4 membres max par dossier partager
+
+**But :** faire ressentir une vraie montée de confort et d’efficacité.
+
+C’est l’offre cœur de cible d’Unblank.
+
+### 3. Plan **3 : Team – 18,99 €/mois ou 199,99 €/an pour 3 à 5 membre**
+
+**Cible :** studios, agences, collectifs ou équipes de 3 à 5 membres.
+
+**Positionnement :** plan collaboratif destiné aux structures créatives.
+
+**Fonctionnalités :**
+
+- Toutes les fonctionnalités du plan Pro.
+- **Collaboration illimitée** (nombre de membres sans restriction).
+- Espaces partagés et gestion commune des dossiers.
+- Gestion d’équipe simplifiée (ajout/retrait de membres).
+
+**But :** permettre aux équipes de centraliser toute leur veille et leur documentation visuelle dans un espace unifié.

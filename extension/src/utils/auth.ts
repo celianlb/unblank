@@ -10,19 +10,16 @@ const STORAGE_KEYS = {
 export async function isAuthenticated(): Promise<boolean> {
   try {
     const session = await getSession();
-    console.log('[Auth] isAuthenticated check - session:', session);
     if (!session) {
-      console.log('[Auth] No session found');
       return false;
     }
 
     // Check if token is expired
     const now = Date.now();
     const isValid = session.expiresAt > now;
-    console.log('[Auth] Token valid:', isValid, 'expires:', new Date(session.expiresAt), 'now:', new Date(now));
     return isValid;
   } catch (error) {
-    console.error('[Auth] Error checking authentication:', error);
+    console.error('[Auth] Error checking authentication');
     return false;
   }
 }
@@ -34,7 +31,6 @@ export async function getSession(): Promise<AuthSession | null> {
   return new Promise((resolve) => {
     chrome.storage.sync.get([STORAGE_KEYS.SESSION], (result) => {
       const session = result[STORAGE_KEYS.SESSION] as AuthSession | undefined;
-      console.log('[Auth] getSession result:', result, 'session:', session);
       resolve(session || null);
     });
   });

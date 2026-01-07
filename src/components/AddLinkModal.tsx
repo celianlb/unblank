@@ -1,33 +1,132 @@
-'use client';
+"use client";
 
-import { X, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { X, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useCreateLink } from "@/hooks/useLinks";
+import { extractMetadata } from "@/utils/linkUtils";
 
 interface AddLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
+  folderId?: string; // Dossier dans lequel ajouter le lien
 }
 
-export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
-  const [url, setUrl] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [tagInput, setTagInput] = useState('');
+export default function AddLinkModal({
+  isOpen,
+  onClose,
+  folderId,
+}: AddLinkModalProps) {
+  const { session } = useAuthContext();
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const [metadata, setMetadata] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [metadataError, setMetadataError] = useState<boolean>(false);
+
+  // Mutation React Query
+  const createLink = useCreateLink(session?.user?.id || "", folderId);
+
+  // Réinitialiser le formulaire quand la modale s'ouvre/ferme
+  useEffect(() => {
+    if (!isOpen) {
+      setUrl("");
+      setTitle("");
+      setDescription("");
+      setTags([]);
+      setTagInput("");
+      setMetadata(null);
+      setErrorMessage(null);
+      setMetadataError(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Gérer le changement d'URL - réinitialiser les métadonnées si l'URL change
+  const handleUrlChange = (newUrl: string) => {
+    setUrl(newUrl);
+    // Si l'URL change et qu'on avait déjà des métadonnées, les réinitialiser
+    if (metadata) {
+      setMetadata(null);
+      setTitle("");
+      setDescription("");
+      setMetadataError(false);
+    }
+  };
+
+  // Extraction automatique des métadonnées quand l'URL change
+  const handleUrlBlur = async () => {
+    if (url && url.startsWith("http") && !metadata) {
+      setIsLoadingMetadata(true);
+      setMetadataError(false);
+      const meta = await extractMetadata(url);
+      setIsLoadingMetadata(false);
+
+      if (meta) {
+        setMetadata(meta);
+        if (!title) setTitle(meta.title || "");
+        if (!description) setDescription(meta.description || "");
+      } else {
+        // L'extraction a échoué, on affiche un warning mais on permet de continuer
+        setMetadataError(true);
+      }
+    }
+  };
+
+  // Gérer le paste dans l'input URL - sortir de l'input et déclencher l'extraction
+  const handleUrlPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData("text");
+    if (pastedText && pastedText.startsWith("http")) {
+      // On laisse le paste se faire, puis on blur pour déclencher l'extraction
+      setTimeout(() => {
+        (e.target as HTMLInputElement).blur();
+      }, 0);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Logique d'ajout du lien
-    console.log({ url, title, description, tags });
-    onClose();
+
+    if (!session?.user?.id || !url.trim()) return;
+
+    try {
+      await createLink.mutateAsync({
+        url: url.trim(),
+        title: title.trim() || undefined,
+        description: description.trim() || undefined,
+        folderId: folderId,
+        originalImageUrl: metadata?.image || undefined,
+        imageFormat: metadata?.imageFormat || undefined,
+        contentType: metadata?.contentType || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+      });
+
+      // Fermer la modale
+      onClose();
+    } catch (error: any) {
+      console.error("Error creating link:", error);
+
+      // Gérer l'erreur de limite de liens
+      if (error.code === "LINK_LIMIT_REACHED") {
+        setErrorMessage(
+          error.message ||
+            "Limite mensuelle de liens atteinte. Passez à un plan Pro pour continuer."
+        );
+      } else {
+        setErrorMessage("Erreur lors de l'ajout du lien. Veuillez réessayer.");
+      }
+    }
   };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
@@ -35,12 +134,27 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  // Vérifier si des données ont été saisies
+  const hasUnsavedData =
+    url.trim() !== "" ||
+    title.trim() !== "" ||
+    description.trim() !== "" ||
+    tags.length > 0;
+
+  // Gérer le clic sur l'overlay
+  const handleOverlayClick = () => {
+    // Ne fermer que si aucune donnée n'a été saisie
+    if (!hasUnsavedData) {
+      onClose();
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
         className="fixed inset-0 z-40 bg-black/70"
-        onClick={onClose}
+        onClick={handleOverlayClick}
       />
 
       {/* Modal */}
@@ -64,20 +178,50 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
 
             {/* Lien (URL) */}
             <div className="flex flex-col gap-2">
-              <label className="text-base font-medium text-black font-[Heebo]">Lien</label>
+              <label className="text-base font-medium text-black font-[Heebo]">
+                Lien{" "}
+                {isLoadingMetadata && (
+                  <span className="text-sm text-gray-500">
+                    (Extraction des métadonnées...)
+                  </span>
+                )}
+              </label>
               <input
                 type="url"
                 placeholder="URL"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                onBlur={handleUrlBlur}
+                onPaste={handleUrlPaste}
                 className="w-full h-12 px-4 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
                 required
+                autoFocus
               />
             </div>
 
+            {/* Warning métadonnées */}
+            {metadataError && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border-2 border-amber-500 rounded-xl">
+                <span className="text-sm font-medium text-amber-700 font-[Heebo]">
+                  Impossible d'extraire les métadonnées. Vous pouvez continuer en remplissant les champs manuellement.
+                </span>
+              </div>
+            )}
+
+            {/* Message d'erreur */}
+            {errorMessage && (
+              <div className="flex items-start gap-2 p-3 bg-red-50 border-2 border-red-500 rounded-xl">
+                <span className="text-sm font-medium text-red-700 font-[Heebo]">
+                  {errorMessage}
+                </span>
+              </div>
+            )}
+
             {/* Titre */}
             <div className="flex flex-col gap-2">
-              <label className="text-base font-medium text-black font-[Heebo]">Titre</label>
+              <label className="text-base font-medium text-black font-[Heebo]">
+                Titre
+              </label>
               <input
                 type="text"
                 placeholder="Titre"
@@ -89,7 +233,9 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
 
             {/* Description */}
             <div className="flex flex-col gap-2">
-              <label className="text-base font-medium text-black font-[Heebo]">Description</label>
+              <label className="text-base font-medium text-black font-[Heebo]">
+                Description
+              </label>
               <textarea
                 placeholder=""
                 value={description}
@@ -107,7 +253,7 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       handleAddTag();
                     }
@@ -125,7 +271,9 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
 
               <div className="flex-1 w-full border border-dashed border-gray-300 rounded-xl flex items-center justify-center p-2.5 overflow-y-auto">
                 {tags.length === 0 ? (
-                  <p className="text-sm text-gray-400 font-[Heebo] font-normal">Aucun tag pour l'instant.</p>
+                  <p className="text-sm text-gray-400 font-[Heebo] font-normal">
+                    Aucun tag pour l'instant.
+                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2.5 w-full">
                     {tags.map((tag, index) => (
@@ -133,7 +281,9 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
                         key={index}
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFE3E8] border border-black rounded-lg font-[Heebo] font-medium text-sm text-black"
                       >
-                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">{tag}</span>
+                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                          {tag}
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag)}
@@ -151,9 +301,14 @@ export default function AddLinkModal({ isOpen, onClose }: AddLinkModalProps) {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-14 rounded-xl bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base cursor-pointer font-[Heebo]"
+              disabled={createLink.isPending || isLoadingMetadata || !url.trim()}
+              className="w-full h-14 rounded-xl bg-[#FF506F] transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:bg-[#FF6080] enabled:active:translate-y-[2px] enabled:active:shadow-none enabled:cursor-pointer"
             >
-              Ajouter le lien
+              {createLink.isPending
+                ? "Ajout en cours..."
+                : isLoadingMetadata
+                  ? "Extraction en cours..."
+                  : "Ajouter le lien"}
             </button>
           </form>
         </div>

@@ -120,11 +120,12 @@ export function useAuth() {
       setError(null);
 
       try {
+        // Check if coming from extension to preserve ext=true in callback
+        const isFromExt = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ext') === 'true';
+        const callbackUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback${isFromExt ? '?ext=true' : ''}`;
+
         const signInWithOAuthUseCase = AuthFactory.createSignInWithOAuthUseCase();
-        await signInWithOAuthUseCase.execute(
-          provider,
-          `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`
-        );
+        await signInWithOAuthUseCase.execute(provider, callbackUrl);
         // La redirection vers le provider OAuth se fait automatiquement
       } catch (err) {
         if (err instanceof AuthError) {

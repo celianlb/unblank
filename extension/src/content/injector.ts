@@ -40,8 +40,8 @@ if (isUnblankDomain) {
         session: event.data.session
       }).then(() => {
         console.log('[Unblank Extension] Auth session forwarded successfully');
-      }).catch((error) => {
-        console.error('[Unblank Extension] Error forwarding auth session:', error);
+      }).catch(() => {
+        console.error('[Unblank Extension] Error forwarding auth session');
       });
     }
     
@@ -51,8 +51,8 @@ if (isUnblankDomain) {
         type: 'AUTH_LOGOUT'
       }).then(() => {
         console.log('[Unblank Extension] Logout forwarded successfully');
-      }).catch((error) => {
-        console.error('[Unblank Extension] Error forwarding logout:', error);
+      }).catch(() => {
+        console.error('[Unblank Extension] Error forwarding logout');
       });
     }
   });

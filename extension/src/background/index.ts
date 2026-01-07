@@ -128,7 +128,7 @@ chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => 
  */
 async function handleAuthSession(session: AuthSession): Promise<void> {
   try {
-    console.log('Saving auth session:', session);
+    console.log('[Auth] Saving session');
     
     // Save session to storage
     await saveSession(session);
@@ -149,9 +149,9 @@ async function handleAuthSession(session: AuthSession): Promise<void> {
       });
     });
     
-    console.log('Auth session saved successfully');
+    console.log('[Auth] Session saved successfully');
   } catch (error) {
-    console.error('Error saving auth session:', error);
+    console.error('[Auth] Error saving session');
     throw error;
   }
 }
@@ -161,7 +161,7 @@ async function handleAuthSession(session: AuthSession): Promise<void> {
  */
 async function handleLogout(): Promise<void> {
   try {
-    console.log('Clearing auth session');
+    console.log('[Auth] Clearing session');
     
     // Clear session from storage
     await clearSession();
@@ -182,9 +182,9 @@ async function handleLogout(): Promise<void> {
       });
     });
     
-    console.log('Auth session cleared successfully');
+    console.log('[Auth] Session cleared successfully');
   } catch (error) {
-    console.error('Error clearing auth session:', error);
+    console.error('[Auth] Error clearing session');
     throw error;
   }
 }

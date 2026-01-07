@@ -4,12 +4,13 @@ import { ChevronRight, Home } from 'lucide-react';
 import Link from 'next/link';
 
 interface BreadcrumbProps {
-  groupName: string;
+  groupName?: string;
   folderName?: string;
   groupSlug?: string;
+  isLoading?: boolean;
 }
 
-export default function Breadcrumb({ groupName, folderName, groupSlug }: BreadcrumbProps) {
+export default function Breadcrumb({ groupName, folderName, groupSlug, isLoading = false }: BreadcrumbProps) {
   return (
     <div className="flex flex-row items-center gap-6">
       {/* Home Icon */}
@@ -17,41 +18,59 @@ export default function Breadcrumb({ groupName, folderName, groupSlug }: Breadcr
         <Home className="w-[35px] h-[35px] text-[#8B8B8B] group-hover:text-[#0D0D0D] transition-colors" strokeWidth={2} />
       </Link>
 
-      {/* Chevron */}
-      <div className="w-8 h-8 flex items-center justify-center">
-        <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
-      </div>
-
-      {/* Group Name */}
-      {folderName ? (
-        // Group is clickable when we're in a folder
-        <Link
-          href={`/${groupSlug}`}
-          className="flex flex-row items-center gap-[22px] group"
-        >
-          <span
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#8B8B8B] group-hover:text-[#0D0D0D] transition-colors"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            {groupName}
-          </span>
-        </Link>
-      ) : (
-        // Group is not clickable when we're at group level
-        <div className="flex flex-row items-center gap-[22px]">
-          <span
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            {groupName}
-          </span>
-        </div>
-      )}
-
-      {/* Folder level */}
-      {folderName && (
+      {/* Loading skeleton or Group Name */}
+      {isLoading ? (
+        <>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
+          </div>
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+        </>
+      ) : groupName && (
         <>
           {/* Chevron */}
+          <div className="w-8 h-8 flex items-center justify-center">
+            <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
+          </div>
+
+          {folderName ? (
+            // Group is clickable when we're in a folder
+            <Link
+              href={`/${groupSlug}`}
+              className="flex flex-row items-center gap-[22px] group"
+            >
+              <span
+                className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#8B8B8B] group-hover:text-[#0D0D0D] transition-colors"
+                style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              >
+                {groupName}
+              </span>
+            </Link>
+          ) : (
+            // Group is not clickable when we're at group level
+            <div className="flex flex-row items-center gap-[22px]">
+              <span
+                className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+                style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              >
+                {groupName}
+              </span>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Folder level or loading skeleton */}
+      {isLoading && !groupName ? (
+        <>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
+          </div>
+          <div className="h-10 w-40 bg-gray-200 rounded animate-pulse" />
+        </>
+      ) : folderName && (
+        <>
+          {/* Chevron - always show before folder name */}
           <div className="w-8 h-8 flex items-center justify-center">
             <ChevronRight className="w-8 h-8 text-[#8B8B8B]" strokeWidth={2} />
           </div>

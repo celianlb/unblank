@@ -12,11 +12,21 @@
     "ext:type-check": "cd extension && npm run type-check"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^8.6.1",
     "@supabase/supabase-js": "^2.83.0",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-query-devtools": "^5.91.1",
     "lucide-react": "^0.554.0",
+    "metascraper": "^5.49.7",
+    "metascraper-description": "^5.49.7",
+    "metascraper-image": "^5.49.7",
+    "metascraper-title": "^5.49.7",
+    "metascraper-url": "^5.49.7",
     "next": "^16.0.7",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "sharp": "^0.34.5",
+    "stripe": "^20.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

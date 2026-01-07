@@ -14,7 +14,6 @@ let isConnected = false;
 // Initialize auth status
 (async () => {
   isConnected = await isAuthenticated();
-  console.log('[UNBLANK] Auth status:', isConnected);
 })();
 
 // Load Heebo font from Google Fonts
@@ -78,11 +77,11 @@ function applyOverlayStyles(container: HTMLDivElement) {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Semi-transparent background
     margin: '0',
     padding: '16px',
     boxSizing: 'border-box',
-    pointerEvents: 'none', // Allow clicks to pass through the container
+    pointerEvents: 'auto', // Enable clicks on container
   });
 }
 
@@ -90,7 +89,6 @@ function applyOverlayStyles(container: HTMLDivElement) {
 async function showOverlay() {
   // Check auth status before showing overlay
   isConnected = await isAuthenticated();
-  console.log('[UNBLANK] Auth status check:', isConnected);
 
   if (overlayContainer) {
     // Overlay already exists, update it and show it

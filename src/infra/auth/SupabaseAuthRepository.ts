@@ -11,6 +11,7 @@ import {
   UpdateProfileData,
 } from '@/domain/auth/models';
 import { GetUserAvatarUrlUseCase } from '@/application/auth/GetUserAvatarUrlUseCase';
+import { AvatarUrlService } from '@/application/auth/AvatarUrlService';
 
 /**
  * Implémentation Supabase du repository d'authentification
@@ -19,9 +20,12 @@ import { GetUserAvatarUrlUseCase } from '@/application/auth/GetUserAvatarUrlUseC
 export class SupabaseAuthRepository implements AuthRepository {
   private readonly getUserAvatarUrlUseCase: GetUserAvatarUrlUseCase;
 
-  constructor(private readonly supabase: SupabaseClient) {
-    // Injecter le Use Case qui gère le cache (Application layer)
-    this.getUserAvatarUrlUseCase = new GetUserAvatarUrlUseCase(supabase);
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly avatarUrlService: AvatarUrlService
+  ) {
+    // Injecter le Use Case qui délègue à AvatarUrlService (Application layer)
+    this.getUserAvatarUrlUseCase = new GetUserAvatarUrlUseCase(avatarUrlService);
   }
 
   /**
@@ -29,22 +33,55 @@ export class SupabaseAuthRepository implements AuthRepository {
    * Récupère les données depuis la table public.users
    */
 
-  private async mapSupabaseUserToDomain(supabaseUser: any): Promise<User> {
-    // Récupérer les données depuis public.users
-    const { data: publicUser, error } = await this.supabase
-      .from('users')
-      .select('username, avatar_url, created_at, updated_at')
-      .eq('id', supabaseUser.id)
-      .maybeSingle();
+  private async mapSupabaseUserToDomain(supabaseUser: any, isNewUser = false): Promise<User> {
+    let publicUser = null;
+    let error = null;
+
+    // Si c'est un nouvel utilisateur (après signup), on retry avec délai pour laisser le trigger s'exécuter
+    if (isNewUser) {
+      const maxRetries = 5;
+      const delayMs = 300; // 300ms entre chaque tentative
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const { data, error: fetchError } = await this.supabase
+          .from('users')
+          .select('username, avatar_url, created_at, updated_at')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
+
+        if (data) {
+          publicUser = data;
+          error = null;
+          break;
+        }
+
+        error = fetchError;
+
+        // Si ce n'est pas la dernière tentative, attendre avant de réessayer
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    } else {
+      // Pour les utilisateurs existants, une seule tentative
+      const { data, error: fetchError } = await this.supabase
+        .from('users')
+        .select('username, avatar_url, created_at, updated_at')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
+
+      publicUser = data;
+      error = fetchError;
+    }
 
     if (error) {
       console.error('Error fetching user from public.users:', error);
     }
 
-    // Si l'utilisateur n'existe pas dans public.users, utiliser user_metadata comme fallback
+    // Si l'utilisateur n'existe pas dans public.users après tous les retries, utiliser user_metadata comme fallback
     // Le trigger SQL devrait créer l'entrée automatiquement lors de l'inscription
     if (!publicUser) {
-      console.warn('User not found in public.users, falling back to user_metadata. This might indicate the trigger did not run.');
+      console.warn('User not found in public.users after retries, falling back to user_metadata. This might indicate the trigger did not run.');
       return {
         id: supabaseUser.id,
         email: supabaseUser.email!,
@@ -66,10 +103,9 @@ export class SupabaseAuthRepository implements AuthRepository {
          (avatarUrl.startsWith('http') && !avatarUrl.includes('supabase.co')))) {
       // Utiliser directement l'URL externe (Google, Pinterest, etc.)
       avatarUrl = externalAvatarUrl;
-    } else if (avatarUrl && !avatarUrl.startsWith('http')) {
-      // Si c'est un path relatif dans le storage Supabase, générer une signed URL
-      const signedUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
-      avatarUrl = signedUrl || avatarUrl;
+    } else if (avatarUrl) {
+      // Path Supabase ou URL externe → AvatarUrlService gère tout
+      avatarUrl = await this.getUserAvatarUrlUseCase.execute(avatarUrl);
     }
 
     return {
@@ -85,9 +121,9 @@ export class SupabaseAuthRepository implements AuthRepository {
   /**
    * Convertit une session Supabase en UserSession du domaine
    */
-  private async mapSupabaseSessionToDomain(supabaseSession: any): Promise<UserSession> {
+  private async mapSupabaseSessionToDomain(supabaseSession: any, isNewUser = false): Promise<UserSession> {
     return {
-      user: await this.mapSupabaseUserToDomain(supabaseSession.user),
+      user: await this.mapSupabaseUserToDomain(supabaseSession.user, isNewUser),
       accessToken: supabaseSession.access_token,
       refreshToken: supabaseSession.refresh_token,
       expiresAt: (supabaseSession.expires_at || 0) * 1000, // Convert seconds to milliseconds
@@ -172,14 +208,15 @@ export class SupabaseAuthRepository implements AuthRepository {
       if (!data.session) {
         // Créer une session temporaire pour afficher un message
         return {
-          user: await this.mapSupabaseUserToDomain(data.user),
+          user: await this.mapSupabaseUserToDomain(data.user, true),
           accessToken: '',
           refreshToken: '',
           expiresAt: 0,
         };
       }
 
-      return await this.mapSupabaseSessionToDomain(data.session);
+      // Pour signUp, on indique que c'est un nouvel utilisateur pour activer le retry
+      return await this.mapSupabaseSessionToDomain(data.session, true);
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -402,7 +439,9 @@ export class SupabaseAuthRepository implements AuthRepository {
       // Supprimer l'utilisateur via l'admin API
       // Note: Supabase ne permet pas de supprimer directement depuis le client
       // Il faut utiliser une fonction serveur ou l'API admin
-      const { error } = await this.supabase.rpc('delete_user');
+      const { error } = await this.supabase.rpc('delete_user', {
+        p_user_id: user.id
+      });
 
       if (error) {
         this.handleSupabaseError(error);

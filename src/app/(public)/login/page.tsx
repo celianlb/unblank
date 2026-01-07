@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
 import { Card, Panel } from "@/components/shared";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { isFromExtension, sendSessionToExtension } from "@/lib/extension/extensi
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -21,6 +22,9 @@ export default function LoginPage() {
   const { signIn, signInWithOAuth, isLoading, error, clearError } = useAuth();
 
   const fromExtension = isFromExtension();
+
+  // Get redirect parameter (for share links)
+  const redirectTo = searchParams.get("redirect");
 
   // Check if user is already authenticated
   useEffect(() => {
@@ -35,11 +39,15 @@ export default function LoginPage() {
           email: session.user.email,
         });
       } else {
-        // Regular access: redirect to app
-        router.push('/app');
+        // Regular access: redirect to app or to the share link
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else {
+          router.push('/app');
+        }
       }
     }
-  }, [loading, session, fromExtension, router]);
+  }, [loading, session, fromExtension, redirectTo, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +74,7 @@ export default function LoginPage() {
           email: result.user.email,
         });
       }
-      // Note: Redirection is handled by useEffect monitoring session
+      // Note: Redirection (including share redirect) is handled by useEffect monitoring session
     }
   };
 
@@ -76,11 +84,19 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     clearError();
+    // If there's a redirect parameter, store it in localStorage for OAuth callback
+    if (redirectTo) {
+      localStorage.setItem("oauth_redirect", redirectTo);
+    }
     await signInWithOAuth("google");
   };
 
   const handlePinterestLogin = async () => {
     clearError();
+    // If there's a redirect parameter, store it in localStorage for OAuth callback
+    if (redirectTo) {
+      localStorage.setItem("oauth_redirect", redirectTo);
+    }
     await signInWithOAuth("pinterest");
   };
 

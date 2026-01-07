@@ -1,57 +1,159 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuthContext } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
 import FolderCard from '@/components/FolderCard';
+import { useGroupBySlug, useGroupFolders } from '@/hooks/useFolders';
+import { formatLastUpdate } from '@/utils/formatters';
+import { useFolderShares } from '@/hooks/useShares';
+import { useQueryClient } from '@tanstack/react-query';
+
+// Helper component to render FolderCard with permission checking for each folder
+function GroupFolderCard({ folder, groupSlug, currentUserEmail, isGroupShared, groupId, userId }: { folder: any; groupSlug: string; currentUserEmail: string | undefined; isGroupShared: boolean; groupId: string | undefined; userId: string | undefined }) {
+  const queryClient = useQueryClient();
+  const { data: shares = [], isLoading: isLoadingShares } = useFolderShares(folder.id);
+
+  const currentUserShare = shares.find((share: any) =>
+    share.user?.email === currentUserEmail
+  );
+
+  // Logique de permission pour chaque dossier individuel
+  const canDelete = !isLoadingShares && (shares.length === 0 || currentUserShare?.permission === 'edit' || currentUserShare?.permission === 'owner');
+
+  // Vérifier si le dossier individuel est partagé (shares.length > 1 car il y a toujours l'owner)
+  // Un dossier est considéré comme partagé individuellement si :
+  // - Il a des shares (> 1 car owner est toujours présent)
+  // - ET l'utilisateur actuel n'est pas l'owner
+  const isFolderShared = !isLoadingShares && shares.length > 1 && currentUserShare?.permission !== 'owner';
+
+  // Si le dossier est partagé individuellement, on quitte le dossier
+  // Sinon, si on est dans un groupe partagé, on quitte le groupe parent
+  const shouldShowExitButton = isFolderShared || isGroupShared;
+  const exitTargetId = isFolderShared ? undefined : (isGroupShared ? groupId : undefined);
+
+  // Callback pour invalider les caches de la page après un exit réussi
+  const handleExitSuccess = () => {
+    // Invalider les dossiers du groupe
+    queryClient.invalidateQueries({ queryKey: ['group-folders', groupId] });
+    // Invalider les shares du groupe
+    queryClient.invalidateQueries({ queryKey: ['shares', groupId] });
+    // Invalider les shares du dossier
+    queryClient.invalidateQueries({ queryKey: ['shares', folder.id] });
+  };
+
+  // Le dossier appartient à l'utilisateur actuel si son user_id correspond
+  const isOwned = folder.user_id === userId;
+
+  return (
+    <FolderCard
+      id={folder.id}
+      title={folder.name}
+      slug={folder.slug}
+      itemCount={folder.link_count || 0}
+      lastUpdate={formatLastUpdate(folder.updated_at)}
+      groupSlug={groupSlug}
+      isSystem={folder.is_system}
+      previewImages={folder.preview_images}
+      canDelete={canDelete}
+      isShared={shouldShowExitButton}
+      isOwned={isOwned}
+      sharedGroupId={exitTargetId}
+      onExitSuccess={handleExitSuccess}
+    />
+  );
+}
 
 export default function GroupPage() {
   const params = useParams();
+  const router = useRouter();
+  const { session, loading } = useAuthContext();
   const slug = params.slug as string;
 
-  // Decode the slug to get the group name
-  const groupName = decodeURIComponent(slug).replace(/-/g, ' ');
+  // ✅ Utilisation de React Query
+  const { data: group, isLoading: loadingGroup } = useGroupBySlug(session?.user?.id, slug);
+  const { data: folders = [], isLoading: loadingFolders } = useGroupFolders(session?.user?.id, group?.id);
 
-  // Format the display name (capitalize first letter of each word)
-  const displayName = groupName
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  // Récupérer les permissions du groupe actuel
+  const { data: groupShares = [], isLoading: isLoadingGroupShares } = useFolderShares(group?.id || null);
+
+  // Vérifier si l'utilisateur a la permission d'éditer dans le groupe (pour supprimer des dossiers)
+  const currentUserGroupShare = groupShares.find((share: any) =>
+    share.user?.email === session?.user?.email
+  );
+
+  // Logique de permission :
+  // - Si pas de groupe (group?.id null/undefined) : peut éditer
+  // - Si groupe existe mais les shares sont en cours de chargement : on attend
+  // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
+  // - Si groupe partagé : vérifier la permission (edit ou owner)
+  const canCreateFolder = !group?.id || (!isLoadingGroupShares && (groupShares.length === 0 || currentUserGroupShare?.permission === 'edit' || currentUserGroupShare?.permission === 'owner'));
+
+  // Vérifier si le groupe est partagé (l'utilisateur n'est pas le propriétaire)
+  const isGroupShared = !isLoadingGroupShares && groupShares.length > 0 && currentUserGroupShare?.permission !== 'owner';
+
+  const loadingData = loadingGroup || loadingFolders;
+
+  useEffect(() => {
+    if (!loading && !session) {
+      router.push("/login");
+    }
+  }, [session, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-white">
+        <Header currentGroupId={group?.id} isInGroup={true} isLoading={true} />
+        <main className="w-full px-[64px] py-[40px]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <Header />
+      <Header currentGroupId={group?.id} isInGroup={true} isLoading={loadingData} />
 
       <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb groupName={displayName} />
+        <Breadcrumb groupName={group?.name} isLoading={loadingGroup} />
 
         {/* Section Dossiers */}
-        <section className="flex flex-col items-start gap-[21px] w-full">
-          {/* Titre */}
-          <h1
-            className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
-            style={{ fontFamily: 'Area Inktrap, sans-serif' }}
-          >
-            Dossiers (2)
-          </h1>
-
-          {/* Contenu des cartes */}
-          <div className="flex flex-row flex-wrap gap-8 w-full">
-            <FolderCard
-              title="Fonderies"
-              itemCount={6}
-              lastUpdate="Mise à jour il y a 1min"
-              groupSlug={slug}
-            />
-            <FolderCard
-              title="Icons"
-              itemCount={6}
-              lastUpdate="Mise à jour il y a 1min"
-              groupSlug={slug}
-            />
+        {!group && !loadingGroup ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500">Groupe introuvable</p>
           </div>
-        </section>
+        ) : loadingFolders ? null : folders.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
+            {/* Titre */}
+            <h1
+              className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+            >
+              Dossiers ({folders.length})
+            </h1>
+
+            {/* Contenu des cartes */}
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {folders.map((folder) => (
+                <GroupFolderCard
+                  key={folder.id}
+                  folder={folder}
+                  groupSlug={slug}
+                  currentUserEmail={session?.user?.email}
+                  isGroupShared={isGroupShared}
+                  groupId={group?.id}
+                  userId={session?.user?.id}
+                />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500">Aucun dossier dans ce groupe</p>
+          </div>
+        )}
       </main>
     </div>
   );

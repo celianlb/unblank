@@ -1,44 +1,69 @@
-'use client';
+"use client";
 
-import { Copy, ExternalLink, Pencil, Trash } from 'lucide-react';
-import { useState } from 'react';
-import DeleteConfirmModal from './DeleteConfirmModal';
-import EditLinkModal from './EditLinkModal';
+import { Copy, ExternalLink, Pencil, Trash, Check } from "lucide-react";
+import { useState } from "react";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import EditLinkModal from "./EditLinkModal";
+import Tooltip from "./Tooltip";
 
 interface DetailedLinkCardProps {
+  linkId: string;
   siteName: string;
   siteUrl: string;
   description: string;
   faviconUrl?: string;
   link: string;
   tags?: string[];
+  isSelectionMode?: boolean;
+  onCheckChange?: (linkId: string, checked: boolean) => void;
+  onDelete?: (linkId: string) => void;
+  canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 export default function DetailedLinkCard({
+  linkId,
   siteName,
   siteUrl,
   description,
   faviconUrl,
   link,
-  tags = []
+  tags = [],
+  isSelectionMode = false,
+  onCheckChange,
+  onDelete,
+  canDelete = true,
+  canEdit = true,
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleDelete = () => {
-    // TODO: Logique de suppression
-    console.log('Suppression confirmée');
+    onDelete?.(linkId);
     setIsDeleteModalOpen(false);
   };
+
+  const handleCheckChange = () => {
+    const newValue = !isChecked;
+    setIsChecked(newValue);
+    onCheckChange?.(linkId, newValue);
+  };
+
+  // Show checkbox if in selection mode or checked
+  const showCheckbox = isSelectionMode || isChecked;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleOpenLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(link, '_blank');
+    window.open(link, "_blank");
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -46,25 +71,72 @@ export default function DetailedLinkCard({
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = (newTitle: string, newUrl: string, newDescription: string, newTags: string[]) => {
+  const handleSaveEdit = (
+    newTitle: string,
+    newUrl: string,
+    newDescription: string,
+    newTags: string[]
+  ) => {
     // TODO: Logique de sauvegarde
-    console.log('Saved:', { newTitle, newUrl, newDescription, newTags });
+    console.log("Saved:", { newTitle, newUrl, newDescription, newTags });
   };
 
   // Truncate link for display
-  const displayLink = link.length > 20 ? link.substring(0, 20) + '...' : link;
+  const displayLink = link.length > 20 ? link.substring(0, 20) + "..." : link;
 
   return (
     <>
-      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border">
+      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative">
+        {/* Checkbox - shown when in selection mode */}
+        {showCheckbox && (
+          <div className="absolute left-3 top-3 z-10">
+            <div
+              onClick={handleCheckChange}
+              className={`relative w-7 h-7 ${
+                isChecked ? "bg-[#FEF8EE]" : "bg-[#FEF8EE] hover:bg-[#FFE3E8]"
+              } border-[3px] border-[#0D0D0D] rounded-lg flex items-center justify-center cursor-pointer transition-colors`}
+            >
+              {isChecked && (
+                <svg
+                  className="absolute w-[28px] h-[22px] left-[2px] top-px z-0"
+                  viewBox="0 0 25 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 10L9 17L23 3"
+                    stroke="#FEF8EE"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M2 10L9 17L23 3"
+                    stroke="#0D0D0D"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header with favicon and site info - Frame 130 */}
         <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
           {/* Favicon */}
           <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center bg-white shrink-0 overflow-hidden">
             {faviconUrl ? (
-              <img src={faviconUrl} alt={siteName} className="w-full h-full object-cover" />
+              <img
+                src={faviconUrl}
+                alt={siteName}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <span className="text-xs font-normal text-black font-[Heebo]">Favicon</span>
+              <span className="text-xs font-normal text-black font-[Heebo]">
+                Favicon
+              </span>
             )}
           </div>
 
@@ -72,7 +144,7 @@ export default function DetailedLinkCard({
           <div className="flex flex-col items-start gap-[10px]">
             <h3
               className="text-[28px] leading-[30px] font-extrabold text-[#0D0D0D]"
-              style={{ fontFamily: 'Area Inktrap, sans-serif' }}
+              style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               {siteName}
             </h3>
@@ -99,32 +171,67 @@ export default function DetailedLinkCard({
             <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {displayLink}
             </span>
-            <button onClick={handleCopy} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
-              <Copy className="w-5 h-5 text-[#0D0D0D]" strokeWidth={2} />
+            <button
+              onClick={handleCopy}
+              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
+            >
+              {isCopied ? (
+                <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+              ) : (
+                <Copy
+                  className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                  strokeWidth={2}
+                />
+              )}
             </button>
-            <button onClick={handleOpenLink} className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer">
+            <button
+              onClick={handleOpenLink}
+              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
+            >
               <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
             </button>
           </div>
 
           {/* Edit button */}
-          <button
-            onClick={handleEdit}
-            className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer"
+          <Tooltip
+            content="Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"
+            disabled={canEdit}
           >
-            <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-          </button>
+            <div className="relative inline-block">
+              <button
+                onClick={canEdit ? handleEdit : undefined}
+                disabled={!canEdit}
+                className={`w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 transition-all ${
+                  !canEdit
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-[#1a1a1a]"
+                }`}
+              >
+                <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+              </button>
+              {!canEdit && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                  <span className="text-xs font-black text-black">!</span>
+                </div>
+              )}
+            </div>
+          </Tooltip>
 
           {/* Delete button - Frame 73 */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteModalOpen(true);
-            }}
-            className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
-          >
-            <Trash className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors" strokeWidth={2} />
-          </button>
+          {canDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteModalOpen(true);
+              }}
+              className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
+            >
+              <Trash
+                className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
+                strokeWidth={2}
+              />
+            </button>
+          )}
         </div>
 
         {/* Tags - Frame 145 */}

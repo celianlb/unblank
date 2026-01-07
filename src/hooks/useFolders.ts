@@ -1,0 +1,268 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Folder } from '@/domain/folders/models';
+import FolderFactory from '@/lib/folders/folderFactory';
+import { supabase } from '@/infra/db/supabase';
+
+// ✅ CLEAN ARCHITECTURE: Utilisation du singleton via la factory
+const folderService = FolderFactory.getFolderService();
+
+/**
+ * Hook pour récupérer tous les dossiers d'un utilisateur
+ */
+export function useFolders(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['folders', userId],
+    queryFn: () => folderService.getUserFolders(userId!),
+    enabled: !!userId,
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
+  });
+}
+
+/**
+ * Hook pour récupérer tous les groupes d'un utilisateur
+ */
+export function useGroups(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['groups', userId],
+    queryFn: () => folderService.getUserGroups(userId!),
+    enabled: !!userId,
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
+  });
+}
+
+/**
+ * Hook pour récupérer un dossier par son slug
+ */
+export function useFolderBySlug(userId: string | undefined, slug: string | undefined) {
+  return useQuery({
+    queryKey: ['folder', userId, slug],
+    queryFn: () => folderService.getFolderBySlug(userId!, slug!),
+    enabled: !!userId && !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook pour récupérer un groupe par son slug
+ */
+export function useGroupBySlug(userId: string | undefined, slug: string | undefined) {
+  return useQuery({
+    queryKey: ['group', userId, slug],
+    queryFn: () => folderService.getGroupBySlug(userId!, slug!),
+    enabled: !!userId && !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook pour récupérer les sous-dossiers d'un groupe
+ */
+export function useGroupFolders(userId: string | undefined, groupId: string | undefined) {
+  return useQuery({
+    queryKey: ['group-folders', groupId],
+    queryFn: () => folderService.getGroupFolders(userId!, groupId!),
+    enabled: !!userId && !!groupId,
+    staleTime: 0, // Pas de cache, toujours frais
+    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
+  });
+}
+
+/**
+ * Hook pour créer un dossier
+ * Invalide automatiquement le cache après création
+ */
+export function useCreateFolder(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { name: string; parentFolderId?: string | null; isGroup?: boolean }) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          name: data.name,
+          parentFolderId: data.parentFolderId,
+          isGroup: data.isGroup,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create folder');
+      }
+
+      const result = await response.json();
+      return result.folder;
+    },
+
+    onSuccess: (newFolder, variables) => {
+      // Invalider les listes concernées
+      queryClient.invalidateQueries({ queryKey: ['folders', userId] });
+      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
+
+      // Si c'est un sous-dossier, invalider le groupe parent
+      if (variables.parentFolderId) {
+        queryClient.invalidateQueries({
+          queryKey: ['group-folders', variables.parentFolderId]
+        });
+      }
+      
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+    },
+  });
+}
+
+/**
+ * Hook pour supprimer des dossiers
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
+ */
+export function useDeleteFolders(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (folderIds: string[]) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch('/api/folders', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ folderIds }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete folders');
+      }
+
+      return response.json();
+    },
+
+    onSuccess: () => {
+      // Invalider TOUTES les queries de dossiers (car les liens sont déplacés vers Récents)
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['folder'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+    },
+  });
+}
+
+/**
+ * Hook pour renommer un dossier
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
+ */
+export function useRenameFolder(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ folderId, newName }: { folderId: string; newName: string }) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/folders/${folderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ newName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to rename folder');
+      }
+
+      const result = await response.json();
+      return result.folder;
+    },
+
+    onSuccess: () => {
+      // Invalider toutes les queries de dossiers et groupes
+      queryClient.invalidateQueries({ queryKey: ['folders', userId] });
+      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
+      queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['group'] });
+      queryClient.invalidateQueries({ queryKey: ['group-folders'] });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+    },
+  });
+}
+
+/**
+ * Hook pour déplacer un dossier vers un groupe
+ * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
+ */
+export function useMoveFolderToGroup(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ folderId, groupId }: { folderId: string; groupId: string }) => {
+      // Récupérer le token d'accès depuis Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/folders/${folderId}/move`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ groupId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to move folder');
+      }
+
+      return response.json();
+    },
+
+    onSuccess: (_, variables) => {
+      // Invalider les listes de dossiers et le groupe concerné
+      queryClient.invalidateQueries({ queryKey: ['folders', userId] });
+      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
+      queryClient.invalidateQueries({
+        queryKey: ['group-folders', variables.groupId]
+      });
+      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+    },
+  });
+}

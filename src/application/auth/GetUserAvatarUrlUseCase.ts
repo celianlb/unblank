@@ -1,51 +1,19 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { avatarCacheService } from './AvatarCacheService';
+import { AvatarUrlService } from './AvatarUrlService';
 
 /**
- * Use Case: Récupérer l'URL signée d'un avatar
- * Couche Application : orchestre le cache et l'infrastructure
+ * Use Case: Récupérer l'URL d'un avatar
+ * Couche Application : délègue la génération d'URL à AvatarUrlService
  */
 export class GetUserAvatarUrlUseCase {
-  constructor(private readonly supabase: SupabaseClient) {}
+  constructor(private readonly avatarUrlService: AvatarUrlService) {}
 
   /**
-   * Récupère l'URL signée d'un avatar, en utilisant le cache si disponible
+   * Récupère l'URL d'un avatar (publique ou externe)
+   * Plus de cache sessionStorage, logique déléguée à AvatarUrlService
    * @param avatarPath - Le chemin de l'avatar stocké dans public.users.avatar_url
-   * @returns L'URL signée ou undefined en cas d'erreur
+   * @returns L'URL publique ou undefined
    */
-  async execute(avatarPath: string): Promise<string | undefined> {
-    try {
-      // Si c'est déjà une URL complète (http/https), la retourner telle quelle
-      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-        return avatarPath;
-      }
-
-      // Vérifier le cache d'abord
-      const cachedUrl = avatarCacheService.get(avatarPath);
-      if (cachedUrl) {
-        console.log('[CACHE HIT] Avatar URL from cache:', avatarPath);
-        return cachedUrl;
-      }
-
-      console.log('[CACHE MISS] Generating new signed URL for:', avatarPath);
-      // Générer une nouvelle signed URL depuis Storage
-      const expiresIn = 3600; // 1 heure
-      const { data, error } = await this.supabase.storage
-        .from('avatars')
-        .createSignedUrl(avatarPath, expiresIn);
-
-      if (error) {
-        console.error('Error creating signed URL for avatar:', error);
-        return undefined;
-      }
-
-      // Mettre en cache
-      avatarCacheService.set(avatarPath, data.signedUrl, expiresIn);
-
-      return data.signedUrl;
-    } catch (error) {
-      console.error('Error getting avatar signed URL:', error);
-      return undefined;
-    }
+  async execute(avatarPath: string | undefined): Promise<string | undefined> {
+    return this.avatarUrlService.getAvatarUrl(avatarPath);
   }
 }
