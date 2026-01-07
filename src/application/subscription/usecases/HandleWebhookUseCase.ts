@@ -21,7 +21,13 @@ export class HandleWebhookUseCase {
       signature,
     });
 
-    console.log(`[Webhook] Processing event: ${event.type}`);
+    console.log(`[Webhook] Processing event: ${event.type}`, {
+      subscriptionId: event.subscriptionId,
+      currentPeriodEnd: event.currentPeriodEnd,
+      currentPeriodEndDate: event.currentPeriodEnd 
+        ? new Date(event.currentPeriodEnd * 1000).toISOString() 
+        : null,
+    });
 
     // 2. Router selon le type d'événement
     switch (event.type) {
@@ -69,18 +75,39 @@ export class HandleWebhookUseCase {
 
   /**
    * Checkout complété - Première souscription
+   * Note: Cet événement peut arriver avant ou après customer.subscription.created
+   * Si priceId manque (subscription not expanded), on laisse customer.subscription.created gérer
    */
   private async handleCheckoutCompleted(event: WebhookEventData): Promise<void> {
-    if (!event.customerId || !event.subscriptionId || !event.priceId) {
-      throw new Error('Missing required fields in checkout.session.completed');
+    if (!event.customerId || !event.subscriptionId) {
+      console.error('[Webhook] Missing customerId or subscriptionId in checkout.session.completed');
+      return;
+    }
+
+    // Si priceId manque, c'est que la subscription n'est pas expanded
+    // On laisse customer.subscription.created gérer la création
+    if (!event.priceId) {
+      console.log('[Webhook] No priceId in checkout.session.completed, relying on customer.subscription.created');
+      return;
     }
 
     // Déterminer le plan depuis le Price ID
     const plan = this.subscriptionService.getPlanFromPriceId(event.priceId);
     const status = this.subscriptionService.computeStatusFromStripeEvent(event.status || 'active');
-    const expiresAt = event.currentPeriodEnd
+
+    // IMPORTANT: Pour les abonnements actifs, on stocke current_period_end
+    // Cela permet de savoir jusqu'à quand l'accès reste valide si l'abonnement est annulé
+    const currentPeriodEnd = event.currentPeriodEnd
       ? this.subscriptionService.computeExpirationDate(event.currentPeriodEnd)
-      : undefined;
+      : null;
+
+    console.log(`[Webhook] Subscription data:`, {
+      customerId: event.customerId,
+      subscriptionId: event.subscriptionId,
+      priceId: event.priceId,
+      currentPeriodEnd: currentPeriodEnd?.toISOString(),
+      cancelAtPeriodEnd: event.cancelAtPeriodEnd,
+    });
 
     // Trouver l'utilisateur par stripe_customer_id
     const { data: user, error: userError } = await this.supabase
@@ -102,7 +129,9 @@ export class HandleWebhookUseCase {
         subscription_status: status,
         stripe_subscription_id: event.subscriptionId,
         stripe_price_id: event.priceId,
-        subscription_expires_at: expiresAt?.toISOString(),
+        // Pour un abonnement actif récurrent: stocke la fin de période actuelle
+        // Pour un abonnement annulé: permet de garder l'accès jusqu'à cette date
+        subscription_expires_at: currentPeriodEnd?.toISOString() || null,
         monthly_links_limit: plan === 'pro' || plan === 'team' ? -1 : 50,
       })
       .eq('id', user.id);
@@ -114,7 +143,7 @@ export class HandleWebhookUseCase {
     // Logger l'événement
     await this.logSubscriptionEvent(user.id, event);
 
-    console.log(`[Webhook] ✅ Checkout completed for user ${user.id}, plan: ${plan}`);
+    console.log(`[Webhook] ✅ Checkout completed for user ${user.id}, plan: ${plan}, expires_at: ${currentPeriodEnd?.toISOString()}`);
   }
 
   /**
@@ -127,9 +156,9 @@ export class HandleWebhookUseCase {
 
     const plan = this.subscriptionService.getPlanFromPriceId(event.priceId);
     const status = this.subscriptionService.computeStatusFromStripeEvent(event.status || 'active');
-    const expiresAt = event.currentPeriodEnd
+    const currentPeriodEnd = event.currentPeriodEnd
       ? this.subscriptionService.computeExpirationDate(event.currentPeriodEnd)
-      : undefined;
+      : null;
 
     // Trouver l'utilisateur
     const { data: user, error: userError } = await this.supabase
@@ -143,14 +172,26 @@ export class HandleWebhookUseCase {
       return;
     }
 
+    // Si l'abonnement est annulé mais reste actif jusqu'à la fin de la période
+    // (cancel_at_period_end = true), on garde le plan actif avec la date d'expiration
+    const finalStatus = event.cancelAtPeriodEnd && status === 'active' ? 'active' : status;
+
+    console.log(`[Webhook] Subscription update:`, {
+      userId: user.id,
+      plan,
+      status: finalStatus,
+      cancelAtPeriodEnd: event.cancelAtPeriodEnd,
+      currentPeriodEnd: currentPeriodEnd?.toISOString(),
+    });
+
     // Mettre à jour
     const { error: updateError } = await this.supabase
       .from('users')
       .update({
         subscription_plan: plan,
-        subscription_status: status,
+        subscription_status: finalStatus,
         stripe_price_id: event.priceId,
-        subscription_expires_at: expiresAt?.toISOString(),
+        subscription_expires_at: currentPeriodEnd?.toISOString() || null,
       })
       .eq('id', user.id);
 
@@ -160,27 +201,58 @@ export class HandleWebhookUseCase {
 
     await this.logSubscriptionEvent(user.id, event);
 
-    console.log(`[Webhook] Subscription updated for user ${user.id}`);
+    console.log(`[Webhook] ✅ Subscription updated for user ${user.id}, expires_at: ${currentPeriodEnd?.toISOString()}`);
   }
 
   /**
    * Abonnement supprimé/annulé
+   * Cet événement arrive quand l'abonnement expire définitivement
    */
   private async handleSubscriptionDeleted(event: WebhookEventData): Promise<void> {
+    console.log(`[Webhook] Processing subscription deletion:`, {
+      subscriptionId: event.subscriptionId,
+      customerId: event.customerId,
+      eventId: event.eventId,
+    });
+
     if (!event.subscriptionId) {
+      console.error('[Webhook] Missing subscription ID in customer.subscription.deleted');
       throw new Error('Missing subscription ID in customer.subscription.deleted');
     }
 
-    const { data: user, error: userError } = await this.supabase
+    // Chercher par stripe_subscription_id d'abord
+    let user = await this.supabase
       .from('users')
-      .select('id')
+      .select('id, username, subscription_plan')
       .eq('stripe_subscription_id', event.subscriptionId)
       .single();
 
-    if (userError || !user) {
-      console.error('[Webhook] User not found for subscription:', event.subscriptionId);
+    // Fallback: chercher par stripe_customer_id si subscription_id ne trouve rien
+    if (user.error && event.customerId) {
+      console.log('[Webhook] User not found by subscription_id, trying by customer_id:', event.customerId);
+      user = await this.supabase
+        .from('users')
+        .select('id, username, subscription_plan')
+        .eq('stripe_customer_id', event.customerId)
+        .single();
+    }
+
+    if (user.error || !user.data) {
+      console.error('[Webhook] User not found for subscription:', event.subscriptionId, 'Error:', user.error);
+      // Logger l'événement même si l'utilisateur n'est pas trouvé (pour audit)
+      await this.supabase.from('subscription_events').insert({
+        user_id: null,
+        event_type: event.type,
+        stripe_event_id: event.eventId,
+        amount: event.amount,
+        currency: event.currency,
+        status: event.status,
+        metadata: event as any,
+      });
       return;
     }
+
+    console.log(`[Webhook] Found user ${user.data.id} (${user.data.username}), current plan: ${user.data.subscription_plan}`);
 
     // Révoquer l'abonnement → retour au plan gratuit
     const { error: updateError } = await this.supabase
@@ -189,34 +261,74 @@ export class HandleWebhookUseCase {
         subscription_plan: 'free',
         subscription_status: 'canceled',
         monthly_links_limit: 50,
+        subscription_expires_at: null, // Nettoyer la date d'expiration
       })
-      .eq('id', user.id);
+      .eq('id', user.data.id);
 
     if (updateError) {
+      console.error('[Webhook] Failed to update user:', updateError);
       throw new Error(`Failed to cancel subscription: ${updateError.message}`);
     }
 
-    await this.logSubscriptionEvent(user.id, event);
+    // Logger l'événement
+    await this.logSubscriptionEvent(user.data.id, event);
 
-    console.log(`[Webhook] Subscription canceled for user ${user.id}`);
+    console.log(`[Webhook] ✅ Subscription canceled for user ${user.data.id} (${user.data.username})`);
   }
 
   /**
-   * Facture payée
+   * Facture payée - Renouvellement mensuel
    */
   private async handleInvoicePaid(event: WebhookEventData): Promise<void> {
-    if (!event.subscriptionId) return;
+    if (!event.subscriptionId) {
+      console.log('[Webhook] No subscription ID in invoice.paid event');
+      return;
+    }
 
-    const { data: user } = await this.supabase
+    // Chercher par stripe_subscription_id d'abord
+    let user = await this.supabase
       .from('users')
-      .select('id')
+      .select('id, subscription_plan, subscription_status')
       .eq('stripe_subscription_id', event.subscriptionId)
       .single();
 
-    if (user) {
-      await this.logSubscriptionEvent(user.id, event);
-      console.log(`[Webhook] Invoice paid for user ${user.id}`);
+    // Fallback: chercher par stripe_customer_id si subscription_id ne trouve rien
+    if (user.error && event.customerId) {
+      console.log('[Webhook] User not found by subscription_id, trying by customer_id:', event.customerId);
+      user = await this.supabase
+        .from('users')
+        .select('id, subscription_plan, subscription_status')
+        .eq('stripe_customer_id', event.customerId)
+        .single();
     }
+
+    if (user.error || !user.data) {
+      console.error('[Webhook] User not found for subscription:', event.subscriptionId, 'or customer:', event.customerId);
+      return;
+    }
+
+    // Mettre à jour la date d'expiration si on a currentPeriodEnd
+    if (event.currentPeriodEnd) {
+      const expirationDate = this.subscriptionService.computeExpirationDate(event.currentPeriodEnd);
+      
+      const { error: updateError } = await this.supabase
+        .from('users')
+        .update({
+          subscription_expires_at: expirationDate.toISOString(),
+          subscription_status: 'active', // Remettre à actif en cas de past_due
+        })
+        .eq('id', user.data.id);
+
+      if (updateError) {
+        console.error('[Webhook] Failed to update expiration date:', updateError);
+      } else {
+        console.log(`[Webhook] ✅ Invoice paid for user ${user.data.id}, expires_at updated to: ${expirationDate.toISOString()}`);
+      }
+    } else {
+      console.log(`[Webhook] Invoice paid for user ${user.data.id} (no currentPeriodEnd to update)`);
+    }
+
+    await this.logSubscriptionEvent(user.data.id, event);
   }
 
   /**
@@ -225,41 +337,88 @@ export class HandleWebhookUseCase {
   private async handleInvoicePaymentFailed(event: WebhookEventData): Promise<void> {
     if (!event.subscriptionId) return;
 
-    const { data: user } = await this.supabase
+    // Chercher par stripe_subscription_id d'abord
+    let user = await this.supabase
       .from('users')
       .select('id')
       .eq('stripe_subscription_id', event.subscriptionId)
       .single();
 
-    if (user) {
+    // Fallback: chercher par stripe_customer_id
+    if (user.error && event.customerId) {
+      console.log('[Webhook] User not found by subscription_id, trying by customer_id:', event.customerId);
+      user = await this.supabase
+        .from('users')
+        .select('id')
+        .eq('stripe_customer_id', event.customerId)
+        .single();
+    }
+
+    if (user.data) {
       // Marquer comme past_due
       await this.supabase
         .from('users')
         .update({ subscription_status: 'past_due' })
-        .eq('id', user.id);
+        .eq('id', user.data.id);
 
-      await this.logSubscriptionEvent(user.id, event);
+      await this.logSubscriptionEvent(user.data.id, event);
 
-      console.log(`[Webhook] Payment failed for user ${user.id}`);
+      console.log(`[Webhook] Payment failed for user ${user.data.id}`);
+    } else {
+      console.error('[Webhook] User not found for failed payment:', event.subscriptionId);
     }
   }
 
   /**
    * Abonnement créé (premier événement lors d'une nouvelle souscription)
+   * Cet événement arrive AVANT ou APRÈS checkout.session.completed selon les cas
    */
   private async handleSubscriptionCreated(event: WebhookEventData): Promise<void> {
-    if (!event.subscriptionId || !event.customerId) return;
+    if (!event.subscriptionId || !event.customerId || !event.priceId) {
+      console.log('[Webhook] Missing required fields in customer.subscription.created');
+      return;
+    }
 
-    const { data: user } = await this.supabase
+    const { data: user, error: userError } = await this.supabase
       .from('users')
-      .select('id')
+      .select('id, stripe_subscription_id, subscription_plan')
       .eq('stripe_customer_id', event.customerId)
       .single();
 
-    if (user) {
-      await this.logSubscriptionEvent(user.id, event);
-      console.log(`[Webhook] Subscription created for user ${user.id}`);
+    if (userError || !user) {
+      console.error('[Webhook] User not found for customer:', event.customerId);
+      return;
     }
+
+    // Déterminer le plan
+    const plan = this.subscriptionService.getPlanFromPriceId(event.priceId);
+    const status = this.subscriptionService.computeStatusFromStripeEvent(event.status || 'active');
+    const currentPeriodEnd = event.currentPeriodEnd
+      ? this.subscriptionService.computeExpirationDate(event.currentPeriodEnd)
+      : null;
+
+    console.log(`[Webhook] Creating subscription for user ${user.id}, plan: ${plan}, expires_at: ${currentPeriodEnd?.toISOString()}`);
+
+    // Mettre à jour l'abonnement (même si un ancien existe, on écrase)
+    const { error: updateError } = await this.supabase
+      .from('users')
+      .update({
+        subscription_plan: plan,
+        subscription_status: status,
+        stripe_subscription_id: event.subscriptionId,
+        stripe_price_id: event.priceId,
+        subscription_expires_at: currentPeriodEnd?.toISOString() || null,
+        monthly_links_limit: plan === 'pro' || plan === 'team' ? -1 : 50,
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('[Webhook] Failed to update subscription:', updateError);
+    } else {
+      console.log(`[Webhook] ✅ Subscription created for user ${user.id}`);
+    }
+
+    await this.logSubscriptionEvent(user.id, event);
   }
 
   /**

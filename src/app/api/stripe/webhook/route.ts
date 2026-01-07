@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
+      console.error('[Webhook] Missing stripe-signature header');
       return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
     }
 
@@ -34,7 +35,13 @@ export async function POST(request: NextRequest) {
     const handleWebhookUseCase = SubscriptionFactory.createHandleWebhookUseCase(supabase);
 
     // 4. Traiter le webhook
-    await handleWebhookUseCase.execute(body, signature);
+    try {
+      await handleWebhookUseCase.execute(body, signature);
+      console.log('[Webhook] ✅ Webhook processed successfully');
+    } catch (webhookError) {
+      console.error('[Webhook] ❌ Error processing webhook:', webhookError);
+      throw webhookError;
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {
