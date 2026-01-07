@@ -18,7 +18,7 @@ export default function PricingPage() {
     "monthly"
   );
 
-  const currentPlanType = subscription?.planType || "free";
+  const currentPlanType = subscription?.plan || "free";
 
   const plans = [
     {

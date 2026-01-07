@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Page de confirmation après un paiement Stripe réussi
@@ -11,23 +12,45 @@ import { useAuthContext } from "@/contexts/AuthContext";
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session } = useAuthContext();
+  const { session, refreshSession } = useAuthContext();
+  const queryClient = useQueryClient();
   const [countdown, setCountdown] = useState(5);
 
   const sessionId = searchParams.get("session_id");
 
+  // Redirection immédiate si pas de session_id
   useEffect(() => {
     if (!sessionId) {
       router.push("/app");
-      return;
     }
+  }, [sessionId, router]);
 
-    // Compte à rebours pour la redirection
+  // Invalider le cache de subscription au montage
+  useEffect(() => {
+    if (sessionId) {
+      // Petit délai pour laisser le temps au webhook de terminer
+      const timer = setTimeout(async () => {
+        // Invalider le cache pour forcer un refetch
+        await queryClient.invalidateQueries({ queryKey: ['subscription'] });
+        
+        // Rafraîchir la session pour obtenir les nouvelles données
+        await refreshSession();
+        
+        // Forcer un refetch immédiat
+        await queryClient.refetchQueries({ queryKey: ['subscription'] });
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [sessionId, queryClient, refreshSession]);
+
+  // Compte à rebours
+  useEffect(() => {
+    if (!sessionId) return;
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
-          router.push("/app");
           return 0;
         }
         return prev - 1;
@@ -35,7 +58,14 @@ export default function SubscriptionSuccessPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [sessionId, router]);
+  }, [sessionId]);
+
+  // Redirection quand countdown atteint 0
+  useEffect(() => {
+    if (countdown === 0) {
+      router.push("/app");
+    }
+  }, [countdown, router]);
 
   if (!sessionId) {
     return null;

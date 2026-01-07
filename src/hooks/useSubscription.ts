@@ -56,6 +56,8 @@ export function useSubscription(): UseSubscriptionReturn {
       return null;
     },
     enabled: !!session?.user,
+    staleTime: 0, // Toujours considérer les données comme périmées
+    gcTime: 0, // Ne pas garder en cache
     retry: (failureCount, error) => {
       // Si c'est une erreur 401, on refresh la session et on réessaye
       if (error instanceof Error && error.message.includes('401')) {
