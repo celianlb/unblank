@@ -43,6 +43,7 @@ export default function ShareLinkModal({
   );
   const [inviteSent, setInviteSent] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const createPublicShare = useCreatePublicShare();
   const inviteByEmailMutation = useInviteByEmail();
@@ -57,6 +58,7 @@ export default function ShareLinkModal({
   };
 
   const handleGenerate = async () => {
+    setGenerateError(null);
     try {
       const result = await createPublicShare.mutateAsync({
         folderId,
@@ -65,7 +67,9 @@ export default function ShareLinkModal({
       setGeneratedShareUrl(result.shareUrl);
     } catch (error) {
       console.error("Error generating share link:", error);
-      alert("Erreur lors de la génération du lien de partage");
+      const message = error instanceof Error ? error.message : "Erreur lors de la génération du lien de partage";
+      setGenerateError(message);
+      setTimeout(() => setGenerateError(null), 4000);
     }
   };
 
@@ -277,10 +281,20 @@ export default function ShareLinkModal({
                 {/* Generate Button */}
                 <button
                   onClick={handleGenerate}
-                  className="w-full h-[46px] bg-[#2D2D2D] hover:bg-[#4D4D4D] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-all cursor-pointer active:translate-y-[2px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center"
+                  className="w-full h-[46px] bg-[#2D2D2D] hover:bg-[#4D4D4D] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-all cursor-pointer active:translate-y-[2px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
                 >
                   Générer un lien
                 </button>
+
+                {/* Error Message */}
+                {generateError && (
+                  <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <p className="text-sm font-medium">
+                      {generateError}
+                    </p>
+                  </div>
+                )}
 
                 {/* Share Link Display (shown if URL exists) */}
                 {generatedShareUrl && (
@@ -407,12 +421,10 @@ export default function ShareLinkModal({
                         inviteByEmailMutation.isPending ||
                         inviteSent
                       }
-                      className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[15px] font-bold font-[Heebo] transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                      className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                         inviteSent
                           ? "bg-green-600 hover:bg-green-600 cursor-pointer"
-                          : validationError || inviteError
-                          ? "bg-red-600 cursor-not-allowed"
-                          : "bg-[#2D2D2D] hover:bg-[#4D4D4D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed cursor-pointer active:translate-y-[2px] active:shadow-none"
+                          : "bg-[#2D2D2D] hover:bg-[#4D4D4D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed cursor-pointer active:enabled:translate-y-[2px] active:enabled:shadow-none"
                       }`}
                     >
                       {inviteSent ? (
@@ -420,16 +432,22 @@ export default function ShareLinkModal({
                           <Check className="w-5 h-5" strokeWidth={3} />
                           Invitation envoyée
                         </>
-                      ) : validationError || inviteError ? (
-                        <span className="whitespace-pre-line text-center">
-                          {validationError || inviteError}
-                        </span>
                       ) : inviteByEmailMutation.isPending ? (
                         "Envoi en cours..."
                       ) : (
                         "Envoyer l'invitation"
                       )}
                     </button>
+
+                    {/* Error Message */}
+                    {(validationError || inviteError) && (
+                      <div className="flex items-center gap-2 text-red-600">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <p className="text-sm font-medium">
+                          {validationError || inviteError}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

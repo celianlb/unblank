@@ -79,7 +79,8 @@ export function useCreatePublicShare() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create public share');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create public share');
       }
 
       return response.json();
