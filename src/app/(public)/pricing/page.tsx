@@ -11,6 +11,7 @@ import { useUpdateSubscription } from "@/hooks/useUpdateSubscription";
 import { usePricing } from "@/hooks/usePricing";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
+import SubscriptionChangeModal from "@/components/SubscriptionChangeModal";
 
 export default function PricingPage() {
   const { session } = useAuthContext();
@@ -22,6 +23,12 @@ export default function PricingPage() {
     "monthly"
   );
   const [managingSubscription, setManagingSubscription] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingPlanChange, setPendingPlanChange] = useState<{
+    planType: 'pro' | 'team';
+    planName: string;
+    price: string;
+  } | null>(null);
 
   const currentPlanType = subscription?.plan || "free";
 
@@ -61,6 +68,36 @@ export default function PricingPage() {
       handleManageSubscription();
     }
   }, [hasActiveSubscription, managingSubscription, handleManageSubscription]);
+
+  // Gérer la confirmation du changement de plan
+  const handleConfirmPlanChange = async () => {
+    if (!pendingPlanChange) return;
+
+    setShowConfirmModal(false);
+    await updateSubscription(pendingPlanChange.planType, billingPeriod);
+    setPendingPlanChange(null);
+  };
+
+  // Gérer le clic sur un bouton de plan
+  const handlePlanClick = (plan: typeof plans[number]) => {
+    // Si c'est le plan actuel (et pas gratuit), ouvrir le portail de gestion
+    if (!loading && plan.planType === currentPlanType && plan.planType !== "free") {
+      handleManageSubscription();
+    } else if (plan.planType !== "free") {
+      // Si on a déjà un abonnement actif, afficher la modale de confirmation
+      if (subscription && subscription.plan !== "free" && subscription.status === "active") {
+        setPendingPlanChange({
+          planType: plan.planType,
+          planName: plan.name,
+          price: billingPeriod === "monthly" ? plan.priceMonthly : plan.priceAnnual,
+        });
+        setShowConfirmModal(true);
+      } else {
+        // Sinon créer un nouveau checkout
+        createCheckoutSession(plan.planType, billingPeriod);
+      }
+    }
+  };
 
   const plans = [
     {
@@ -246,22 +283,9 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  onClick={async () => {
-                    // Si c'est le plan actuel (et pas gratuit), ouvrir le portail de gestion
-                    if (!loading && plan.planType === currentPlanType && plan.planType !== "free") {
-                      handleManageSubscription();
-                    } else if (plan.planType !== "free") {
-                      // Si on a déjà un abonnement actif, mettre à jour au lieu de créer
-                      if (subscription && subscription.plan !== "free" && subscription.status === "active") {
-                        await updateSubscription(plan.planType, billingPeriod);
-                      } else {
-                        // Sinon créer un nouveau checkout
-                        createCheckoutSession(plan.planType, billingPeriod);
-                      }
-                    }
-                  }}
+                  onClick={() => handlePlanClick(plan)}
                   disabled={
-                    checkoutLoading || 
+                    checkoutLoading ||
                     updateLoading ||
                     managingSubscription ||
                     (!loading && plan.planType === currentPlanType && plan.planType === "free")
@@ -294,6 +318,33 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
+
+      {/* Modale de confirmation */}
+      {pendingPlanChange && (
+        <SubscriptionChangeModal
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setPendingPlanChange(null);
+          }}
+          onConfirm={handleConfirmPlanChange}
+          currentPlan={currentPlanType}
+          newPlan={pendingPlanChange.planType}
+          currentPrice={
+            currentPlanType === 'pro'
+              ? billingPeriod === 'monthly'
+                ? pricing.pro.monthly?.formatted || '6,99€'
+                : pricing.pro.annual?.formatted || '69,99€'
+              : currentPlanType === 'team'
+              ? billingPeriod === 'monthly'
+                ? pricing.team.monthly?.formatted || '18,99€'
+                : pricing.team.annual?.formatted || '189,99€'
+              : '0€'
+          }
+          newPrice={pendingPlanChange.price}
+          billingPeriod={billingPeriod}
+        />
+      )}
     </>
   );
 }
