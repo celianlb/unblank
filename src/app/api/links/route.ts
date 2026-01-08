@@ -185,11 +185,9 @@ export async function DELETE(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions pour chaque lien
-    const { data: links } = await supabase
-      .from('links')
-      .select('id, user_id, folder_id')
-      .in('id', linkIds);
+    // ✅ CLEAN ARCHITECTURE: Récupérer les informations de propriété via LinkRepository
+    const linkService = LinkFactory.createLinkService(supabase);
+    const links = await linkService.getLinksOwnership(linkIds);
 
     if (!links || links.length !== linkIds.length) {
       const response = NextResponse.json(
@@ -203,11 +201,11 @@ export async function DELETE(request: NextRequest) {
     const shareService = ShareFactory.createShareService(supabase);
 
     for (const link of links) {
-      const isOwner = link.user_id === user.id;
+      const isOwner = link.userId === user.id;
 
       // Si pas propriétaire, vérifier les permissions
       if (!isOwner) {
-        if (!link.folder_id) {
+        if (!link.folderId) {
           // Lien sans dossier et pas le propriétaire : interdit
           const response = NextResponse.json(
             { error: `You do not have permission to delete link ${link.id}` },
@@ -216,7 +214,7 @@ export async function DELETE(request: NextRequest) {
           return addCorsHeaders(response, origin);
         }
 
-        const hasEditPermission = await shareService.hasEditPermission(link.folder_id, user.id, user.email!);
+        const hasEditPermission = await shareService.hasEditPermission(link.folderId, user.id, user.email!);
 
         if (!hasEditPermission) {
           const response = NextResponse.json(
@@ -227,9 +225,6 @@ export async function DELETE(request: NextRequest) {
         }
       }
     }
-
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
-    const linkService = LinkFactory.createLinkService(supabase);
 
     // Delete links using the domain service
     const success = await linkService.deleteLinks(linkIds);

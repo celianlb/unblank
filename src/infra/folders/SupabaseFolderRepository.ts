@@ -300,4 +300,46 @@ export class SupabaseFolderRepository implements FolderRepository {
       return false;
     }
   }
+
+  async getFolderOwnership(folderId: string): Promise<{ userId: string } | null> {
+    try {
+      const { data: folder, error } = await this.supabase
+        .from('folders')
+        .select('user_id')
+        .eq('id', folderId)
+        .single();
+
+      if (error || !folder) {
+        return null;
+      }
+
+      return {
+        userId: folder.user_id,
+      };
+    } catch (error) {
+      console.error('Error getting folder ownership:', error);
+      return null;
+    }
+  }
+
+  async getFoldersOwnership(folderIds: string[]): Promise<Array<{ id: string; userId: string }>> {
+    try {
+      const { data: folders, error } = await this.supabase
+        .from('folders')
+        .select('id, user_id')
+        .in('id', folderIds);
+
+      if (error || !folders) {
+        return [];
+      }
+
+      return folders.map(folder => ({
+        id: folder.id,
+        userId: folder.user_id,
+      }));
+    } catch (error) {
+      console.error('Error getting folders ownership:', error);
+      return [];
+    }
+  }
 }

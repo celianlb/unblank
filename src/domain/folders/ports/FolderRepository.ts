@@ -49,4 +49,14 @@ export interface FolderRepository {
    * Supprime un ou plusieurs dossiers
    */
   deleteFolders(folderIds: string[]): Promise<boolean>;
+
+  /**
+   * Récupère les informations de propriété d'un dossier (pour vérification de permissions)
+   */
+  getFolderOwnership(folderId: string): Promise<{ userId: string } | null>;
+
+  /**
+   * Récupère les informations de propriété de plusieurs dossiers (pour vérification de permissions)
+   */
+  getFoldersOwnership(folderIds: string[]): Promise<Array<{ id: string; userId: string }>>;
 }

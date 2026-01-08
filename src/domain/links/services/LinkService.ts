@@ -90,6 +90,20 @@ export class LinkService {
   }
 
   /**
+   * Récupère les informations de propriété d'un lien (pour vérification de permissions)
+   */
+  async getLinkOwnership(linkId: string): Promise<{ userId: string; folderId: string | null } | null> {
+    return this.linkRepository.getLinkOwnership(linkId);
+  }
+
+  /**
+   * Récupère les informations de propriété de plusieurs liens (pour vérification de permissions)
+   */
+  async getLinksOwnership(linkIds: string[]): Promise<Array<{ id: string; userId: string; folderId: string | null }>> {
+    return this.linkRepository.getLinksOwnership(linkIds);
+  }
+
+  /**
    * Extrait les métadonnées d'une URL via l'API
    */
   static async extractMetadata(url: string): Promise<{

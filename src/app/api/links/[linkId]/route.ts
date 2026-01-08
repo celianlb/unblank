@@ -60,12 +60,9 @@ export async function DELETE(
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Récupérer le lien avec son dossier parent
-    const { data: link } = await supabase
-      .from('links')
-      .select('user_id, folder_id')
-      .eq('id', linkId)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Récupérer les informations de propriété via LinkService
+    const linkService = LinkFactory.createLinkService(supabase);
+    const link = await linkService.getLinkOwnership(linkId);
 
     if (!link) {
       const response = NextResponse.json(
@@ -76,10 +73,10 @@ export async function DELETE(
     }
 
     // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
-    const isOwner = link.user_id === user.id;
+    const isOwner = link.userId === user.id;
 
     if (!isOwner) {
-      if (!link.folder_id) {
+      if (!link.folderId) {
         // Lien sans dossier et pas le propriétaire : interdit
         const response = NextResponse.json(
           { error: 'You do not have permission to delete this link' },
@@ -89,7 +86,7 @@ export async function DELETE(
       }
 
       const shareService = ShareFactory.createShareService(supabase);
-      const hasEditPermission = await shareService.hasEditPermission(link.folder_id, user.id, user.email!);
+      const hasEditPermission = await shareService.hasEditPermission(link.folderId, user.id, user.email!);
 
       if (!hasEditPermission) {
         const response = NextResponse.json(
@@ -99,9 +96,6 @@ export async function DELETE(
         return addCorsHeaders(response, origin);
       }
     }
-
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
-    const linkService = LinkFactory.createLinkService(supabase);
 
     // Delete link using the domain service
     const success = await linkService.deleteLink(linkId);

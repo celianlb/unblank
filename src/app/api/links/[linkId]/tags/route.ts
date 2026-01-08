@@ -57,12 +57,9 @@ export async function PUT(
       );
     }
 
-    // ✅ Récupérer le lien avec son dossier parent
-    const { data: link } = await supabase
-      .from('links')
-      .select('user_id, folder_id')
-      .eq('id', linkId)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Récupérer les informations de propriété via LinkService
+    const linkService = LinkFactory.createLinkService(supabase);
+    const link = await linkService.getLinkOwnership(linkId);
 
     if (!link) {
       return NextResponse.json(
@@ -72,10 +69,10 @@ export async function PUT(
     }
 
     // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
-    const isOwner = link.user_id === user.id;
+    const isOwner = link.userId === user.id;
 
     if (!isOwner) {
-      if (!link.folder_id) {
+      if (!link.folderId) {
         // Lien sans dossier et pas le propriétaire : interdit
         return NextResponse.json(
           { error: 'You do not have permission to edit tags for this link' },
@@ -84,7 +81,7 @@ export async function PUT(
       }
 
       const shareService = ShareFactory.createShareService(supabase);
-      const hasEditPermission = await shareService.hasEditPermission(link.folder_id, user.id, user.email!);
+      const hasEditPermission = await shareService.hasEditPermission(link.folderId, user.id, user.email!);
 
       if (!hasEditPermission) {
         return NextResponse.json(
@@ -93,9 +90,6 @@ export async function PUT(
         );
       }
     }
-
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
-    const linkService = LinkFactory.createLinkService(supabase);
     const success = await linkService.updateTags(linkId, user.id, tags);
 
     if (!success) {

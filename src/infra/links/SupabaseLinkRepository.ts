@@ -306,4 +306,48 @@ export class SupabaseLinkRepository implements LinkRepository {
       return false;
     }
   }
+
+  async getLinkOwnership(linkId: string): Promise<{ userId: string; folderId: string | null } | null> {
+    try {
+      const { data: link, error } = await this.supabase
+        .from('links')
+        .select('user_id, folder_id')
+        .eq('id', linkId)
+        .single();
+
+      if (error || !link) {
+        return null;
+      }
+
+      return {
+        userId: link.user_id,
+        folderId: link.folder_id,
+      };
+    } catch (error) {
+      console.error('Error getting link ownership:', error);
+      return null;
+    }
+  }
+
+  async getLinksOwnership(linkIds: string[]): Promise<Array<{ id: string; userId: string; folderId: string | null }>> {
+    try {
+      const { data: links, error } = await this.supabase
+        .from('links')
+        .select('id, user_id, folder_id')
+        .in('id', linkIds);
+
+      if (error || !links) {
+        return [];
+      }
+
+      return links.map(link => ({
+        id: link.id,
+        userId: link.user_id,
+        folderId: link.folder_id,
+      }));
+    } catch (error) {
+      console.error('Error getting links ownership:', error);
+      return [];
+    }
+  }
 }

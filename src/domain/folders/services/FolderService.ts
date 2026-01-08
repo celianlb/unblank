@@ -111,4 +111,18 @@ export class FolderService {
     const folders = await this.folderRepository.getGroupFolders(userId, folderId);
     return folders.map(f => f.id);
   }
+
+  /**
+   * Récupère les informations de propriété d'un dossier (userId)
+   */
+  async getFolderOwnership(folderId: string): Promise<{ userId: string } | null> {
+    return this.folderRepository.getFolderOwnership(folderId);
+  }
+
+  /**
+   * Récupère les informations de propriété de plusieurs dossiers
+   */
+  async getFoldersOwnership(folderIds: string[]): Promise<Array<{ id: string; userId: string }>> {
+    return this.folderRepository.getFoldersOwnership(folderIds);
+  }
 }

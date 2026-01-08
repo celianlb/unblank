@@ -34,4 +34,14 @@ export interface LinkRepository {
    * Met à jour les tags d'un lien
    */
   updateTags(linkId: string, userId: string, tags: string[]): Promise<boolean>;
+
+  /**
+   * Récupère les informations de propriété d'un lien (pour vérification de permissions)
+   */
+  getLinkOwnership(linkId: string): Promise<{ userId: string; folderId: string | null } | null>;
+
+  /**
+   * Récupère les informations de propriété de plusieurs liens (pour vérification de permissions)
+   */
+  getLinksOwnership(linkIds: string[]): Promise<Array<{ id: string; userId: string; folderId: string | null }>>;
 }

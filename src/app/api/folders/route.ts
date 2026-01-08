@@ -231,42 +231,37 @@ export async function DELETE(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions pour chaque dossier
-    for (const folderId of folderIds) {
-      // 1. Vérifier si l'utilisateur est le propriétaire
-      const { data: folder } = await supabase
-        .from('folders')
-        .select('user_id')
-        .eq('id', folderId)
-        .single();
+    // ✅ CLEAN ARCHITECTURE: Récupérer les informations de propriété via FolderService
+    const folderService = FolderFactory.createFolderService(supabase);
+    const folders = await folderService.getFoldersOwnership(folderIds);
 
-      if (!folder) {
-        const response = NextResponse.json(
-          { error: `Folder ${folderId} not found` },
-          { status: 404 }
-        );
-        return addCorsHeaders(response, origin);
-      }
+    if (!folders || folders.length !== folderIds.length) {
+      const response = NextResponse.json(
+        { error: 'Some folders not found' },
+        { status: 404 }
+      );
+      return addCorsHeaders(response, origin);
+    }
 
-      const isOwner = folder.user_id === user.id;
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
+    const shareService = ShareFactory.createShareService(supabase);
 
-      // ✅ CLEAN ARCHITECTURE: Si pas propriétaire, vérifier les permissions via ShareService
+    for (const folder of folders) {
+      const isOwner = folder.userId === user.id;
+
+      // Si pas propriétaire, vérifier les permissions
       if (!isOwner) {
-        const shareService = ShareFactory.createShareService(supabase);
-        const hasEditPermission = await shareService.hasEditPermission(folderId, user.id, user.email!);
+        const hasEditPermission = await shareService.hasEditPermission(folder.id, user.id, user.email!);
 
         if (!hasEditPermission) {
           const response = NextResponse.json(
-            { error: `You do not have permission to delete folder ${folderId}` },
+            { error: `You do not have permission to delete folder ${folder.id}` },
             { status: 403 }
           );
           return addCorsHeaders(response, origin);
         }
       }
     }
-
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
-    const folderService = FolderFactory.createFolderService(supabase);
 
     // Delete folders using the domain service
     const success = await folderService.deleteFolders(folderIds);
