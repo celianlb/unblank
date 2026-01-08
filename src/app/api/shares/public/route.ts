@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
 import { SharePermission } from '@/domain/shares/models/Share';
 import { ShareLimitError } from '@/infra/shares/SupabaseShareRepository';
+import { GetSubscriptionStatusUseCase } from '@/application/subscription/usecases/GetSubscriptionStatusUseCase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,21 +51,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier le plan de l'utilisateur - les liens publics nécessitent Pro ou Team
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('subscription_plan')
-      .eq('id', user.id)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Utilisation du use case pour récupérer l'abonnement
+    const getSubscriptionStatus = new GetSubscriptionStatusUseCase(supabase);
+    const subscription = await getSubscriptionStatus.execute(user.id);
 
-    if (userError || !userData) {
+    if (!subscription) {
       return NextResponse.json(
         { error: 'Impossible de vérifier votre abonnement' },
         { status: 500 }
       );
     }
 
-    if (userData.subscription_plan === 'free') {
+    if (subscription.plan === 'free') {
       return NextResponse.json(
         {
           error: 'Le partage par lien nécessite le plan Pro ou Team',
@@ -75,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier la permission d'édition pour les plans Pro
-    if (permission === 'edit' && userData.subscription_plan === 'pro') {
+    if (permission === 'edit' && subscription.plan === 'pro') {
       return NextResponse.json(
         {
           error: 'Le partage avec droits d\'édition nécessite le plan Team',

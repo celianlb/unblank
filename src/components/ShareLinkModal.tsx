@@ -66,7 +66,6 @@ export default function ShareLinkModal({
       });
       setGeneratedShareUrl(result.shareUrl);
     } catch (error) {
-      console.error("Error generating share link:", error);
       const message = error instanceof Error ? error.message : "Erreur lors de la génération du lien de partage";
       setGenerateError(message);
       setTimeout(() => setGenerateError(null), 4000);
