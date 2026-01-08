@@ -16,7 +16,7 @@ export default function PricingPage() {
   const { session } = useAuthContext();
   const { subscription, loading } = useSubscription();
   const { createCheckoutSession, loading: checkoutLoading, hasActiveSubscription } = useCheckout();
-  const { updateSubscription, loading: updateLoading, success: updateSuccess } = useUpdateSubscription();
+  const { updateSubscription, loading: updateLoading } = useUpdateSubscription();
   const { pricing } = usePricing();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "monthly"

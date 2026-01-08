@@ -56,11 +56,16 @@ export function useUpdateSubscription(): UseUpdateSubscriptionReturn {
         throw new Error('Failed to update subscription');
       }
 
-      // Invalider le cache React Query pour rafraîchir les données
-      await queryClient.invalidateQueries({ queryKey: ['subscription', session.user?.id] });
-      
-      setSuccess(true);
+      // Invalider et refetch le cache React Query pour rafraîchir les données immédiatement
+      await queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      await queryClient.refetchQueries({ queryKey: ['subscription', session.user?.id] });
+
       setLoading(false);
+      setSuccess(true);
+
+      // Réinitialiser le succès après un court délai pour éviter les boucles
+      setTimeout(() => setSuccess(false), 100);
+
       return true;
     } catch (err) {
       console.error('Error updating subscription:', err);

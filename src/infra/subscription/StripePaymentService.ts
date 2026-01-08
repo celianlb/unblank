@@ -334,17 +334,26 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         proration_behavior: 'create_prorations', // Créer automatiquement les prorations
       });
 
+      // Dans la nouvelle API Stripe, current_period_end est dans items.data[0]
+      const currentPeriodEnd = (updated.items.data[0] as any).current_period_end;
+
       console.log('[StripePaymentService] Subscription updated successfully:', {
         subscriptionId: updated.id,
         status: updated.status,
-        currentPeriodEnd: updated.current_period_end,
+        currentPeriodEnd: currentPeriodEnd,
         newPriceId: updated.items.data[0].price.id,
       });
+
+      if (!currentPeriodEnd) {
+        console.error('[StripePaymentService] WARNING: current_period_end is missing from Stripe response!');
+        console.error('[StripePaymentService] Full Stripe response:', JSON.stringify(updated, null, 2));
+        throw new Error('Stripe did not return current_period_end');
+      }
 
       return {
         subscriptionId: updated.id,
         status: updated.status,
-        currentPeriodEnd: updated.current_period_end,
+        currentPeriodEnd: currentPeriodEnd,
       };
     } catch (error) {
       console.error('[StripePaymentService] Error updating subscription:', error);

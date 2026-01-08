@@ -65,14 +65,21 @@ export class UpdateSubscriptionUseCase {
     });
 
     // 4. Mettre à jour l'abonnement via Stripe
-    const updatedSubscription = await this.paymentService.updateSubscription({
-      subscriptionId: userData.stripe_subscription_id,
-      priceId: newPriceId,
-    });
+    let updatedSubscription;
+    try {
+      updatedSubscription = await this.paymentService.updateSubscription({
+        subscriptionId: userData.stripe_subscription_id,
+        priceId: newPriceId,
+      });
 
-    console.log('[UpdateSubscription] Stripe API response:', updatedSubscription);
+      console.log('[UpdateSubscription] Stripe API response:', JSON.stringify(updatedSubscription, null, 2));
+    } catch (error) {
+      console.error('[UpdateSubscription] Error from Stripe:', error);
+      throw new Error(`Failed to update subscription with Stripe: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 
-    if (!updatedSubscription.currentPeriodEnd) {
+    if (!updatedSubscription || !updatedSubscription.currentPeriodEnd) {
+      console.error('[UpdateSubscription] Invalid response from Stripe:', updatedSubscription);
       throw new Error('Invalid subscription update response: missing currentPeriodEnd');
     }
 
