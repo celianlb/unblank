@@ -1,7 +1,7 @@
 'use client';
 
 import { UnifiedSearchResultItem as SearchResult } from '@/domain/search/models/SearchResult';
-import { Link as LinkIcon, Folder, FolderTree } from 'lucide-react';
+import { Link as LinkIcon, Folder, FolderTree, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UnifiedSearchResultItemProps {
@@ -68,8 +68,12 @@ export default function UnifiedSearchResultItem({ result }: UnifiedSearchResultI
           </h3>
           {/* Badge pour le type */}
           {result.result_type !== 'link' && (
-            <span className="text-xs px-2 py-0.5 rounded-md bg-black text-white font-medium font-[Heebo]">
+            <span className="text-xs px-2 py-0.5 rounded-md bg-black text-white font-medium font-[Heebo] flex items-center gap-1">
               {result.result_type === 'group' ? 'Groupe' : 'Dossier'}
+              {/* Icône de partage si le dossier/groupe est partagé */}
+              {result.is_shared && (
+                <Share2 className="w-3 h-3" strokeWidth={2.5} />
+              )}
             </span>
           )}
         </div>

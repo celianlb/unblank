@@ -1,5 +1,4 @@
 import { Link } from '@/domain/links/models/Link';
-import { Folder } from '@/domain/folders/models/Folder';
 
 /**
  * Filtres de recherche
@@ -39,6 +38,7 @@ export interface UnifiedSearchResultItem {
   link_count: number;
   tags: Array<{ id: string; name: string }>;
   created_at: string;
+  is_shared?: boolean; // Indique si le dossier/groupe est partagé avec l'utilisateur (true) ou lui appartient (false/undefined)
 }
 
 /**
