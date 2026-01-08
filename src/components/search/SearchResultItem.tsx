@@ -1,8 +1,7 @@
 'use client';
 
 import { Link } from '@/domain/links/models/Link';
-import { ImageIcon, Link as LinkIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Link as LinkIcon } from 'lucide-react';
 
 interface SearchResultItemProps {
   link: Link;
@@ -10,12 +9,11 @@ interface SearchResultItemProps {
 }
 
 export default function SearchResultItem({ link, folderName }: SearchResultItemProps) {
-  const router = useRouter();
 
   const handleClick = () => {
-    // Navigate to the folder containing this link
-    if (link.folder_id) {
-      router.push(`/app/folder/${link.folder_id}`);
+    // Open the link URL in a new tab
+    if (link.url) {
+      window.open(link.url, '_blank', 'noopener,noreferrer');
     }
   };
 
