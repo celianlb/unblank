@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import FolderFactory from '@/lib/folders/folderFactory';
+import ShareFactory from '@/lib/shares/shareFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 
 // Handle CORS preflight
@@ -125,28 +126,12 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions si on crée dans un groupe partagé
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService si on crée dans un groupe partagé
     if (parentFolderId) {
-      const { data: share } = await supabase
-        .from('shares')
-        .select('permission')
-        .eq('folder_id', parentFolderId)
-        .eq('shared_with_email', user.email)
-        .eq('is_active', true)
-        .eq('permission', 'edit')
-        .maybeSingle();
+      const shareService = ShareFactory.createShareService(supabase);
+      const hasEditPermission = await shareService.hasEditPermission(parentFolderId, user.id, user.email!);
 
-      // Vérifier aussi si l'utilisateur est le propriétaire du parent
-      const { data: parentFolder } = await supabase
-        .from('folders')
-        .select('user_id')
-        .eq('id', parentFolderId)
-        .single();
-
-      const isOwner = parentFolder?.user_id === user.id;
-      const hasEditPermission = share?.permission === 'edit';
-
-      if (!isOwner && !hasEditPermission) {
+      if (!hasEditPermission) {
         const response = NextResponse.json(
           { error: 'You do not have permission to create folders in this group' },
           { status: 403 }
@@ -265,18 +250,10 @@ export async function DELETE(request: NextRequest) {
 
       const isOwner = folder.user_id === user.id;
 
-      // 2. Si pas propriétaire, vérifier les permissions de partage
+      // ✅ CLEAN ARCHITECTURE: Si pas propriétaire, vérifier les permissions via ShareService
       if (!isOwner) {
-        const { data: share } = await supabase
-          .from('shares')
-          .select('permission')
-          .eq('folder_id', folderId)
-          .eq('shared_with_email', user.email)
-          .eq('is_active', true)
-          .eq('permission', 'edit')
-          .maybeSingle();
-
-        const hasEditPermission = share?.permission === 'edit';
+        const shareService = ShareFactory.createShareService(supabase);
+        const hasEditPermission = await shareService.hasEditPermission(folderId, user.id, user.email!);
 
         if (!hasEditPermission) {
           const response = NextResponse.json(

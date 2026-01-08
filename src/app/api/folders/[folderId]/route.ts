@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import FolderFactory from '@/lib/folders/folderFactory';
+import ShareFactory from '@/lib/shares/shareFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 
 // Handle CORS preflight
@@ -70,44 +71,16 @@ export async function PATCH(
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions
-    // 1. Vérifier si l'utilisateur est le propriétaire
-    const { data: folder } = await supabase
-      .from('folders')
-      .select('user_id')
-      .eq('id', folderId)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
+    const shareService = ShareFactory.createShareService(supabase);
+    const hasEditPermission = await shareService.hasEditPermission(folderId, user.id, user.email!);
 
-    if (!folder) {
+    if (!hasEditPermission) {
       const response = NextResponse.json(
-        { error: 'Folder not found' },
-        { status: 404 }
+        { error: 'You do not have permission to rename this folder' },
+        { status: 403 }
       );
       return addCorsHeaders(response, origin);
-    }
-
-    const isOwner = folder.user_id === user.id;
-
-    // 2. Si pas propriétaire, vérifier les permissions de partage
-    if (!isOwner) {
-      const { data: share } = await supabase
-        .from('shares')
-        .select('permission')
-        .eq('folder_id', folderId)
-        .eq('shared_with_email', user.email)
-        .eq('is_active', true)
-        .eq('permission', 'edit')
-        .maybeSingle();
-
-      const hasEditPermission = share?.permission === 'edit';
-
-      if (!hasEditPermission) {
-        const response = NextResponse.json(
-          { error: 'You do not have permission to rename this folder' },
-          { status: 403 }
-        );
-        return addCorsHeaders(response, origin);
-      }
     }
 
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory

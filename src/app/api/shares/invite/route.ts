@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
 import { SharePermission } from '@/domain/shares/models/Share';
 import { ShareLimitError } from '@/infra/shares/SupabaseShareRepository';
+import { GetSubscriptionStatusUseCase } from '@/application/subscription/usecases/GetSubscriptionStatusUseCase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,22 +68,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validation 2: Vérifier le plan de l'utilisateur pour les permissions d'édition
+    // ✅ CLEAN ARCHITECTURE: Vérifier le plan de l'utilisateur pour les permissions d'édition
     if (permission === 'edit') {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('subscription_plan')
-        .eq('id', user.id)
-        .single();
+      const getSubscriptionStatus = new GetSubscriptionStatusUseCase(supabase);
+      const subscription = await getSubscriptionStatus.execute(user.id);
 
-      if (userError || !userData) {
+      if (!subscription) {
         return NextResponse.json(
           { error: 'Failed to verify user subscription' },
           { status: 500 }
         );
       }
 
-      if (userData.subscription_plan === 'free') {
+      if (subscription.plan === 'free') {
         return NextResponse.json(
           {
             error: 'Edit permission requires Pro or Team plan',

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import ShareFactory from '@/lib/shares/shareFactory';
+import FolderFactory from '@/lib/folders/folderFactory';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,14 +43,11 @@ export async function GET(request: NextRequest) {
     // Séparer les groupes et les dossiers
     const sharedGroups = allShared.filter(item => item.is_group === true);
 
-    // Récupérer tous les groupes que l'utilisateur possède
-    const { data: ownedGroups } = await supabase
-      .from('folders')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('is_group', true);
+    // ✅ CLEAN ARCHITECTURE: Récupérer tous les groupes que l'utilisateur possède via FolderService
+    const folderService = FolderFactory.createFolderService(supabase);
+    const ownedGroups = await folderService.getUserGroups(user.id);
 
-    const ownedGroupIds = new Set(ownedGroups?.map(g => g.id) || []);
+    const ownedGroupIds = new Set(ownedGroups.map(g => g.id));
 
     // Pour les dossiers partagés, exclure:
     // 1. Ceux dont le groupe parent est AUSSI partagé (accessibles via le groupe partagé)

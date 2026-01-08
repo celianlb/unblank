@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { authenticateRequest, handleApiError } from '@/lib/api/auth';
+import { GetSubscriptionStatusUseCase } from '@/application/subscription/usecases/GetSubscriptionStatusUseCase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -16,14 +17,11 @@ export async function POST(req: NextRequest) {
 
     const { user, supabase } = authResult.data;
 
-    // Récupérer le stripe_customer_id de l'utilisateur
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Récupérer le stripe_customer_id via GetSubscriptionStatusUseCase
+    const getSubscriptionStatus = new GetSubscriptionStatusUseCase(supabase);
+    const subscription = await getSubscriptionStatus.execute(user.id);
 
-    if (userError || !userData?.stripe_customer_id) {
+    if (!subscription?.stripeCustomerId) {
       return NextResponse.json(
         { error: 'Aucun compte Stripe trouvé' },
         { status: 400 }
@@ -34,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     // Créer une session du portail client Stripe
     const session = await stripe.billingPortal.sessions.create({
-      customer: userData.stripe_customer_id,
+      customer: subscription.stripeCustomerId,
       return_url: returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/subscription`,
     });
 

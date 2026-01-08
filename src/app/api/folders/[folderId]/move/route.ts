@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import FolderFactory from '@/lib/folders/folderFactory';
+import ShareFactory from '@/lib/shares/shareFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 
 // Handle CORS preflight
@@ -62,83 +63,30 @@ export async function PATCH(
     const body = await request.json();
     const { groupId } = body;
 
-    // ✅ Vérifier les permissions sur le dossier à déplacer
-    // 1. Vérifier si l'utilisateur est le propriétaire du dossier
-    const { data: folder } = await supabase
-      .from('folders')
-      .select('user_id')
-      .eq('id', folderId)
-      .single();
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
+    const shareService = ShareFactory.createShareService(supabase);
 
-    if (!folder) {
+    // Vérifier les permissions sur le dossier à déplacer
+    const hasEditPermission = await shareService.hasEditPermission(folderId, user.id, user.email!);
+
+    if (!hasEditPermission) {
       const response = NextResponse.json(
-        { error: 'Folder not found' },
-        { status: 404 }
+        { error: 'You do not have permission to move this folder' },
+        { status: 403 }
       );
       return addCorsHeaders(response, origin);
     }
 
-    const isOwner = folder.user_id === user.id;
+    // Si on déplace vers un groupe, vérifier les permissions sur le groupe de destination
+    if (groupId) {
+      const hasGroupEditPermission = await shareService.hasEditPermission(groupId, user.id, user.email!);
 
-    // 2. Si pas propriétaire, vérifier les permissions de partage sur le dossier
-    if (!isOwner) {
-      const { data: share } = await supabase
-        .from('shares')
-        .select('permission')
-        .eq('folder_id', folderId)
-        .eq('shared_with_email', user.email)
-        .eq('is_active', true)
-        .eq('permission', 'edit')
-        .maybeSingle();
-
-      const hasEditPermission = share?.permission === 'edit';
-
-      if (!hasEditPermission) {
+      if (!hasGroupEditPermission) {
         const response = NextResponse.json(
-          { error: 'You do not have permission to move this folder' },
+          { error: 'You do not have permission to move folders into this group' },
           { status: 403 }
         );
         return addCorsHeaders(response, origin);
-      }
-    }
-
-    // ✅ Si on déplace vers un groupe, vérifier les permissions sur le groupe de destination
-    if (groupId) {
-      const { data: targetGroup } = await supabase
-        .from('folders')
-        .select('user_id')
-        .eq('id', groupId)
-        .single();
-
-      if (!targetGroup) {
-        const response = NextResponse.json(
-          { error: 'Target group not found' },
-          { status: 404 }
-        );
-        return addCorsHeaders(response, origin);
-      }
-
-      const isGroupOwner = targetGroup.user_id === user.id;
-
-      if (!isGroupOwner) {
-        const { data: groupShare } = await supabase
-          .from('shares')
-          .select('permission')
-          .eq('folder_id', groupId)
-          .eq('shared_with_email', user.email)
-          .eq('is_active', true)
-          .eq('permission', 'edit')
-          .maybeSingle();
-
-        const hasGroupEditPermission = groupShare?.permission === 'edit';
-
-        if (!hasGroupEditPermission) {
-          const response = NextResponse.json(
-            { error: 'You do not have permission to move folders into this group' },
-            { status: 403 }
-          );
-          return addCorsHeaders(response, origin);
-        }
       }
     }
 
