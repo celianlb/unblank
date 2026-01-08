@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import LinkFactory from '@/lib/links/linkFactory';
+import ShareFactory from '@/lib/shares/shareFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 import { LinkLimitError } from '@/infra/links/SupabaseLinkRepository';
 
@@ -70,44 +71,17 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions si on crée dans un dossier partagé
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
     if (folderId) {
-      const { data: folder } = await supabase
-        .from('folders')
-        .select('user_id')
-        .eq('id', folderId)
-        .single();
+      const shareService = ShareFactory.createShareService(supabase);
+      const hasEditPermission = await shareService.hasEditPermission(folderId, user.id, user.email!);
 
-      if (!folder) {
+      if (!hasEditPermission) {
         const response = NextResponse.json(
-          { error: 'Folder not found' },
-          { status: 404 }
+          { error: 'You do not have permission to create links in this folder' },
+          { status: 403 }
         );
         return addCorsHeaders(response, origin);
-      }
-
-      const isOwner = folder.user_id === user.id;
-
-      // Si pas propriétaire, vérifier les permissions de partage
-      if (!isOwner) {
-        const { data: share } = await supabase
-          .from('shares')
-          .select('permission')
-          .eq('folder_id', folderId)
-          .eq('shared_with_email', user.email)
-          .eq('is_active', true)
-          .eq('permission', 'edit')
-          .maybeSingle();
-
-        const hasEditPermission = share?.permission === 'edit';
-
-        if (!hasEditPermission) {
-          const response = NextResponse.json(
-            { error: 'You do not have permission to create links in this folder' },
-            { status: 403 }
-          );
-          return addCorsHeaders(response, origin);
-        }
       }
     }
 
@@ -225,22 +199,24 @@ export async function DELETE(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // Vérifier les permissions pour chaque lien
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
+    const shareService = ShareFactory.createShareService(supabase);
+
     for (const link of links) {
       const isOwner = link.user_id === user.id;
 
-      // Si pas propriétaire, vérifier les permissions via le dossier parent
-      if (!isOwner && link.folder_id) {
-        const { data: share } = await supabase
-          .from('shares')
-          .select('permission')
-          .eq('folder_id', link.folder_id)
-          .eq('shared_with_email', user.email)
-          .eq('is_active', true)
-          .eq('permission', 'edit')
-          .maybeSingle();
+      // Si pas propriétaire, vérifier les permissions
+      if (!isOwner) {
+        if (!link.folder_id) {
+          // Lien sans dossier et pas le propriétaire : interdit
+          const response = NextResponse.json(
+            { error: `You do not have permission to delete link ${link.id}` },
+            { status: 403 }
+          );
+          return addCorsHeaders(response, origin);
+        }
 
-        const hasEditPermission = share?.permission === 'edit';
+        const hasEditPermission = await shareService.hasEditPermission(link.folder_id, user.id, user.email!);
 
         if (!hasEditPermission) {
           const response = NextResponse.json(
@@ -249,13 +225,6 @@ export async function DELETE(request: NextRequest) {
           );
           return addCorsHeaders(response, origin);
         }
-      } else if (!isOwner && !link.folder_id) {
-        // Lien sans dossier et pas le propriétaire : interdit
-        const response = NextResponse.json(
-          { error: `You do not have permission to delete link ${link.id}` },
-          { status: 403 }
-        );
-        return addCorsHeaders(response, origin);
       }
     }
 

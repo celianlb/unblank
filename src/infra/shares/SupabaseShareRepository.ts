@@ -364,4 +364,61 @@ export class SupabaseShareRepository implements ShareRepository {
       throw new Error(`Failed to revoke group shares: ${error.message}`);
     }
   }
+
+  async hasEditPermission(folderId: string, userId: string, userEmail: string): Promise<boolean> {
+    // Vérifier si l'utilisateur est propriétaire
+    const { data: folder } = await this.supabase
+      .from('folders')
+      .select('user_id')
+      .eq('id', folderId)
+      .single();
+
+    if (!folder) {
+      return false;
+    }
+
+    if (folder.user_id === userId) {
+      return true;
+    }
+
+    // Vérifier s'il a une permission d'édition via un share
+    const { data: share } = await this.supabase
+      .from('shares')
+      .select('permission')
+      .eq('folder_id', folderId)
+      .eq('shared_with_email', userEmail)
+      .eq('is_active', true)
+      .eq('permission', 'edit')
+      .maybeSingle();
+
+    return share?.permission === 'edit';
+  }
+
+  async hasAnyPermission(folderId: string, userId: string, userEmail: string): Promise<boolean> {
+    // Vérifier si l'utilisateur est propriétaire
+    const { data: folder } = await this.supabase
+      .from('folders')
+      .select('user_id')
+      .eq('id', folderId)
+      .single();
+
+    if (!folder) {
+      return false;
+    }
+
+    if (folder.user_id === userId) {
+      return true;
+    }
+
+    // Vérifier s'il a un share actif (view ou edit)
+    const { data: share } = await this.supabase
+      .from('shares')
+      .select('permission')
+      .eq('folder_id', folderId)
+      .eq('shared_with_email', userEmail)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    return !!share;
+  }
 }

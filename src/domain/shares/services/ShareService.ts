@@ -161,4 +161,18 @@ export class ShareService {
       await this.shareRepository.revokeShare(share.id);
     }
   }
+
+  /**
+   * Check if a user has edit permission on a folder
+   */
+  async hasEditPermission(folderId: string, userId: string, userEmail: string): Promise<boolean> {
+    return this.shareRepository.hasEditPermission(folderId, userId, userEmail);
+  }
+
+  /**
+   * Check if a user has any permission (view or edit) on a folder
+   */
+  async hasAnyPermission(folderId: string, userId: string, userEmail: string): Promise<boolean> {
+    return this.shareRepository.hasAnyPermission(folderId, userId, userEmail);
+  }
 }

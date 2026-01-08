@@ -55,4 +55,16 @@ export interface ShareRepository {
    * Revoke all shares for a user in a group and its child folders
    */
   revokeGroupShares(groupId: string, userEmail: string, childFolderIds: string[]): Promise<void>;
+
+  /**
+   * Check if a user has edit permission on a folder
+   * Returns true if user is owner or has edit share permission
+   */
+  hasEditPermission(folderId: string, userId: string, userEmail: string): Promise<boolean>;
+
+  /**
+   * Check if a user has any permission (view or edit) on a folder
+   * Returns true if user is owner or has any active share
+   */
+  hasAnyPermission(folderId: string, userId: string, userEmail: string): Promise<boolean>;
 }

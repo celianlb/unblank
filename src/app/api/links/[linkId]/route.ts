@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import LinkFactory from '@/lib/links/linkFactory';
+import ShareFactory from '@/lib/shares/shareFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 
 // Handle CORS preflight
@@ -74,22 +75,21 @@ export async function DELETE(
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions
-    // 1. Vérifier si l'utilisateur est le propriétaire du lien
+    // ✅ CLEAN ARCHITECTURE: Vérifier les permissions via ShareService
     const isOwner = link.user_id === user.id;
 
-    // 2. Si pas propriétaire, vérifier les permissions via le dossier parent
-    if (!isOwner && link.folder_id) {
-      const { data: share } = await supabase
-        .from('shares')
-        .select('permission')
-        .eq('folder_id', link.folder_id)
-        .eq('shared_with_email', user.email)
-        .eq('is_active', true)
-        .eq('permission', 'edit')
-        .maybeSingle();
+    if (!isOwner) {
+      if (!link.folder_id) {
+        // Lien sans dossier et pas le propriétaire : interdit
+        const response = NextResponse.json(
+          { error: 'You do not have permission to delete this link' },
+          { status: 403 }
+        );
+        return addCorsHeaders(response, origin);
+      }
 
-      const hasEditPermission = share?.permission === 'edit';
+      const shareService = ShareFactory.createShareService(supabase);
+      const hasEditPermission = await shareService.hasEditPermission(link.folder_id, user.id, user.email!);
 
       if (!hasEditPermission) {
         const response = NextResponse.json(
@@ -98,13 +98,6 @@ export async function DELETE(
         );
         return addCorsHeaders(response, origin);
       }
-    } else if (!isOwner && !link.folder_id) {
-      // Lien sans dossier et pas le propriétaire : interdit
-      const response = NextResponse.json(
-        { error: 'You do not have permission to delete this link' },
-        { status: 403 }
-      );
-      return addCorsHeaders(response, origin);
     }
 
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
