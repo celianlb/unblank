@@ -17,10 +17,18 @@ export default function UnifiedSearchResultItem({ result }: UnifiedSearchResultI
       window.open(result.url, '_blank', 'noopener,noreferrer');
     } else if (result.result_type === 'folder') {
       // Navigate to folder page
-      router.push(`/app/folder/${result.id}`);
+      const folderSlug = result.slug || result.name.toLowerCase().replace(/\s+/g, '-');
+      if (result.parent_slug) {
+        // Dossier dans un groupe : /{groupSlug}/{folderSlug}
+        router.push(`/${result.parent_slug}/${folderSlug}`);
+      } else {
+        // Dossier standalone : /app/{folderSlug}
+        router.push(`/app/${folderSlug}`);
+      }
     } else if (result.result_type === 'group') {
-      // Navigate to group page
-      router.push(`/app/group/${result.id}`);
+      // Navigate to group page : /{groupSlug}
+      const groupSlug = result.slug || result.name.toLowerCase().replace(/\s+/g, '-');
+      router.push(`/${groupSlug}`);
     }
   };
 
@@ -68,13 +76,17 @@ export default function UnifiedSearchResultItem({ result }: UnifiedSearchResultI
           </h3>
           {/* Badge pour le type */}
           {result.result_type !== 'link' && (
-            <span className="text-xs px-2 py-0.5 rounded-md bg-black text-white font-medium font-[Heebo] flex items-center gap-1">
-              {result.result_type === 'group' ? 'Groupe' : 'Dossier'}
+            <>
+              <span className="text-xs px-2 py-0.5 rounded-md bg-black text-white font-medium font-[Heebo]">
+                {result.result_type === 'group' ? 'Groupe' : 'Dossier'}
+              </span>
               {/* Icône de partage si le dossier/groupe est partagé */}
               {result.is_shared && (
-                <Share2 className="w-3 h-3" strokeWidth={2.5} />
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B6B] border-2 border-black shadow-[1px_1px_0px_#000000]">
+                  <Share2 className="w-3.5 h-3.5 text-black" strokeWidth={2.5} />
+                </span>
               )}
-            </span>
+            </>
           )}
         </div>
 

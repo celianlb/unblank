@@ -39,6 +39,9 @@ export interface UnifiedSearchResultItem {
   tags: Array<{ id: string; name: string }>;
   created_at: string;
   is_shared?: boolean; // Indique si le dossier/groupe est partagé avec l'utilisateur (true) ou lui appartient (false/undefined)
+  slug?: string; // Slug du dossier/groupe pour la navigation
+  parent_folder_id?: string; // ID du groupe parent (si le dossier est dans un groupe)
+  parent_slug?: string; // Slug du groupe parent (si le dossier est dans un groupe)
 }
 
 /**
