@@ -2,6 +2,7 @@
 
 import { X, Copy, Check, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   useCreatePublicShare,
   useInviteByEmail,
@@ -147,9 +148,9 @@ export default function ShareLinkModal({
       <div className="fixed inset-0 z-40 bg-black/70" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[calc(50vh-250px)] pointer-events-none">
         <div
-          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[479px] pointer-events-auto flex flex-col p-8 gap-6 relative"
+          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[479px] h-fit pointer-events-auto flex flex-col p-8 gap-6 relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
@@ -175,25 +176,27 @@ export default function ShareLinkModal({
 
             {/* Tabs */}
             <div className="flex flex-row gap-2 w-full border-b-2 border-black">
-              <Tooltip
-                content="Le partage par lien nécessite le plan Pro ou Team"
-                disabled={!isFreeUser}
-                className="flex-1"
-              >
-                <button
-                  onClick={() => !isFreeUser && setActiveTab("link")}
-                  disabled={isFreeUser}
-                  className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
-                    isFreeUser
-                      ? "text-[#A8A8A8] opacity-50 cursor-not-allowed"
-                      : activeTab === "link"
-                      ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px] cursor-pointer"
-                      : "text-[#A8A8A8] hover:text-[#0D0D0D] cursor-pointer"
-                  }`}
+              <div className="flex-1">
+                <Tooltip
+                  content="Le partage par lien nécessite le plan Pro ou Team"
+                  disabled={!isFreeUser}
+                  className="w-full"
                 >
-                  Lien de partage
-                </button>
-              </Tooltip>
+                  <button
+                    onClick={() => !isFreeUser && setActiveTab("link")}
+                    disabled={isFreeUser}
+                    className={`w-full pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                      isFreeUser
+                        ? "text-[#A8A8A8] opacity-50 cursor-not-allowed"
+                        : activeTab === "link"
+                        ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px] cursor-pointer"
+                        : "text-[#A8A8A8] hover:text-[#0D0D0D] cursor-pointer"
+                    }`}
+                  >
+                    Lien de partage
+                  </button>
+                </Tooltip>
+              </div>
               <button
                 onClick={() => setActiveTab("email")}
                 className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${
@@ -207,14 +210,24 @@ export default function ShareLinkModal({
             </div>
 
             {/* Tab Content - Link */}
-            {activeTab === "link" && (
-              <div className="flex flex-col items-start gap-4 w-full">
-                <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
-                  Créez un lien que vous pouvez partager avec n&apos;importe qui
-                </p>
+            <AnimatePresence mode="wait">
+              {activeTab === "link" && (
+                <motion.div
+                  key="link"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ overflow: "hidden", width: "100%" }}
+                  className="flex flex-col items-center pb-2"
+                >
+                  <div className="flex flex-col gap-4 w-full max-w-md px-2">
+                    <p className="text-[16px] text-[#A8A8A8] font-[Heebo] w-full text-center">
+                      Créez un lien que vous pouvez partager avec n&apos;importe qui
+                    </p>
 
                 {/* Radio Buttons */}
-                <div className="flex flex-col items-start gap-2 w-full">
+                <div className="flex flex-col gap-2 w-full">
                   {/* Lecture seule */}
                   <div
                     onClick={() => setSelectedPermission("view")}
@@ -264,7 +277,7 @@ export default function ShareLinkModal({
                 {/* Generate Button */}
                 <button
                   onClick={handleGenerate}
-                  className="w-full h-[46px] bg-[#0D0D0D] hover:bg-[#2D2D2D] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors"
+                  className="w-full h-[46px] bg-[#2D2D2D] hover:bg-[#4D4D4D] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-all cursor-pointer active:translate-y-[2px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center"
                 >
                   Générer un lien
                 </button>
@@ -292,123 +305,135 @@ export default function ShareLinkModal({
                   </div>
                 )}
 
-                {/* Loading state */}
-                {createPublicShare.isPending && (
-                  <p className="text-[14px] text-[#A8A8A8] font-[Heebo]">
-                    Génération du lien en cours...
-                  </p>
-                )}
-              </div>
-            )}
+                    {/* Loading state */}
+                    {createPublicShare.isPending && (
+                      <p className="text-[14px] text-[#A8A8A8] font-[Heebo]">
+                        Génération du lien en cours...
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
 
-            {/* Tab Content - Email */}
-            {activeTab === "email" && (
-              <div className="flex flex-col items-start gap-4 w-full">
-                <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
-                  Invitez une personne spécifique par son adresse email
-                </p>
+              {/* Tab Content - Email */}
+              {activeTab === "email" && (
+                <motion.div
+                  key="email"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ overflow: "hidden", width: "100%" }}
+                  className="flex flex-col items-center pb-2"
+                >
+                  <div className="flex flex-col gap-4 w-full max-w-md px-2">
+                    <p className="text-[16px] text-[#A8A8A8] font-[Heebo] w-full text-center">
+                      Invitez une personne spécifique par son adresse email
+                    </p>
 
-                {/* Email Input */}
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-[14px] font-medium text-[#0D0D0D] font-[Heebo]">
-                    Adresse email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="exemple@email.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full h-[44px] px-3 bg-white border-2 border-black rounded-xl text-base leading-[23px] tracking-[-0.03em] font-normal text-[#0D0D0D] placeholder-[#A8A8A8] focus:outline-none transition-colors font-[Heebo]"
-                  />
-                </div>
-
-                {/* Permission Selection for Email Invite */}
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-[14px] font-medium text-[#0D0D0D] font-[Heebo]">
-                    Niveau d&apos;accès
-                  </label>
-                  <div className="flex flex-col items-start gap-2 w-full">
-                    {/* Lecture seule */}
-                    <div
-                      onClick={() => setInvitePermission("view")}
-                      className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
-                    >
-                      <div className="flex items-center justify-center w-[31px] h-[31px]">
-                        <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                          {invitePermission === "view" && (
-                            <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                        Lecture seule
-                      </span>
+                    {/* Email Input */}
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-[14px] font-medium text-[#0D0D0D] font-[Heebo]">
+                        Adresse email
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="exemple@email.com"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        className="w-full h-[44px] px-3 bg-white border-2 border-black rounded-xl text-base leading-[23px] tracking-[-0.03em] font-normal text-[#0D0D0D] placeholder-[#A8A8A8] focus:outline-none transition-colors font-[Heebo]"
+                      />
                     </div>
 
-                    {/* Lecture et édition */}
-                    <Tooltip
-                      content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
-                      disabled={!isFreeUser}
-                    >
-                      <div
-                        onClick={() =>
-                          !isFreeUser && setInvitePermission("edit")
-                        }
-                        className={`flex flex-row items-center gap-2 w-full transition-opacity ${
-                          isFreeUser
-                            ? "opacity-50 cursor-not-allowed"
-                            : "cursor-pointer hover:opacity-70"
-                        }`}
-                      >
-                        <div className="flex items-center justify-center w-[31px] h-[31px]">
-                          <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
-                            {invitePermission === "edit" && (
-                              <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
-                            )}
+                    {/* Permission Selection for Email Invite */}
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-[14px] font-medium text-[#0D0D0D] font-[Heebo]">
+                        Niveau d&apos;accès
+                      </label>
+                      <div className="flex flex-col gap-2 w-full">
+                        {/* Lecture seule */}
+                        <div
+                          onClick={() => setInvitePermission("view")}
+                          className="flex flex-row items-center gap-2 w-full cursor-pointer hover:opacity-70 transition-opacity"
+                        >
+                          <div className="flex items-center justify-center w-[31px] h-[31px]">
+                            <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
+                              {invitePermission === "view" && (
+                                <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
+                              )}
+                            </div>
                           </div>
+                          <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
+                            Lecture seule
+                          </span>
                         </div>
-                        <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
-                          Lecture et édition
-                        </span>
-                      </div>
-                    </Tooltip>
-                  </div>
-                </div>
 
-                {/* Invite Button */}
-                <button
-                  onClick={handleInviteByEmail}
-                  disabled={
-                    !canSendInvite ||
-                    !!inviteError ||
-                    inviteByEmailMutation.isPending ||
-                    inviteSent
-                  }
-                  className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[15px] font-bold font-[Heebo] transition-colors flex items-center justify-center gap-2 ${
-                    inviteSent
-                      ? "bg-green-600 hover:bg-green-600"
-                      : validationError || inviteError
-                      ? "bg-red-600 cursor-not-allowed"
-                      : "bg-[#0D0D0D] hover:bg-[#2D2D2D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed"
-                  }`}
-                >
-                  {inviteSent ? (
-                    <>
-                      <Check className="w-5 h-5" strokeWidth={3} />
-                      Invitation envoyée
-                    </>
-                  ) : validationError || inviteError ? (
-                    <span className="whitespace-pre-line text-center">
-                      {validationError || inviteError}
-                    </span>
-                  ) : inviteByEmailMutation.isPending ? (
-                    "Envoi en cours..."
-                  ) : (
-                    "Envoyer l'invitation"
-                  )}
-                </button>
-              </div>
-            )}
+                        {/* Lecture et édition */}
+                        <Tooltip
+                          content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                          disabled={!isFreeUser}
+                        >
+                          <div
+                            onClick={() =>
+                              !isFreeUser && setInvitePermission("edit")
+                            }
+                            className={`flex flex-row items-center gap-2 w-full transition-opacity ${
+                              isFreeUser
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer hover:opacity-70"
+                            }`}
+                          >
+                            <div className="flex items-center justify-center w-[31px] h-[31px]">
+                              <div className="relative w-[24px] h-[24px] bg-[#FEF8EE] border-2 border-black rounded-full flex items-center justify-center">
+                                {invitePermission === "edit" && (
+                                  <div className="w-[16px] h-[16px] bg-[#0D0D0D] rounded-full" />
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-[18px] leading-[24px] tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo]">
+                              Lecture et édition
+                            </span>
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </div>
+
+                    {/* Invite Button */}
+                    <button
+                      onClick={handleInviteByEmail}
+                      disabled={
+                        !canSendInvite ||
+                        !!inviteError ||
+                        inviteByEmailMutation.isPending ||
+                        inviteSent
+                      }
+                      className={`w-full h-[46px] border-2 border-black rounded-xl text-white text-[15px] font-bold font-[Heebo] transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
+                        inviteSent
+                          ? "bg-green-600 hover:bg-green-600 cursor-pointer"
+                          : validationError || inviteError
+                          ? "bg-red-600 cursor-not-allowed"
+                          : "bg-[#2D2D2D] hover:bg-[#4D4D4D] disabled:bg-[#A8A8A8] disabled:cursor-not-allowed cursor-pointer active:translate-y-[2px] active:shadow-none"
+                      }`}
+                    >
+                      {inviteSent ? (
+                        <>
+                          <Check className="w-5 h-5" strokeWidth={3} />
+                          Invitation envoyée
+                        </>
+                      ) : validationError || inviteError ? (
+                        <span className="whitespace-pre-line text-center">
+                          {validationError || inviteError}
+                        </span>
+                      ) : inviteByEmailMutation.isPending ? (
+                        "Envoi en cours..."
+                      ) : (
+                        "Envoyer l'invitation"
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
