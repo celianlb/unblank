@@ -1,5 +1,5 @@
 import { SearchRepository } from '../ports/SearchRepository';
-import { SearchParams, SearchResult, TagWithCount } from '../models/SearchResult';
+import { SearchParams, SearchResult, TagWithCount, UnifiedSearchResult } from '../models/SearchResult';
 import { Link } from '@/domain/links/models/Link';
 
 /**
@@ -44,6 +44,45 @@ export class SearchService {
     return {
       links: resultLinks,
       total: resultLinks.length,
+      hasMore,
+    };
+  }
+
+  /**
+   * Recherche unifiée (liens + dossiers + groupes) avec validation et pagination
+   * @param userId - ID de l'utilisateur
+   * @param params - Paramètres de recherche
+   * @returns Résultat de recherche unifié avec métadonnées
+   */
+  async unifiedSearch(userId: string, params: SearchParams): Promise<UnifiedSearchResult> {
+    // Validation métier: la requête doit faire au moins 2 caractères
+    if (params.query && params.query.trim().length > 0 && params.query.trim().length < 2) {
+      console.warn('Search query must be at least 2 characters');
+      return {
+        results: [],
+        total: 0,
+        hasMore: false,
+      };
+    }
+
+    // Valeurs par défaut pour la pagination
+    const limit = params.limit ?? 20;
+    const offset = params.offset ?? 0;
+
+    // Appel au repository
+    const results = await this.searchRepository.unifiedSearch(userId, {
+      ...params,
+      limit: limit + 1, // +1 pour détecter s'il y a plus de résultats
+      offset,
+    });
+
+    // Déterminer s'il y a plus de résultats
+    const hasMore = results.length > limit;
+    const finalResults = hasMore ? results.slice(0, limit) : results;
+
+    return {
+      results: finalResults,
+      total: finalResults.length,
       hasMore,
     };
   }

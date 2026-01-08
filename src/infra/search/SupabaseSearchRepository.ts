@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SearchRepository } from '@/domain/search/ports/SearchRepository';
 import { Link } from '@/domain/links/models/Link';
-import { SearchParams, TagWithCount } from '@/domain/search/models/SearchResult';
+import { SearchParams, TagWithCount, UnifiedSearchResultItem } from '@/domain/search/models/SearchResult';
 
 /**
  * Implémentation Supabase du repository de recherche
@@ -38,6 +38,29 @@ export class SupabaseSearchRepository implements SearchRepository {
       ...link,
       tags: typeof link.tags === 'string' ? JSON.parse(link.tags) : link.tags,
     }));
+  }
+
+  /**
+   * Recherche unifiée (liens + dossiers + groupes) via la fonction RPC unified_search
+   */
+  async unifiedSearch(userId: string, params: SearchParams): Promise<UnifiedSearchResultItem[]> {
+    const { query, tagNames, limit = 20, offset = 0 } = params;
+
+    // Appel à la fonction RPC PostgreSQL avec limit et offset
+    const { data, error } = await this.supabase.rpc('unified_search', {
+      p_user_id: userId,
+      p_query: query || null,
+      p_tag_names: tagNames && tagNames.length > 0 ? tagNames : null,
+      p_limit: limit,
+      p_offset: offset,
+    });
+
+    if (error) {
+      console.error('Error in unified search:', error);
+      throw error;
+    }
+
+    return data || [];
   }
 
   /**

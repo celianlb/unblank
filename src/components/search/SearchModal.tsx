@@ -2,8 +2,9 @@
 
 import { X, Search, Loader2, XCircle, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useInfiniteSearch, useUserTags, useRecentLinks } from '@/hooks/useSearch';
+import { useUnifiedInfiniteSearch, useUserTags, useRecentLinks } from '@/hooks/useSearch';
 import { useDebounce } from '@/utils/useDebounce';
+import UnifiedSearchResultItem from './UnifiedSearchResultItem';
 import SearchResultItem from './SearchResultItem';
 
 interface SearchModalProps {
@@ -31,7 +32,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     hasNextPage,
     isLoading,
     isFetchingNextPage,
-  } = useInfiniteSearch({
+  } = useUnifiedInfiniteSearch({
     query: debouncedQuery,
     tagNames: selectedTags.length > 0 ? selectedTags : undefined,
   });
@@ -172,7 +173,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   };
 
   // Get all results from pages
-  const allResults = data?.pages.flatMap((page) => page.links) || [];
+  const allResults = data?.pages.flatMap((page) => page.results) || [];
   const hasResults = allResults.length > 0;
   const showEmptyState = !isLoading && !hasResults && (query.trim().length >= 2 || selectedTags.length > 0);
   const showInitialState = !isLoading && query.trim().length < 2 && selectedTags.length === 0;
@@ -405,11 +406,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             {/* Results List */}
             {hasResults && (
               <div className="flex flex-col gap-3">
-                {allResults.map((link) => (
-                  <SearchResultItem
-                    key={link.id}
-                    link={link}
-                    folderName={(link as any).folder_name}
+                {allResults.map((result) => (
+                  <UnifiedSearchResultItem
+                    key={result.id}
+                    result={result}
                   />
                 ))}
 
