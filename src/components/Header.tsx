@@ -173,8 +173,10 @@ export default function Header({
         }`}
       >
         <div
-          className={`w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 ${
-            minimal ? "py-4" : "py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8"
+          className={`w-full h-full ${
+            minimal
+              ? "px-8 py-6"
+              : "px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8"
           }`}
         >
           <div

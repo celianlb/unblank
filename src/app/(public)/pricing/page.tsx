@@ -16,8 +16,13 @@ import SubscriptionChangeModal from "@/components/SubscriptionChangeModal";
 export default function PricingPage() {
   const { session } = useAuthContext();
   const { subscription, loading } = useSubscription();
-  const { createCheckoutSession, loading: checkoutLoading, hasActiveSubscription } = useCheckout();
-  const { updateSubscription, loading: updateLoading } = useUpdateSubscription();
+  const {
+    createCheckoutSession,
+    loading: checkoutLoading,
+    hasActiveSubscription,
+  } = useCheckout();
+  const { updateSubscription, loading: updateLoading } =
+    useUpdateSubscription();
   const { pricing } = usePricing();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">(
     "monthly"
@@ -25,7 +30,7 @@ export default function PricingPage() {
   const [managingSubscription, setManagingSubscription] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingPlanChange, setPendingPlanChange] = useState<{
-    planType: 'pro' | 'team';
+    planType: "pro" | "team";
     planName: string;
     price: string;
   } | null>(null);
@@ -35,15 +40,17 @@ export default function PricingPage() {
   // Déterminer la période de facturation actuelle de l'abonnement
   const getCurrentBillingPeriod = (): "monthly" | "annual" => {
     if (!subscription?.stripePriceId) return "monthly";
-    
+
     const currentPriceId = subscription.stripePriceId;
-    
+
     // Vérifier si le price ID correspond à un plan annuel
-    if (currentPriceId === pricing.pro.annual?.priceId || 
-        currentPriceId === pricing.team.annual?.priceId) {
+    if (
+      currentPriceId === pricing.pro.annual?.priceId ||
+      currentPriceId === pricing.team.annual?.priceId
+    ) {
       return "annual";
     }
-    
+
     return "monthly";
   };
 
@@ -81,7 +88,9 @@ export default function PricingPage() {
   // Si une tentative de checkout échoue car il y a déjà un abonnement actif, ouvrir le portail
   useEffect(() => {
     if (hasActiveSubscription && !managingSubscription) {
-      console.log('[PricingPage] Active subscription detected, redirecting to portal...');
+      console.log(
+        "[PricingPage] Active subscription detected, redirecting to portal..."
+      );
       handleManageSubscription();
     }
   }, [hasActiveSubscription, managingSubscription, handleManageSubscription]);
@@ -96,22 +105,28 @@ export default function PricingPage() {
   };
 
   // Gérer le clic sur un bouton de plan
-  const handlePlanClick = (plan: typeof plans[number]) => {
+  const handlePlanClick = (plan: (typeof plans)[number]) => {
     // Si c'est le plan actuel ET la même période de facturation (et pas gratuit), ouvrir le portail de gestion
-    const isSamePlanAndPeriod = !loading && 
-      plan.planType === currentPlanType && 
-      billingPeriod === currentBillingPeriod && 
+    const isSamePlanAndPeriod =
+      !loading &&
+      plan.planType === currentPlanType &&
+      billingPeriod === currentBillingPeriod &&
       plan.planType !== "free";
 
     if (isSamePlanAndPeriod) {
       handleManageSubscription();
     } else if (plan.planType !== "free") {
       // Si on a déjà un abonnement actif, afficher la modale de confirmation
-      if (subscription && subscription.plan !== "free" && subscription.status === "active") {
+      if (
+        subscription &&
+        subscription.plan !== "free" &&
+        subscription.status === "active"
+      ) {
         setPendingPlanChange({
           planType: plan.planType,
           planName: plan.name,
-          price: billingPeriod === "monthly" ? plan.priceMonthly : plan.priceAnnual,
+          price:
+            billingPeriod === "monthly" ? plan.priceMonthly : plan.priceAnnual,
         });
         setShowConfirmModal(true);
       } else {
@@ -120,6 +135,27 @@ export default function PricingPage() {
       }
     }
   };
+
+  // Calculer les pourcentages de réduction pour les plans annuels
+  const calculateDiscount = (
+    monthlyPrice: number,
+    annualPrice: number
+  ): number => {
+    const yearlyFromMonthly = monthlyPrice * 12;
+    const discount =
+      ((yearlyFromMonthly - annualPrice) / yearlyFromMonthly) * 100;
+    return Math.round(discount);
+  };
+
+  const proDiscount = calculateDiscount(
+    pricing.pro.monthly?.amount || 6.99,
+    pricing.pro.annual?.amount || 69.99
+  );
+
+  const teamDiscount = calculateDiscount(
+    pricing.team.monthly?.amount || 18.99,
+    pricing.team.annual?.amount || 189.99
+  );
 
   const plans = [
     {
@@ -140,6 +176,7 @@ export default function PricingPage() {
       buttonText: "Continuer avec ce plan",
       buttonStyle: "primary",
       cardStyle: "white",
+      discount: 0,
     },
     {
       name: "Pro",
@@ -157,6 +194,7 @@ export default function PricingPage() {
       buttonStyle: "secondary",
       cardStyle: "black",
       highlighted: true,
+      discount: proDiscount,
     },
     {
       name: "Team",
@@ -168,6 +206,7 @@ export default function PricingPage() {
       buttonText: "Continuer avec ce plan",
       buttonStyle: "primary",
       cardStyle: "white",
+      discount: teamDiscount,
     },
   ];
 
@@ -204,10 +243,10 @@ export default function PricingPage() {
           <div className="flex items-center gap-3 p-1.5 bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_#000000]">
             <button
               onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border-2 ${
                 billingPeriod === "monthly"
-                  ? "bg-black text-white"
-                  : "bg-transparent text-black hover:bg-gray-100"
+                  ? "bg-[#FF506F] text-black border-black"
+                  : "bg-gray-50 text-black border-transparent hover:bg-gray-100"
               }`}
               style={{ fontFamily: "Heebo, sans-serif" }}
             >
@@ -215,10 +254,10 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setBillingPeriod("annual")}
-              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border-2 ${
                 billingPeriod === "annual"
-                  ? "bg-black text-white"
-                  : "bg-transparent text-black hover:bg-gray-100"
+                  ? "bg-[#FF506F] text-black border-black"
+                  : "bg-gray-50 text-black border-transparent hover:bg-gray-100"
               }`}
               style={{ fontFamily: "Heebo, sans-serif" }}
             >
@@ -231,12 +270,25 @@ export default function PricingPage() {
             {displayedPlans.map((plan, index) => (
               <div
                 key={plan.planType}
-                className={`flex flex-col justify-between items-start p-8 gap-7 w-[308px] h-[573px] rounded-xl ${
+                className={`relative flex flex-col justify-between items-start p-8 gap-7 w-[308px] h-[573px] rounded-xl ${
                   plan.cardStyle === "black"
                     ? "bg-[#0D0D0D] border-2 border-[#0D0D0D]"
                     : "bg-white border-4 border-[#0D0D0D]"
                 } shadow-[6px_6px_0px_#000000]`}
               >
+                {/* Badge de réduction (seulement pour les plans annuels payants) */}
+                {billingPeriod === "annual" &&
+                  plan.planType !== "free" &&
+                  plan.discount > 0 && (
+                    <div className="absolute -top-5 right-8 flex justify-center items-center px-3 py-3 bg-white border-2 border-black z-10">
+                      <span
+                        className="text-[18px] font-bold leading-[109%] text-center uppercase text-[#0D0D0D] whitespace-nowrap"
+                        style={{ fontFamily: "Heebo, sans-serif" }}
+                      >
+                        Économisez {plan.discount}%
+                      </span>
+                    </div>
+                  )}
                 <div className="flex flex-col items-start gap-7 w-full">
                   {/* Header */}
                   <div className="flex flex-col items-start gap-2.5 w-full">
@@ -336,14 +388,21 @@ export default function PricingPage() {
                     checkoutLoading ||
                     updateLoading ||
                     managingSubscription ||
-                    (!loading && plan.planType === currentPlanType && plan.planType === "free")
+                    (!loading &&
+                      plan.planType === currentPlanType &&
+                      plan.planType === "free")
                   }
                   className={`flex flex-row justify-center items-center py-2.5 px-[27px] gap-2.5 w-full h-[54px] border-2 border-[#0D0D0D] shadow-[3px_3px_0px_#000000] rounded-xl transition-all ${
                     plan.buttonStyle === "primary"
                       ? "bg-[#FF506F] text-[#0D0D0D]"
                       : "bg-[#FEF8EE] text-[#0D0D0D]"
                   } ${
-                    checkoutLoading || updateLoading || managingSubscription || (!loading && plan.planType === currentPlanType && plan.planType === "free")
+                    checkoutLoading ||
+                    updateLoading ||
+                    managingSubscription ||
+                    (!loading &&
+                      plan.planType === currentPlanType &&
+                      plan.planType === "free")
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer"
                   }`}
@@ -352,9 +411,14 @@ export default function PricingPage() {
                     className="text-[16px] font-semibold leading-[23px] text-center"
                     style={{ fontFamily: "Heebo, sans-serif" }}
                   >
-                    {!loading && plan.planType === currentPlanType && billingPeriod === currentBillingPeriod && plan.planType !== "free"
+                    {!loading &&
+                    plan.planType === currentPlanType &&
+                    billingPeriod === currentBillingPeriod &&
+                    plan.planType !== "free"
                       ? "Gérer l'abonnement"
-                      : !loading && plan.planType === currentPlanType && plan.planType === "free"
+                      : !loading &&
+                        plan.planType === currentPlanType &&
+                        plan.planType === "free"
                       ? "Plan actuel"
                       : checkoutLoading || updateLoading || managingSubscription
                       ? "Chargement..."
@@ -379,15 +443,15 @@ export default function PricingPage() {
           currentPlan={currentPlanType}
           newPlan={pendingPlanChange.planType}
           currentPrice={
-            currentPlanType === 'pro'
-              ? billingPeriod === 'monthly'
-                ? pricing.pro.monthly?.formatted || '6,99€'
-                : pricing.pro.annual?.formatted || '69,99€'
-              : currentPlanType === 'team'
-              ? billingPeriod === 'monthly'
-                ? pricing.team.monthly?.formatted || '18,99€'
-                : pricing.team.annual?.formatted || '189,99€'
-              : '0€'
+            currentPlanType === "pro"
+              ? billingPeriod === "monthly"
+                ? pricing.pro.monthly?.formatted || "6,99€"
+                : pricing.pro.annual?.formatted || "69,99€"
+              : currentPlanType === "team"
+              ? billingPeriod === "monthly"
+                ? pricing.team.monthly?.formatted || "18,99€"
+                : pricing.team.annual?.formatted || "189,99€"
+              : "0€"
           }
           newPrice={pendingPlanChange.price}
           billingPeriod={billingPeriod}
