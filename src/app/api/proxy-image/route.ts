@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Vérifier le cache
     const cached = imageCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return new NextResponse(cached.buffer, {
+      return new NextResponse(new Uint8Array(cached.buffer), {
         headers: {
           'Content-Type': cached.contentType,
           'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    let buffer = Buffer.from(arrayBuffer);
+    let buffer: Buffer = Buffer.from(arrayBuffer);
 
     // Redimensionner l'image si nécessaire
     if (width || height || quality) {
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
       toDelete.forEach(([key]) => imageCache.delete(key));
     }
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',

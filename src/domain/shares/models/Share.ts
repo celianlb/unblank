@@ -20,6 +20,7 @@ export interface ShareWithUser extends Share {
     name: string;
     avatar_url?: string;
   } | null;
+  folders?: any; // Pour les shares avec informations de dossier
 }
 
 export interface CreateShareDTO {

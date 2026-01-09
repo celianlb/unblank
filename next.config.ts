@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Externaliser les packages natifs pour éviter les problèmes avec Turbopack
+  serverExternalPackages: ['re2'],
   async headers() {
     return [
       {

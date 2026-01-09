@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input } from '@/components/ui';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -143,3 +143,14 @@ export default function ForgotPasswordPage() {
   );
 }
 
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    }>
+      <ForgotPasswordForm />
+    </Suspense>
+  );
+}

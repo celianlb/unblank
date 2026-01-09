@@ -10,8 +10,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       queries: {
         // Cache les données pendant 5 minutes (données fraîches)
         staleTime: 5 * 60 * 1000,
-        // Garde les données en cache pendant 10 minutes
-        cacheTime: 10 * 60 * 1000,
+        // Garde les données en cache pendant 10 minutes (gcTime remplace cacheTime en v5)
+        gcTime: 10 * 60 * 1000,
         // Ne pas refetch automatiquement quand la fenêtre reprend le focus
         refetchOnWindowFocus: false,
         // Retry 1 fois en cas d'erreur

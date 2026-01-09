@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, OAuthButton } from "@/components/ui";
@@ -9,7 +9,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuth } from "@/lib/auth";
 import { isFromExtension, sendSessionToExtension } from "@/lib/extension/extensionBridge";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -256,5 +256,17 @@ export default function LoginPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen w-full bg-[#FEF8EE]">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

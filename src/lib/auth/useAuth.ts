@@ -27,10 +27,7 @@ export function useAuth() {
       const currentSession = await getCurrentSessionUseCase.execute();
       if (currentSession) {
         setSession(currentSession);
-        setUser({
-          id: currentSession.userId,
-          email: currentSession.email,
-        });
+        setUser(currentSession.user);
       }
     } catch (err) {
       console.error('Error loading session:', err);
@@ -51,10 +48,7 @@ export function useAuth() {
 
         // Update state
         setSession(userSession);
-        setUser({
-          id: userSession.userId,
-          email: userSession.email,
-        });
+        setUser(userSession.user);
 
         // Note: Redirection is now handled by the calling component
         // via useAuthContext and useEffect monitoring session state
@@ -196,11 +190,25 @@ export function useAuth() {
     setError(null);
 
     try {
-      const resetPasswordUseCase = AuthFactory.createResetPasswordUseCase();
-      await resetPasswordUseCase.execute(email);
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email de réinitialisation');
+      }
+
       return true;
     } catch (err) {
       if (err instanceof AuthError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('Erreur lors de l\'envoi de l\'email de réinitialisation');

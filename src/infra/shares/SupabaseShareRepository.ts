@@ -240,7 +240,7 @@ export class SupabaseShareRepository implements ShareRepository {
     // Récupérer les shares sans faire de jointure avec folders (pour éviter les problèmes RLS)
     const { data: shares, error } = await this.supabase
       .from('shares')
-      .select('id, folder_id, permission, created_at')
+      .select('*')
       .eq('is_active', true)
       .eq('shared_with_email', userEmail)
       .order('created_at', { ascending: false });

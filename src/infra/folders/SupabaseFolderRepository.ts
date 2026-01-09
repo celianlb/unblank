@@ -79,7 +79,7 @@ export class SupabaseFolderRepository implements FolderRepository {
 
     // Pour chaque dossier, récupérer les 2 dernières images
     const foldersWithImages = await Promise.all(
-      folders.map(async (folder) => {
+      folders.map(async (folder: any) => {
         const { data: links } = await this.supabase
           .from('links')
           .select('original_image_url, screenshot_url')
@@ -115,7 +115,7 @@ export class SupabaseFolderRepository implements FolderRepository {
 
     // Pour chaque groupe, récupérer 1 image par dossier enfant (max 4 dossiers)
     const groupsWithImages = await Promise.all(
-      groups.map(async (group) => {
+      groups.map(async (group: any) => {
         // Récupérer tous les dossiers du groupe (limité à 4)
         const { data: groupFolders } = await this.supabase
           .from('folders')

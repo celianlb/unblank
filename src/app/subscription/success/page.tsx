@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
  * Page de confirmation après un paiement Stripe réussi
  * Affiche un message de succès et redirige vers l'app
  */
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session, refreshSession } = useAuthContext();
@@ -124,5 +124,17 @@ export default function SubscriptionSuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    }>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }
