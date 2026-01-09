@@ -246,7 +246,7 @@ export default function PricingPage() {
               className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border-2 ${
                 billingPeriod === "monthly"
                   ? "bg-[#FF506F] text-black border-black"
-                  : "bg-gray-50 text-black border-transparent hover:bg-gray-100"
+                  : "bg-gray-200 text-black border-transparent hover:bg-gray-100"
               }`}
               style={{ fontFamily: "Heebo, sans-serif" }}
             >
@@ -254,14 +254,21 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setBillingPeriod("annual")}
-              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border-2 ${
+              className={`relative px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border-2 ${
                 billingPeriod === "annual"
                   ? "bg-[#FF506F] text-black border-black"
-                  : "bg-gray-50 text-black border-transparent hover:bg-gray-100"
+                  : "bg-gray-200 text-black border-transparent hover:bg-gray-100"
               }`}
               style={{ fontFamily: "Heebo, sans-serif" }}
             >
               Annuel
+              {/* Badge % bleu */}
+              <span
+                className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-6 h-6 rounded-full bg-[#202AED] border-2 border-black shadow-[1px_1px_0px_#000000] text-white text-[14px] font-bold"
+                style={{ fontFamily: "Heebo, sans-serif", lineHeight: "1" }}
+              >
+                %
+              </span>
             </button>
           </div>
 
@@ -428,6 +435,22 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
+
+          {/* Bouton Voir mes factures (si l'utilisateur a déjà eu un abonnement Stripe) */}
+          {!loading && subscription && subscription.stripeCustomerId && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={managingSubscription}
+              className="flex items-center justify-center px-6 py-3 gap-2 bg-white border-2 border-[#0D0D0D] rounded-xl shadow-[3px_3px_0px_#000000] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span
+                className="text-base font-semibold text-[#0D0D0D]"
+                style={{ fontFamily: "Heebo, sans-serif" }}
+              >
+                {managingSubscription ? "Chargement..." : "Voir mes factures"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
