@@ -32,6 +32,23 @@ export default function PricingPage() {
 
   const currentPlanType = subscription?.plan || "free";
 
+  // Déterminer la période de facturation actuelle de l'abonnement
+  const getCurrentBillingPeriod = (): "monthly" | "annual" => {
+    if (!subscription?.stripePriceId) return "monthly";
+    
+    const currentPriceId = subscription.stripePriceId;
+    
+    // Vérifier si le price ID correspond à un plan annuel
+    if (currentPriceId === pricing.pro.annual?.priceId || 
+        currentPriceId === pricing.team.annual?.priceId) {
+      return "annual";
+    }
+    
+    return "monthly";
+  };
+
+  const currentBillingPeriod = getCurrentBillingPeriod();
+
   // Fonction pour ouvrir le portail Stripe
   const handleManageSubscription = useCallback(async () => {
     if (!session?.accessToken) return;
@@ -80,8 +97,13 @@ export default function PricingPage() {
 
   // Gérer le clic sur un bouton de plan
   const handlePlanClick = (plan: typeof plans[number]) => {
-    // Si c'est le plan actuel (et pas gratuit), ouvrir le portail de gestion
-    if (!loading && plan.planType === currentPlanType && plan.planType !== "free") {
+    // Si c'est le plan actuel ET la même période de facturation (et pas gratuit), ouvrir le portail de gestion
+    const isSamePlanAndPeriod = !loading && 
+      plan.planType === currentPlanType && 
+      billingPeriod === currentBillingPeriod && 
+      plan.planType !== "free";
+
+    if (isSamePlanAndPeriod) {
       handleManageSubscription();
     } else if (plan.planType !== "free") {
       // Si on a déjà un abonnement actif, afficher la modale de confirmation
@@ -176,6 +198,32 @@ export default function PricingPage() {
             >
               Accède à 80% des fonctionnalités gratuitement dès maintenant.
             </p>
+          </div>
+
+          {/* Toggle Mensuel/Annuel */}
+          <div className="flex items-center gap-3 p-1.5 bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_#000000]">
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+                billingPeriod === "monthly"
+                  ? "bg-black text-white"
+                  : "bg-transparent text-black hover:bg-gray-100"
+              }`}
+              style={{ fontFamily: "Heebo, sans-serif" }}
+            >
+              Mensuel
+            </button>
+            <button
+              onClick={() => setBillingPeriod("annual")}
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+                billingPeriod === "annual"
+                  ? "bg-black text-white"
+                  : "bg-transparent text-black hover:bg-gray-100"
+              }`}
+              style={{ fontFamily: "Heebo, sans-serif" }}
+            >
+              Annuel
+            </button>
           </div>
 
           {/* Pricing Cards */}
@@ -304,7 +352,7 @@ export default function PricingPage() {
                     className="text-[16px] font-semibold leading-[23px] text-center"
                     style={{ fontFamily: "Heebo, sans-serif" }}
                   >
-                    {!loading && plan.planType === currentPlanType && plan.planType !== "free"
+                    {!loading && plan.planType === currentPlanType && billingPeriod === currentBillingPeriod && plan.planType !== "free"
                       ? "Gérer l'abonnement"
                       : !loading && plan.planType === currentPlanType && plan.planType === "free"
                       ? "Plan actuel"
