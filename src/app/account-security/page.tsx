@@ -14,7 +14,7 @@ export default function AccountSecurityPage() {
   const { session, loading, refreshSession } = useAuthContext();
 
   // Actions depuis useAuth (updatePassword, deleteAccount, etc.)
-  const { updatePassword, deleteAccount, isLoading } = useAuth();
+  const { updatePassword, deleteAccount, signOut, isLoading } = useAuth();
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -99,11 +99,16 @@ export default function AccountSecurityPage() {
       if (success) {
         setShowDeleteModal(false);
 
-        // Refresh the AuthContext to clear the session
-        await refreshSession();
+        // Déconnexion complète pour nettoyer toutes les sessions Supabase
+        await signOut();
 
-        // Redirect to login page
-        router.push('/login');
+        // Vider tous les storages pour être sûr
+        sessionStorage.clear();
+        localStorage.clear();
+
+        // Force un rechargement complet de la page pour vider le state
+        // router.push() ne suffit pas car c'est une navigation SPA
+        window.location.href = '/login';
       }
       return success;
     } catch (error) {

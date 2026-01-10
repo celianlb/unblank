@@ -10,6 +10,7 @@ import { CreateCheckoutSessionUseCase } from '@/application/subscription/usecase
 import { UpdateSubscriptionUseCase } from '@/application/subscription/usecases/UpdateSubscriptionUseCase';
 import { HandleWebhookUseCase } from '@/application/subscription/usecases/HandleWebhookUseCase';
 import { GetSubscriptionStatusUseCase } from '@/application/subscription/usecases/GetSubscriptionStatusUseCase';
+import { CancelSubscriptionUseCase } from '@/application/subscription/usecases/CancelSubscriptionUseCase';
 
 /**
  * Factory pour créer les instances configurées
@@ -62,5 +63,14 @@ export class SubscriptionFactory {
    */
   static createGetSubscriptionStatusUseCase(supabase: SupabaseClient): GetSubscriptionStatusUseCase {
     return new GetSubscriptionStatusUseCase(supabase);
+  }
+
+  /**
+   * Crée le use case pour annuler un abonnement
+   */
+  static createCancelSubscriptionUseCase(supabase: SupabaseClient): CancelSubscriptionUseCase {
+    const stripeService = this.createStripeService();
+
+    return new CancelSubscriptionUseCase(stripeService, supabase);
   }
 }

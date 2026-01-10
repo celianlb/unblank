@@ -16,6 +16,8 @@ import { AvatarUrlService } from '@/application/auth/AvatarUrlService';
 import { SupabaseAvatarStorageService } from '@/infra/storage/SupabaseAvatarStorageService';
 import { UploadAvatarUseCase } from '@/application/auth/UploadAvatarUseCase';
 import { AvatarStoragePort } from '@/application/auth/ports/AvatarStoragePort';
+import { SubscriptionFactory } from '@/infra/subscription/SubscriptionFactory';
+import { DeleteAccountWithSubscriptionUseCase } from '@/application/auth/usecases/DeleteAccountWithSubscriptionUseCase';
 
 /**
  * Factory pour créer les instances d'authentification
@@ -133,7 +135,8 @@ class AuthFactory {
    * Crée une nouvelle instance du use case DeleteAccount
    */
   static createDeleteAccountUseCase(): DeleteAccountUseCase {
-    return new DeleteAccountUseCase(this.getAuthService());
+    const cancelSubscriptionUseCase = SubscriptionFactory.createCancelSubscriptionUseCase(supabase);
+    return new DeleteAccountUseCase(this.getAuthService(), cancelSubscriptionUseCase);
   }
 
   /**
@@ -143,6 +146,20 @@ class AuthFactory {
     return new UploadAvatarUseCase(
       this.getAvatarStorageService(),
       this.getAvatarUrlService()
+    );
+  }
+
+  /**
+   * Crée une nouvelle instance du use case DeleteAccountWithSubscription
+   * Ce use case est destiné à être utilisé côté serveur (routes API)
+   * car il nécessite l'accès à Stripe
+   */
+  static createDeleteAccountWithSubscriptionUseCase(): DeleteAccountWithSubscriptionUseCase {
+    const cancelSubscriptionUseCase = SubscriptionFactory.createCancelSubscriptionUseCase(supabase);
+    return new DeleteAccountWithSubscriptionUseCase(
+      this.getAuthRepository(),
+      cancelSubscriptionUseCase,
+      supabase
     );
   }
 }

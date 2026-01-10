@@ -282,8 +282,33 @@ export function useAuth() {
     setError(null);
 
     try {
-      const deleteAccountUseCase = AuthFactory.createDeleteAccountUseCase();
-      await deleteAccountUseCase.execute();
+      console.log('[useAuth] deleteAccount: Getting current session...');
+
+      // Récupérer le token de la session actuelle
+      const currentSession = await getCurrentSession();
+      if (!currentSession || !currentSession.accessToken) {
+        console.error('[useAuth] deleteAccount: No session or access token');
+        throw new Error('No authenticated session found');
+      }
+
+      console.log('[useAuth] deleteAccount: Calling API route...');
+
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('[useAuth] deleteAccount: API error:', data.error);
+        throw new Error(data.error || 'Erreur lors de la suppression du compte');
+      }
+
+      console.log('[useAuth] deleteAccount: Account deleted successfully');
 
       // Clear state
       setSession(null);
@@ -294,16 +319,22 @@ export function useAuth() {
 
       return true;
     } catch (err) {
+      console.error('[useAuth] deleteAccount: Error occurred:', err);
       if (err instanceof AuthError) {
+        console.error('[useAuth] deleteAccount: AuthError:', err.message);
+        setError(err.message);
+      } else if (err instanceof Error) {
+        console.error('[useAuth] deleteAccount: Error:', err.message);
         setError(err.message);
       } else {
+        console.error('[useAuth] deleteAccount: Unknown error');
         setError('Erreur lors de la suppression du compte');
       }
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getCurrentSession]);
 
   return {
     signIn,
