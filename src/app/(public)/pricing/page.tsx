@@ -34,6 +34,7 @@ export default function PricingPage() {
     planName: string;
     price: string;
   } | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<"free" | "pro" | "team" | null>(null);
 
   const currentPlanType = subscription?.plan || "free";
 
@@ -95,10 +96,18 @@ export default function PricingPage() {
     }
   }, [hasActiveSubscription, managingSubscription, handleManageSubscription]);
 
+  // Réinitialiser loadingPlan quand les chargements se terminent
+  useEffect(() => {
+    if (!checkoutLoading && !updateLoading && !managingSubscription) {
+      setLoadingPlan(null);
+    }
+  }, [checkoutLoading, updateLoading, managingSubscription]);
+
   // Gérer la confirmation du changement de plan
   const handleConfirmPlanChange = async () => {
     if (!pendingPlanChange) return;
 
+    setLoadingPlan(pendingPlanChange.planType);
     setShowConfirmModal(false);
     await updateSubscription(pendingPlanChange.planType, billingPeriod);
     setPendingPlanChange(null);
@@ -106,6 +115,8 @@ export default function PricingPage() {
 
   // Gérer le clic sur un bouton de plan
   const handlePlanClick = (plan: (typeof plans)[number]) => {
+    setLoadingPlan(plan.planType);
+
     // Si c'est le plan actuel ET la même période de facturation (et pas gratuit), ouvrir le portail de gestion
     const isSamePlanAndPeriod =
       !loading &&
@@ -129,6 +140,7 @@ export default function PricingPage() {
             billingPeriod === "monthly" ? plan.priceMonthly : plan.priceAnnual,
         });
         setShowConfirmModal(true);
+        setLoadingPlan(null);
       } else {
         // Sinon créer un nouveau checkout
         createCheckoutSession(plan.planType, billingPeriod);
@@ -392,9 +404,7 @@ export default function PricingPage() {
                 <button
                   onClick={() => handlePlanClick(plan)}
                   disabled={
-                    checkoutLoading ||
-                    updateLoading ||
-                    managingSubscription ||
+                    loadingPlan !== null ||
                     (!loading &&
                       plan.planType === currentPlanType &&
                       plan.planType === "free")
@@ -404,13 +414,13 @@ export default function PricingPage() {
                       ? "bg-[#FF506F] text-[#0D0D0D]"
                       : "bg-[#FEF8EE] text-[#0D0D0D]"
                   } ${
-                    checkoutLoading ||
-                    updateLoading ||
-                    managingSubscription ||
+                    loadingPlan === plan.planType ||
                     (!loading &&
                       plan.planType === currentPlanType &&
                       plan.planType === "free")
                       ? "opacity-50 cursor-not-allowed"
+                      : loadingPlan !== null
+                      ? "opacity-30 cursor-not-allowed"
                       : "hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer"
                   }`}
                 >
@@ -427,7 +437,7 @@ export default function PricingPage() {
                         plan.planType === currentPlanType &&
                         plan.planType === "free"
                       ? "Plan actuel"
-                      : checkoutLoading || updateLoading || managingSubscription
+                      : loadingPlan === plan.planType
                       ? "Chargement..."
                       : plan.buttonText}
                   </span>
