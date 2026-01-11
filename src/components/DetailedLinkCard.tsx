@@ -86,7 +86,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative">
+      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">
@@ -236,13 +236,13 @@ export default function DetailedLinkCard({
 
         {/* Tags - Frame 145 */}
         {tags.length > 0 && (
-          <div className="flex flex-row items-start gap-1.5">
+          <div className="flex flex-row items-start gap-1.5 w-full overflow-hidden">
             {tags.map((tag, index) => (
               <div
                 key={index}
-                className="flex flex-row justify-center items-center px-2 py-1 h-[29px] bg-[#FEF8EE] border-2 border-black rounded-lg"
+                className="flex flex-row justify-center items-center px-2 py-1 h-[29px] bg-[#FEF8EE] border-2 border-black rounded-lg shrink-0"
               >
-                <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo]">
+                <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
                   #{tag}
                 </span>
               </div>

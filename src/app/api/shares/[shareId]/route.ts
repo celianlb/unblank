@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       if (userData.subscription_plan === 'free') {
         return NextResponse.json(
           {
-            error: 'Edit permission requires Pro or Team plan',
+            error: 'Edit permission requires Pro plan',
             code: 'UPGRADE_REQUIRED'
           },
           { status: 403 }

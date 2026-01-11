@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
       const hasAIAccess =
         userData?.subscription_status === 'active' &&
-        (userData?.subscription_plan === 'pro' || userData?.subscription_plan === 'team');
+        userData?.subscription_plan === 'pro';
 
       if (!hasAIAccess) {
         console.log('[Create Link] ⚠️ User attempted AI tagging without active subscription');

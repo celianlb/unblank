@@ -132,7 +132,7 @@ export class HandleWebhookUseCase {
         // Pour un abonnement actif récurrent: stocke la fin de période actuelle
         // Pour un abonnement annulé: permet de garder l'accès jusqu'à cette date
         subscription_expires_at: currentPeriodEnd?.toISOString() || null,
-        monthly_links_limit: plan === 'pro' || plan === 'team' ? -1 : 50,
+        monthly_links_limit: plan === 'pro' ? -1 : 50,
       })
       .eq('id', user.id);
 
@@ -408,7 +408,7 @@ export class HandleWebhookUseCase {
         stripe_subscription_id: event.subscriptionId,
         stripe_price_id: event.priceId,
         subscription_expires_at: currentPeriodEnd?.toISOString() || null,
-        monthly_links_limit: plan === 'pro' || plan === 'team' ? -1 : 50,
+        monthly_links_limit: plan === 'pro' ? -1 : 50,
       })
       .eq('id', user.id);
 

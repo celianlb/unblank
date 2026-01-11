@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // 2. Parser et valider le body
     const body = await request.json();
     const { planType, billingPeriod } = body as {
-      planType: 'pro' | 'team';
+      planType: 'pro';
       billingPeriod?: 'monthly' | 'annual';
     };
 

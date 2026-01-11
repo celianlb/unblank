@@ -9,7 +9,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface UpdateSubscriptionInput {
   userId: string;
-  planType: 'pro' | 'team';
+  planType: 'pro';
   billingInterval: BillingInterval;
 }
 

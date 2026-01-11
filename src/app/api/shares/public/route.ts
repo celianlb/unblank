@@ -59,8 +59,9 @@ export async function POST(request: NextRequest) {
       expiresAt
     );
 
-    // Generate the share URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Generate the share URL - use request origin as primary source for production
+    const origin = request.headers.get('origin');
+    const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const shareUrl = `${baseUrl}/s/${share.share_token}`;
 
     return NextResponse.json({ share, shareUrl });

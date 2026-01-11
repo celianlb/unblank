@@ -75,7 +75,7 @@ export default function PricingPage() {
         "Tags manuels",
         "Création de dossiers illimité",
         "Sauvegarde de 50 liens par mois",
-        "Collaboration limité à 2 personnes en simultané",
+        "Collaboration limité à 15 personnes",
         "Création de liens d'affiliations",
       ],
       buttonText: "Continuer avec ce plan",
@@ -92,29 +92,19 @@ export default function PricingPage() {
         "Toutes les features du plan gratuit",
         "Tags des liens et images automatiquement par IA",
         "Création de groupe de dossier et de sous-dossier en illimités",
-        "Collaboration jusqu'à 4 personnes en simultané",
+        "Collaboration jusqu'à 30 personnes",
+        "Liens illimités par mois",
       ],
       buttonText: "Choisir ce forfait",
       buttonStyle: "secondary",
       cardStyle: "black",
       highlighted: true,
     },
-    {
-      name: "Team",
-      priceMonthly: pricing.team.monthly?.formatted || "18,99€",
-      priceAnnual: pricing.team.annual?.formatted || "189,99€",
-      planType: "team" as const,
-      description: "Pour les équipes de 3 à 5 membres",
-      features: ["Toutes les features du plan pro", "Collaboration illimité"],
-      buttonText: "Continuer avec ce plan",
-      buttonStyle: "primary",
-      cardStyle: "white",
-    },
   ];
 
   // Filtrer les plans : ne pas afficher "free" si l'utilisateur a un plan payant
   const displayedPlans = plans.filter((plan) => {
-    if (currentPlanType === "pro" || currentPlanType === "team") {
+    if (currentPlanType === "pro") {
       return plan.planType !== "free";
     }
     return true;

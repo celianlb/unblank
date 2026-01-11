@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Déterminer le plan type depuis la table users (pas subscriptions)
     // IMPORTANT: Le plan est uniquement accordé si subscription_status === 'active'
-    let planType: 'free' | 'pro' | 'team' = 'free';
+    let planType: 'free' | 'pro' = 'free';
     const isActive = userData?.subscription_status === 'active';
 
     if (userData?.subscription_plan && isActive) {
@@ -39,8 +39,6 @@ export async function GET(request: NextRequest) {
       console.log('[API /me] Detected ACTIVE subscription plan from users table:', subscriptionPlan);
       if (subscriptionPlan === 'pro') {
         planType = 'pro';
-      } else if (subscriptionPlan === 'team') {
-        planType = 'team';
       }
     } else if (userData?.subscription_plan && !isActive) {
       console.log('[API /me] User has plan', userData.subscription_plan, 'but status is', userData.subscription_status, '→ treating as free');
@@ -58,22 +56,14 @@ export async function GET(request: NextRequest) {
         canUseAITags: false,
         canCreateGroups: false,
         canShareWithEdit: false,
-        maxShareMembers: 2,
+        maxShareMembers: 15,
       },
       pro: {
         monthlyLinksLimit: -1, // unlimited
         canUseAITags: true,
         canCreateGroups: true,
         canShareWithEdit: true,
-        maxShareMembers: 4,
-      },
-      team: {
-        monthlyLinksLimit: -1, // unlimited
-        canUseAITags: true,
-        canCreateGroups: true,
-        canShareWithEdit: true,
-        maxShareMembers: -1, // unlimited
-        hasUnlimitedCollaboration: true,
+        maxShareMembers: 30,
       },
     };
 
@@ -97,12 +87,12 @@ export async function GET(request: NextRequest) {
       usage: {
         linksThisMonth: linksThisMonth,
         // Pour free, utiliser la limite de la DB (peut être personnalisée)
-        // Pour pro/team, utiliser -1 (illimité)
+        // Pour pro, utiliser -1 (illimité)
         linksLimit: planType === 'free' ? dbLinksLimit : features[planType].monthlyLinksLimit,
         linksRemaining:
           planType === 'free'
             ? Math.max(0, dbLinksLimit - linksThisMonth)
-            : -1, // Illimité pour pro/team
+            : -1, // Illimité pour pro
       },
     });
   } catch (error) {

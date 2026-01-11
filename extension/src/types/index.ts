@@ -25,15 +25,14 @@ export interface AuthSession {
 }
 
 // Subscription types
-export type SubscriptionPlanType = 'free' | 'pro' | 'team';
+export type SubscriptionPlanType = 'free' | 'pro';
 
 export interface SubscriptionFeatures {
   monthlyLinksLimit: number; // -1 = unlimited
   canUseAITags: boolean;
   canCreateGroups: boolean;
   canShareWithEdit: boolean;
-  maxShareMembers: number; // -1 = unlimited
-  hasUnlimitedCollaboration?: boolean;
+  maxShareMembers: number; // 15 pour free, 30 pour pro
 }
 
 export interface UserSubscription {

@@ -3,17 +3,16 @@
  * Représente les différents plans disponibles sur Unblank
  */
 
-export type SubscriptionPlanType = 'free' | 'pro' | 'team';
+export type SubscriptionPlanType = 'free' | 'pro';
 export type SubscriptionStatus = 'inactive' | 'active' | 'canceled' | 'past_due';
 export type BillingInterval = 'monthly' | 'yearly';
 
 export interface SubscriptionPlanFeatures {
-  monthlyLinksLimit: number; // 50 pour free, illimité pour pro/team
-  canUseAITags: boolean; // false pour free, true pour pro/team
-  canCreateGroups: boolean; // false pour free, true pour pro/team
-  canShareWithEdit: boolean; // false pour free, true pour pro/team
-  maxShareMembers: number; // 2 pour free, 4 pour pro, illimité pour team
-  hasUnlimitedCollaboration: boolean; // false pour free/pro, true pour team
+  monthlyLinksLimit: number; // 50 pour free, illimité pour pro
+  canUseAITags: boolean; // false pour free, true pour pro
+  canCreateGroups: boolean; // false pour free, true pour pro
+  canShareWithEdit: boolean; // false pour free, true pour pro
+  maxShareMembers: number; // 15 pour free, 30 pour pro
 }
 
 export interface SubscriptionPlanPricing {
@@ -47,8 +46,7 @@ export class  SubscriptionPlan {
       canUseAITags: false,
       canCreateGroups: false,
       canShareWithEdit: false,
-      maxShareMembers: 2,
-      hasUnlimitedCollaboration: false,
+      maxShareMembers: 15,
     },
     null
   );
@@ -62,8 +60,7 @@ export class  SubscriptionPlan {
       canUseAITags: true,
       canCreateGroups: true,
       canShareWithEdit: true,
-      maxShareMembers: 4,
-      hasUnlimitedCollaboration: false,
+      maxShareMembers: 30,
     },
     {
       monthlyPrice: 6.99,
@@ -76,29 +73,6 @@ export class  SubscriptionPlan {
     }
   );
 
-  static readonly TEAM = new SubscriptionPlan(
-    'team',
-    'Team',
-    'Pour équipes créatives (3-5 membres)',
-    {
-      monthlyLinksLimit: -1, // illimité
-      canUseAITags: true,
-      canCreateGroups: true,
-      canShareWithEdit: true,
-      maxShareMembers: -1, // illimité
-      hasUnlimitedCollaboration: true,
-    },
-    {
-      monthlyPrice: 18.99,
-      yearlyPrice: 199.99,
-      yearlyDiscount: 12, // ~12% de réduction
-    },
-    {
-      monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY,
-      yearly: process.env.STRIPE_PRICE_TEAM_YEARLY,
-    }
-  );
-
   /**
    * Récupérer un plan par son type
    */
@@ -108,8 +82,6 @@ export class  SubscriptionPlan {
         return SubscriptionPlan.FREE;
       case 'pro':
         return SubscriptionPlan.PRO;
-      case 'team':
-        return SubscriptionPlan.TEAM;
       default:
         return SubscriptionPlan.FREE;
     }

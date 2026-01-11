@@ -175,16 +175,16 @@ export default function ImageCard({
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
           <div
-            className={`absolute left-2 sm:left-3 bottom-[50px] sm:bottom-[61px] ${
+            className={`absolute left-2 sm:left-3 right-2 sm:right-3 bottom-[50px] sm:bottom-[61px] ${
               showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } flex-row gap-1`}
+            } flex-row gap-1 overflow-hidden`}
           >
             {tags.map((tag, index) => (
               <div
                 key={index}
-                className="flex flex-row justify-center items-center px-1.5 sm:px-2 py-0.5 sm:py-1 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg"
+                className="flex flex-row justify-center items-center px-1.5 sm:px-2 py-0.5 sm:py-1 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg shrink-0"
               >
-                <span className="text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo]">
+                <span className="text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
                   #{tag}
                 </span>
               </div>

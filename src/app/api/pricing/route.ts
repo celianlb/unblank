@@ -12,8 +12,6 @@ export async function GET() {
     console.log('[PRICING API] Expected price IDs:', {
       proMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
       proYearly: process.env.STRIPE_PRICE_PRO_YEARLY,
-      teamMonthly: process.env.STRIPE_PRICE_TEAM_MONTHLY,
-      teamYearly: process.env.STRIPE_PRICE_TEAM_YEARLY,
     });
 
     const prices = await stripe.prices.list({
@@ -27,21 +25,16 @@ export async function GET() {
     // Mapper les prix par plan
     const pricingData: Record<string, any> = {
       pro: { monthly: null, annual: null },
-      team: { monthly: null, annual: null },
     };
 
     prices.data.forEach((price) => {
       // Identifier le plan basé sur le price ID des variables d'environnement
-      let planType: 'pro' | 'team' | null = null;
-      
+      let planType: 'pro' | null = null;
+
       if (price.id === process.env.STRIPE_PRICE_PRO_MONTHLY) {
         planType = 'pro';
       } else if (price.id === process.env.STRIPE_PRICE_PRO_YEARLY) {
         planType = 'pro';
-      } else if (price.id === process.env.STRIPE_PRICE_TEAM_MONTHLY) {
-        planType = 'team';
-      } else if (price.id === process.env.STRIPE_PRICE_TEAM_YEARLY) {
-        planType = 'team';
       }
 
       if (!planType) return;

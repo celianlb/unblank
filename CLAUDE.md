@@ -146,13 +146,13 @@ Auth flow: User clicks login in extension → opens web app with `?ext=true` →
 
 ## Subscription Plans
 
-| Feature | Free | Pro (€6.99/mo) | Team (€18.99/mo) |
-|---------|------|----------------|------------------|
-| Monthly links | 50 | Unlimited | Unlimited |
-| AI Tags | ❌ | ✅ | ✅ |
-| Folder Groups | ❌ | ✅ | ✅ |
-| Edit sharing | ❌ | ✅ | ✅ |
-| Share members | 2 | 4 | Unlimited |
+| Feature | Free | Pro (€6.99/mo) |
+|---------|------|----------------|
+| Monthly links | 50 | Unlimited |
+| AI Tags | ❌ | ✅ |
+| Folder Groups | ❌ | ✅ |
+| Edit sharing | ❌ | ✅ |
+| Share members | 15 | 30 |
 
 ## Environment Variables
 
@@ -168,8 +168,6 @@ STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 STRIPE_PRICE_PRO_MONTHLY
 STRIPE_PRICE_PRO_YEARLY
-STRIPE_PRICE_TEAM_MONTHLY
-STRIPE_PRICE_TEAM_YEARLY
 
 # OpenAI (for AI tagging)
 OPEN_API_KEY

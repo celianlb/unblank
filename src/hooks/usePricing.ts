@@ -19,7 +19,6 @@ interface PlanPricing {
 
 interface PricingData {
   pro: PlanPricing;
-  team: PlanPricing;
 }
 
 // Prix de fallback en cas d'erreur
@@ -27,10 +26,6 @@ const FALLBACK_PRICING: PricingData = {
   pro: {
     monthly: { amount: 6.99, priceId: '', formatted: '6,99€' },
     annual: { amount: 69.99, priceId: '', formatted: '69,99€' },
-  },
-  team: {
-    monthly: { amount: 18.99, priceId: '', formatted: '18,99€' },
-    annual: { amount: 189.99, priceId: '', formatted: '189,99€' },
   },
 };
 

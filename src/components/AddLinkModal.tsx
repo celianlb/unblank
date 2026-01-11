@@ -35,10 +35,10 @@ export default function AddLinkModal({
   // Mutation React Query
   const createLink = useCreateLink(session?.user?.id || "", folderId);
 
-  // Vérifier si l'utilisateur peut utiliser l'IA (pro ou team avec statut actif)
+  // Vérifier si l'utilisateur peut utiliser l'IA (pro avec statut actif)
   const canUseAI =
     subscription?.isActive() &&
-    (subscription?.plan === "pro" || subscription?.plan === "team");
+    subscription?.plan === "pro";
 
   // Réinitialiser le formulaire quand la modale s'ouvre/ferme
   useEffect(() => {

@@ -30,7 +30,7 @@ export class SubscriptionService {
     if (!plan.features.canShareWithEdit) {
       return {
         allowed: false,
-        reason: 'Edit sharing requires Pro or Team plan',
+        reason: 'Edit sharing requires Pro plan',
       };
     }
 
@@ -46,7 +46,7 @@ export class SubscriptionService {
     if (!plan.features.canCreateGroups) {
       return {
         allowed: false,
-        reason: 'Groups require Pro or Team plan',
+        reason: 'Groups require Pro plan',
       };
     }
 
@@ -62,11 +62,6 @@ export class SubscriptionService {
   ): { allowed: boolean; reason?: string } {
     const plan = SubscriptionPlan.getByType(subscription.plan);
     const maxMembers = plan.features.maxShareMembers;
-
-    if (maxMembers === -1) {
-      // Illimité
-      return { allowed: true };
-    }
 
     if (currentMembersCount >= maxMembers) {
       return {
@@ -112,15 +107,9 @@ export class SubscriptionService {
   getPlanFromPriceId(priceId: string): SubscriptionPlanType {
     const proMonthly = process.env.STRIPE_PRICE_PRO_MONTHLY;
     const proYearly = process.env.STRIPE_PRICE_PRO_YEARLY;
-    const teamMonthly = process.env.STRIPE_PRICE_TEAM_MONTHLY;
-    const teamYearly = process.env.STRIPE_PRICE_TEAM_YEARLY;
 
     if (priceId === proMonthly || priceId === proYearly) {
       return 'pro';
-    }
-
-    if (priceId === teamMonthly || priceId === teamYearly) {
-      return 'team';
     }
 
     return 'free';

@@ -10,7 +10,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export interface CreateCheckoutSessionInput {
   userId: string;
   userEmail: string;
-  planType: 'pro' | 'team';
+  planType: 'pro';
   billingInterval: BillingInterval;
   successUrl: string;
   cancelUrl: string;

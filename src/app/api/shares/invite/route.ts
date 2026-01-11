@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       if (userData.subscription_plan === 'free') {
         return NextResponse.json(
           {
-            error: 'Edit permission requires Pro or Team plan',
+            error: 'Edit permission requires Pro plan',
             code: 'UPGRADE_REQUIRED'
           },
           { status: 403 }

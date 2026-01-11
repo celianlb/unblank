@@ -201,16 +201,16 @@ export default function LinkCard({
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
           <div
-            className={`absolute left-3 bottom-[61px] ${
+            className={`absolute left-3 right-3 bottom-[61px] ${
               showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } flex-row gap-1`}
+            } flex-row gap-1 overflow-hidden`}
           >
             {tags.map((tag, index) => (
               <div
                 key={index}
-                className="flex flex-row justify-center items-center px-2 py-1 bg-[#FEF8EE] border-2 border-black rounded-lg"
+                className="flex flex-row justify-center items-center px-2 py-1 bg-[#FEF8EE] border-2 border-black rounded-lg shrink-0"
               >
-                <span className="text-sm leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo]">
+                <span className="text-sm leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
                   #{tag}
                 </span>
               </div>
