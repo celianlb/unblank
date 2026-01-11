@@ -96,7 +96,7 @@ export default function ShareTokenPage() {
         // 4. Get folder info and redirect to the shared folder
         const { data: folderData, error: folderError } = await supabase
           .from("folders")
-          .select("slug, user_id")
+          .select("slug, user_id, is_group, parent_folder_id")
           .eq("id", data.share.folder_id)
           .single();
 
@@ -106,8 +106,28 @@ export default function ShareTokenPage() {
           return;
         }
 
-        // 5. Redirect to the shared folder (using slug route, not /s/)
-        router.push(`/${folderData.slug}`);
+        // 5. Redirect based on folder type
+        if (folderData.is_group) {
+          // C'est un groupe → rediriger vers /[slug]
+          router.push(`/${folderData.slug}`);
+        } else if (folderData.parent_folder_id) {
+          // C'est un dossier dans un groupe → récupérer le slug du groupe parent
+          const { data: parentGroup } = await supabase
+            .from("folders")
+            .select("slug")
+            .eq("id", folderData.parent_folder_id)
+            .single();
+
+          if (parentGroup) {
+            router.push(`/${parentGroup.slug}/${folderData.slug}`);
+          } else {
+            // Fallback si le groupe parent n'existe pas
+            router.push(`/app/${folderData.slug}`);
+          }
+        } else {
+          // C'est un dossier racine (sans groupe) → rediriger vers /app/[slug]
+          router.push(`/app/${folderData.slug}`);
+        }
 
       } catch (err) {
         console.error("Error handling share link:", err);
