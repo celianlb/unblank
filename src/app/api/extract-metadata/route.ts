@@ -1,17 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import metascraper from 'metascraper';
-import metascraperDescription from 'metascraper-description';
-import metascraperImage from 'metascraper-image';
-import metascraperTitle from 'metascraper-title';
-import metascraperUrl from 'metascraper-url';
 
-// Configuration du scraper
-const scraper = metascraper([
-  metascraperDescription(),
-  metascraperImage(),
-  metascraperTitle(),
-  metascraperUrl(),
-]);
+// Simple metadata extraction without external dependencies
+function extractMetadata(html: string, url: string): { title: string; description: string; image: string | null } {
+  // Extract title
+  let title = '';
+  const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+  const twitterTitleMatch = html.match(/<meta[^>]*name=["']twitter:title["'][^>]*content=["']([^"']+)["']/i);
+  const titleTagMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+
+  title = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || titleTagMatch?.[1] || '';
+
+  // Extract description
+  let description = '';
+  const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+  const twitterDescMatch = html.match(/<meta[^>]*name=["']twitter:description["'][^>]*content=["']([^"']+)["']/i);
+  const metaDescMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+
+  description = ogDescMatch?.[1] || twitterDescMatch?.[1] || metaDescMatch?.[1] || '';
+
+  // Extract image
+  let image: string | null = null;
+  const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+  const twitterImageMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+
+  image = ogImageMatch?.[1] || twitterImageMatch?.[1] || null;
+
+  // Handle relative image URLs
+  if (image && !image.startsWith('http')) {
+    try {
+      const baseUrl = new URL(url);
+      image = new URL(image, baseUrl.origin).href;
+    } catch {
+      image = null;
+    }
+  }
+
+  return { title, description, image };
+}
 
 // Fonction pour détecter le type de contenu
 function detectContentType(url: string): 'image' | 'video' | 'link' {
@@ -101,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const html = await response.text();
-    const metadata = await scraper({ html, url });
+    const metadata = extractMetadata(html, url);
 
     // Extraire le format d'image si présent
     let imageFormat: string | undefined;
@@ -110,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      url: metadata.url || url,
+      url: url,
       title: metadata.title || validUrl.hostname,
       description: metadata.description || '',
       image: metadata.image || null,
