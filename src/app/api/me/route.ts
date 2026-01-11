@@ -15,10 +15,11 @@ export async function GET(request: NextRequest) {
 
     const { user, supabase } = authResult.data;
 
-    // 2. Récupérer les informations de l'utilisateur
+    // 2. Récupérer les informations de l'utilisateur avec son plan d'abonnement
+    // Note: email est dans auth.users (disponible via user.email), pas dans public.users
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, username, avatar_url, created_at')
+      .select('id, username, avatar_url, created_at, subscription_plan, subscription_status, subscription_expires_at, monthly_links_used, monthly_links_limit')
       .eq('id', user.id)
       .single();
 
@@ -26,45 +27,29 @@ export async function GET(request: NextRequest) {
       console.error('[API /me] Error fetching user:', userError);
     }
 
-    // 3. Récupérer l'abonnement actif
-    const { data: subscriptions, error: subError } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1);
+    console.log('[API /me] User data:', JSON.stringify(userData, null, 2));
 
-    if (subError) {
-      console.error('[API /me] Error fetching subscription:', subError);
-    }
-
-    const activeSubscription = subscriptions?.[0] || null;
-
-    // 4. Déterminer le plan type (free par défaut)
+    // 3. Déterminer le plan type depuis la table users (pas subscriptions)
+    // IMPORTANT: Le plan est uniquement accordé si subscription_status === 'active'
     let planType: 'free' | 'pro' | 'team' = 'free';
-    if (activeSubscription) {
-      if (activeSubscription.plan_type === 'pro') {
+    const isActive = userData?.subscription_status === 'active';
+
+    if (userData?.subscription_plan && isActive) {
+      const subscriptionPlan = userData.subscription_plan;
+      console.log('[API /me] Detected ACTIVE subscription plan from users table:', subscriptionPlan);
+      if (subscriptionPlan === 'pro') {
         planType = 'pro';
-      } else if (activeSubscription.plan_type === 'team') {
+      } else if (subscriptionPlan === 'team') {
         planType = 'team';
       }
+    } else if (userData?.subscription_plan && !isActive) {
+      console.log('[API /me] User has plan', userData.subscription_plan, 'but status is', userData.subscription_status, '→ treating as free');
     }
+    console.log('[API /me] Final planType:', planType);
 
-    // 5. Récupérer le nombre de liens créés ce mois
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { count: linksThisMonth, error: linksError } = await supabase
-      .from('links')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .gte('created_at', startOfMonth.toISOString());
-
-    if (linksError) {
-      console.error('[API /me] Error counting links:', linksError);
-    }
+    // 5. Utiliser les données d'usage de la DB (plus fiable que de compter à chaque fois)
+    const linksThisMonth = userData?.monthly_links_used || 0;
+    const dbLinksLimit = userData?.monthly_links_limit || 50;
 
     // 6. Déterminer les features selon le plan
     const features = {
@@ -104,18 +89,20 @@ export async function GET(request: NextRequest) {
       },
       subscription: {
         planType,
-        status: activeSubscription?.status || 'inactive',
+        status: userData?.subscription_status || 'active',
         features: features[planType],
-        currentPeriodEnd: activeSubscription?.current_period_end || null,
-        cancelAtPeriodEnd: activeSubscription?.cancel_at_period_end || false,
+        currentPeriodEnd: userData?.subscription_expires_at || null,
+        cancelAtPeriodEnd: false,
       },
       usage: {
-        linksThisMonth: linksThisMonth || 0,
-        linksLimit: features[planType].monthlyLinksLimit,
+        linksThisMonth: linksThisMonth,
+        // Pour free, utiliser la limite de la DB (peut être personnalisée)
+        // Pour pro/team, utiliser -1 (illimité)
+        linksLimit: planType === 'free' ? dbLinksLimit : features[planType].monthlyLinksLimit,
         linksRemaining:
-          features[planType].monthlyLinksLimit === -1
-            ? -1
-            : Math.max(0, features[planType].monthlyLinksLimit - (linksThisMonth || 0)),
+          planType === 'free'
+            ? Math.max(0, dbLinksLimit - linksThisMonth)
+            : -1, // Illimité pour pro/team
       },
     });
   } catch (error) {

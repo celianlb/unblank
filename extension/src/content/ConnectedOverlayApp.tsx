@@ -6,6 +6,7 @@ import {
   Plus,
   ChevronLeft,
   FolderOpen,
+  Lock,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
@@ -20,12 +21,23 @@ import {
   type Folder as FolderType,
   type TagWithMetadata,
 } from "../utils/api";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 interface ConnectedOverlayAppProps {
   onClose: () => void;
 }
 
 function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
+  // User profile and subscription data
+  const {
+    loading: userLoading,
+    planType,
+    canUseAITags,
+    linksRemaining,
+    linksThisMonth,
+    linksLimit,
+  } = useUserProfile();
+
   const [url, setUrl] = useState("");
   const [autoTagging, setAutoTagging] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(
@@ -230,9 +242,28 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
     }
   };
 
+  const handleToggleAutoTagging = () => {
+    if (!canUseAITags) {
+      // Free user trying to enable AI tagging
+      if (confirm("Le tagging automatique est une fonctionnalité premium. Voulez-vous passer à un plan Pro ou Team ?")) {
+        window.open("https://unblank.app/pricing", "_blank");
+      }
+      return;
+    }
+    setAutoTagging(!autoTagging);
+  };
+
   const handleSave = async () => {
     if (!url.trim()) {
       alert("Veuillez entrer une URL");
+      return;
+    }
+
+    // Check usage limits for free users
+    if (planType === 'free' && linksRemaining <= 0) {
+      if (confirm("Vous avez atteint votre limite mensuelle de 50 liens. Voulez-vous passer à un plan Pro pour des liens illimités ?")) {
+        window.open("https://unblank.app/pricing", "_blank");
+      }
       return;
     }
 
@@ -631,38 +662,143 @@ function ConnectedOverlayApp({ onClose }: ConnectedOverlayAppProps) {
         )}
       </div>
 
-      {/* Auto Tagging Toggle */}
-      <div style={toggleSectionStyle}>
-        <div style={toggleLabelStyle}>
-          <WandSparkles
-            size={24}
-            color={autoTagging ? "#0D0D0D" : "#8B8B8B"}
-            strokeWidth={2}
-          />
-          <span>Activer le tagging automatique</span>
-        </div>
-        <motion.div
-          style={{ ...toggleStyle, display: "flex", alignItems: "center" }}
-          onClick={() => setAutoTagging(!autoTagging)}
-          animate={{
-            backgroundColor: autoTagging ? "#FF506F" : "#FFE3E8",
-            borderColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
+      {/* Usage Limits Banner for Free Users */}
+      {planType === 'free' && !userLoading && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 12px",
+            background: linksRemaining <= 10 ? "#FFE3E8" : "#FFF8E1",
+            border: `2px solid ${linksRemaining <= 10 ? "#FF506F" : "#FFB800"}`,
+            borderRadius: "12px",
+            gap: "8px",
           }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                fontFamily: "Heebo",
+                fontWeight: 600,
+                fontSize: "14px",
+                lineHeight: "20px",
+                color: "#0D0D0D",
+              }}
+            >
+              {linksRemaining > 0
+                ? `${linksRemaining} liens restants ce mois`
+                : "Limite mensuelle atteinte"}
+            </div>
+            <div
+              style={{
+                fontFamily: "Heebo",
+                fontWeight: 400,
+                fontSize: "12px",
+                lineHeight: "18px",
+                color: "#666666",
+                marginTop: "2px",
+              }}
+            >
+              {linksThisMonth}/{linksLimit} liens utilisés
+            </div>
+          </div>
+          <button
+            onClick={() => window.open("https://unblank.app/pricing", "_blank")}
+            style={{
+              padding: "6px 12px",
+              background: "#FF506F",
+              border: "2px solid #0D0D0D",
+              borderRadius: "8px",
+              fontFamily: "Heebo",
+              fontWeight: 600,
+              fontSize: "13px",
+              color: "#FFFFFF",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              boxShadow: "2px 2px 0px #000000",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(2px)";
+              e.currentTarget.style.boxShadow = "0px 0px 0px #000000";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0px)";
+              e.currentTarget.style.boxShadow = "2px 2px 0px #000000";
+            }}
+          >
+            Passer à Pro
+          </button>
+        </div>
+      )}
+
+      {/* Auto Tagging Toggle - Premium Feature */}
+      <div style={{ position: "relative" }}>
+        <div style={toggleSectionStyle}>
+          <div style={toggleLabelStyle}>
+            <WandSparkles
+              size={24}
+              color={autoTagging ? "#0D0D0D" : "#8B8B8B"}
+              strokeWidth={2}
+            />
+            <span>Activer le tagging automatique</span>
+            {!canUseAITags && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "2px 8px",
+                  background: "#FF506F",
+                  borderRadius: "6px",
+                  marginLeft: "8px",
+                }}
+              >
+                <Lock size={12} color="#FFFFFF" strokeWidth={2} />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#FFFFFF",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  PRO
+                </span>
+              </div>
+            )}
+          </div>
           <motion.div
+            style={{
+              ...toggleStyle,
+              display: "flex",
+              alignItems: "center",
+              cursor: canUseAITags ? "pointer" : "pointer",
+              opacity: canUseAITags ? 1 : 0.7,
+            }}
+            onClick={handleToggleAutoTagging}
             animate={{
-              x: autoTagging ? 18 : 0,
-              backgroundColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
+              backgroundColor: autoTagging ? "#FF506F" : "#FFE3E8",
+              borderColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
             }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            style={{
-              width: "22px",
-              height: "22px",
-              borderRadius: "50%",
-            }}
-          />
-        </motion.div>
+          >
+            <motion.div
+              animate={{
+                x: autoTagging ? 18 : 0,
+                backgroundColor: autoTagging ? "#0D0D0D" : "#8B8B8B",
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+              }}
+            />
+          </motion.div>
+        </div>
       </div>
 
       {/* Destination Selector */}

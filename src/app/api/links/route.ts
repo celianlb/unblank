@@ -128,31 +128,47 @@ export async function POST(request: NextRequest) {
       tags
     });
 
-    // ✅ Si le tagging automatique est activé, générer les tags via IA en arrière-plan
+    // ✅ Si le tagging automatique est activé, vérifier les permissions puis générer les tags via IA
     if (autoTaggingEnabled && link) {
-      const imageUrl = link.screenshot_url || link.original_image_url;
+      // SÉCURITÉ: Vérifier que l'utilisateur a un abonnement actif pour utiliser l'IA
+      const { data: userData } = await supabase
+        .from('users')
+        .select('subscription_plan, subscription_status')
+        .eq('id', user.id)
+        .single();
 
-      if (imageUrl) {
-        console.log('[Create Link] Auto-tagging enabled, scheduling AI tag generation for link:', link.id);
+      const hasAIAccess =
+        userData?.subscription_status === 'active' &&
+        (userData?.subscription_plan === 'pro' || userData?.subscription_plan === 'team');
 
-        // Lancement asynchrone sans bloquer la réponse (fire-and-forget)
-        const generateAITagsUseCase = AIFactory.createGenerateAITagsUseCase(supabase);
-
-        generateAITagsUseCase.execute({
-          linkId: link.id,
-          userId: user.id,
-          imageUrl,
-          linkUrl: link.url,
-          linkTitle: link.title || undefined,
-          linkDescription: link.description || undefined,
-          replaceExisting: false,
-        }).then(() => {
-          console.log('[Create Link] AI tags generated successfully (background)');
-        }).catch((aiError) => {
-          console.error('[Create Link] Failed to generate AI tags (background, non-blocking):', aiError);
-        });
+      if (!hasAIAccess) {
+        console.log('[Create Link] ⚠️ User attempted AI tagging without active subscription');
+        // Ne pas générer de tags, mais ne pas bloquer la création du lien
       } else {
-        console.log('[Create Link] No image URL available for AI tagging');
+        const imageUrl = link.screenshot_url || link.original_image_url;
+
+        if (imageUrl) {
+          console.log('[Create Link] Auto-tagging enabled, scheduling AI tag generation for link:', link.id);
+
+          // Lancement asynchrone sans bloquer la réponse (fire-and-forget)
+          const generateAITagsUseCase = AIFactory.createGenerateAITagsUseCase(supabase);
+
+          generateAITagsUseCase.execute({
+            linkId: link.id,
+            userId: user.id,
+            imageUrl,
+            linkUrl: link.url,
+            linkTitle: link.title || undefined,
+            linkDescription: link.description || undefined,
+            replaceExisting: false,
+          }).then(() => {
+            console.log('[Create Link] AI tags generated successfully (background)');
+          }).catch((aiError) => {
+            console.error('[Create Link] Failed to generate AI tags (background, non-blocking):', aiError);
+          });
+        } else {
+          console.log('[Create Link] No image URL available for AI tagging');
+        }
       }
     }
 

@@ -2,9 +2,10 @@
 
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useCreateLink } from "@/hooks/useLinks";
+import { useSubscription } from "@/hooks/useSubscription";
 import { extractMetadata } from "@/utils/linkUtils";
 import { motion } from "framer-motion";
-import { Plus, WandSparkles, X } from "lucide-react";
+import { Plus, WandSparkles, X, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface AddLinkModalProps {
@@ -19,6 +20,7 @@ export default function AddLinkModal({
   folderId,
 }: AddLinkModalProps) {
   const { session } = useAuthContext();
+  const { subscription } = useSubscription();
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -32,6 +34,11 @@ export default function AddLinkModal({
 
   // Mutation React Query
   const createLink = useCreateLink(session?.user?.id || "", folderId);
+
+  // Vérifier si l'utilisateur peut utiliser l'IA (pro ou team avec statut actif)
+  const canUseAI =
+    subscription?.isActive() &&
+    (subscription?.plan === "pro" || subscription?.plan === "team");
 
   // Réinitialiser le formulaire quand la modale s'ouvre/ferme
   useEffect(() => {
@@ -262,9 +269,29 @@ export default function AddLinkModal({
                 >
                   Activer le tagging automatique
                 </span>
+                {!canUseAI && (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FF506F] rounded-md">
+                    <Lock size={12} color="#FFFFFF" strokeWidth={2} />
+                    <span className="text-xs font-bold text-white uppercase">
+                      PRO
+                    </span>
+                  </div>
+                )}
               </div>
               <motion.div
-                onClick={() => setAutoTaggingEnabled(!autoTaggingEnabled)}
+                onClick={() => {
+                  if (!canUseAI) {
+                    if (
+                      confirm(
+                        "Le tagging automatique est une fonctionnalité premium. Voulez-vous passer à un plan Pro ou Team ?"
+                      )
+                    ) {
+                      window.open("https://unblank.app/pricing", "_blank");
+                    }
+                    return;
+                  }
+                  setAutoTaggingEnabled(!autoTaggingEnabled);
+                }}
                 animate={{
                   backgroundColor: autoTaggingEnabled ? "#FF506F" : "#FFE3E8",
                   borderColor: autoTaggingEnabled ? "#0D0D0D" : "#8B8B8B",
@@ -275,6 +302,7 @@ export default function AddLinkModal({
                   width: "52px",
                   height: "30px",
                   padding: "4px",
+                  opacity: canUseAI ? 1 : 0.7,
                 }}
               >
                 <motion.div
