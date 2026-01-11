@@ -57,7 +57,7 @@ export default function FolderPage() {
   const canEdit =
     !loadingFolder &&
     !isLoadingShares &&
-    folder?.id &&
+    !!folder?.id &&
     (shares.length === 0 ||
       currentUserShare?.permission === "edit" ||
       currentUserShare?.permission === "owner");

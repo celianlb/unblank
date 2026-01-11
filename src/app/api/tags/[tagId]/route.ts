@@ -10,9 +10,10 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { tagId: string } }
+  { params }: { params: Promise<{ tagId: string }> }
 ) {
   const origin = request.headers.get('origin');
+  const { tagId } = await params;
 
   try {
     const authHeader = request.headers.get('Authorization');
@@ -61,7 +62,7 @@ export async function PATCH(
     const tagService = TagFactory.createTagService(supabase);
 
     // Vérifier que le tag appartient à l'utilisateur
-    const existingTag = await tagService.getTagById(params.tagId);
+    const existingTag = await tagService.getTagById(tagId);
     if (!existingTag || existingTag.user_id !== user.id) {
       const response = NextResponse.json(
         { error: 'Tag not found or unauthorized' },
@@ -70,7 +71,7 @@ export async function PATCH(
       return addCorsHeaders(response, origin);
     }
 
-    const tag = await tagService.renameTag(params.tagId, name);
+    const tag = await tagService.renameTag(tagId, name);
 
     if (!tag) {
       const response = NextResponse.json(
@@ -94,9 +95,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { tagId: string } }
+  { params }: { params: Promise<{ tagId: string }> }
 ) {
   const origin = request.headers.get('origin');
+  const { tagId } = await params;
 
   try {
     const authHeader = request.headers.get('Authorization');
@@ -135,7 +137,7 @@ export async function DELETE(
     const tagService = TagFactory.createTagService(supabase);
 
     // Vérifier que le tag appartient à l'utilisateur
-    const existingTag = await tagService.getTagById(params.tagId);
+    const existingTag = await tagService.getTagById(tagId);
     if (!existingTag || existingTag.user_id !== user.id) {
       const response = NextResponse.json(
         { error: 'Tag not found or unauthorized' },
@@ -144,7 +146,7 @@ export async function DELETE(
       return addCorsHeaders(response, origin);
     }
 
-    const success = await tagService.deleteTag(params.tagId);
+    const success = await tagService.deleteTag(tagId);
 
     if (!success) {
       const response = NextResponse.json(

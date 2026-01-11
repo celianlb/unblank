@@ -22,6 +22,24 @@ export interface ShareWithUser extends Share {
   } | null;
 }
 
+export interface ShareWithFolder {
+  id: string;
+  folder_id: string;
+  permission: SharePermission;
+  created_at: string;
+  folders: {
+    id: string;
+    name: string;
+    slug: string;
+    parent_folder_id: string | null;
+    is_group: boolean;
+    created_at: string;
+    updated_at: string;
+    link_count: number;
+    preview_images: string[];
+  } | null;
+}
+
 export interface CreateShareDTO {
   folder_id: string;
   shared_by: string;

@@ -1,5 +1,5 @@
 import { ShareRepository } from '../ports/ShareRepository';
-import { Share, ShareWithUser, SharePermission } from '../models/Share';
+import { Share, ShareWithUser, ShareWithFolder, SharePermission } from '../models/Share';
 
 export class ShareService {
   constructor(private shareRepository: ShareRepository) {}

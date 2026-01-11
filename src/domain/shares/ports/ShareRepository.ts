@@ -1,4 +1,4 @@
-import { Share, ShareWithUser, CreateShareDTO, UpdateShareDTO } from '../models/Share';
+import { Share, ShareWithUser, ShareWithFolder, CreateShareDTO, UpdateShareDTO } from '../models/Share';
 
 export interface ShareRepository {
   /**
@@ -49,7 +49,7 @@ export interface ShareRepository {
   /**
    * Get all folders shared with a specific user
    */
-  getSharedWithUser(userEmail: string): Promise<ShareWithUser[]>;
+  getSharedWithUser(userEmail: string): Promise<ShareWithFolder[]>;
 
   /**
    * Revoke all shares for a user in a group and its child folders

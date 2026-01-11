@@ -1,3 +1,5 @@
+import { AuthRepository } from '../ports';
+
 /**
  * Use Case pour la réinitialisation de mot de passe
  *
@@ -23,6 +25,15 @@ export interface ResetPasswordResult {
 }
 
 export class ResetPasswordUseCase {
+  constructor(private readonly authRepository: AuthRepository) {}
+
+  /**
+   * Exécute la réinitialisation de mot de passe
+   * @param email - L'email de l'utilisateur
+   */
+  async execute(email: string): Promise<void> {
+    await this.authRepository.resetPassword(email);
+  }
   /**
    * Vérifie si un utilisateur utilise OAuth
    * @param user - Les données utilisateur depuis Supabase

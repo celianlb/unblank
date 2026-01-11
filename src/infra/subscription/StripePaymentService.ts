@@ -5,6 +5,20 @@ import {
   WebhookEventData,
 } from '@/application/subscription/ports/SubscriptionPaymentPort';
 
+// Type extension pour les propriétés Stripe qui ne sont pas dans les types modernes
+// mais sont toujours présentes dans l'API
+type SubscriptionWithPeriod = Stripe.Subscription & {
+  current_period_end: number;
+  cancel_at_period_end: boolean;
+  trial_end: number | null;
+};
+
+type InvoiceWithSubscription = Stripe.Invoice & {
+  subscription: string | Stripe.Subscription | null;
+  amount_paid: number;
+  amount_due: number;
+};
+
 /**
  * Infrastructure Layer: Implémentation Stripe du port de paiement
  * Gère toutes les interactions avec l'API Stripe
@@ -134,7 +148,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
     priceId: string;
     currentPeriodEnd: number;
   }> {
-    const subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await this.stripe.subscriptions.retrieve(subscriptionId) as unknown as SubscriptionWithPeriod;
 
     return {
       status: subscription.status,
@@ -169,11 +183,11 @@ export class StripePaymentService implements SubscriptionPaymentPort {
 
         // Si subscription est expanded dans la session, l'utiliser directement
         if (session.subscription && typeof session.subscription === 'object') {
-          const subscription = session.subscription as Stripe.Subscription;
+          const subscription = session.subscription as SubscriptionWithPeriod;
           data.priceId = subscription.items.data[0].price.id;
           data.currentPeriodEnd = subscription.current_period_end;
           data.cancelAtPeriodEnd = subscription.cancel_at_period_end;
-          
+
           console.log('[StripePaymentService] Using expanded subscription from session:', {
             id: subscription.id,
             current_period_end: subscription.current_period_end,
@@ -190,7 +204,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       }
 
       case 'customer.subscription.created': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as SubscriptionWithPeriod;
         data.customerId = subscription.customer as string;
         data.subscriptionId = subscription.id;
         data.priceId = subscription.items.data[0].price.id;
@@ -201,7 +215,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as SubscriptionWithPeriod;
         const previousAttributes = (event.data as any).previous_attributes;
 
         data.customerId = subscription.customer as string;
@@ -219,7 +233,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as SubscriptionWithPeriod;
         data.customerId = subscription.customer as string;
         data.subscriptionId = subscription.id;
         data.priceId = subscription.items.data[0].price.id;
@@ -230,9 +244,9 @@ export class StripePaymentService implements SubscriptionPaymentPort {
 
       case 'invoice.paid':
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as InvoiceWithSubscription;
         data.customerId = invoice.customer as string;
-        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
+        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as Stripe.Subscription | null)?.id;
         data.amount = invoice.amount_paid;
         data.currency = invoice.currency;
         data.status = invoice.status ? String(invoice.status) : undefined;
@@ -252,9 +266,9 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as InvoiceWithSubscription;
         data.customerId = invoice.customer as string;
-        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
+        data.subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as Stripe.Subscription | null)?.id;
         data.amount = invoice.amount_due; // Montant dû pour les échecs
         data.currency = invoice.currency;
         data.status = invoice.status ? String(invoice.status) : undefined;
@@ -279,7 +293,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       }
 
       case 'customer.subscription.trial_will_end': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as SubscriptionWithPeriod;
         data.customerId = subscription.customer as string;
         data.subscriptionId = subscription.id;
         data.priceId = subscription.items.data[0].price.id;
@@ -324,7 +338,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
       });
 
       // Mettre à jour l'abonnement avec le nouveau prix
-      const updated = await this.stripe.subscriptions.update(params.subscriptionId, {
+      const updatedRaw = await this.stripe.subscriptions.update(params.subscriptionId, {
         items: [
           {
             id: subscription.items.data[0].id,
@@ -333,6 +347,7 @@ export class StripePaymentService implements SubscriptionPaymentPort {
         ],
         proration_behavior: 'create_prorations', // Créer automatiquement les prorations
       });
+      const updated = updatedRaw as unknown as SubscriptionWithPeriod;
 
       console.log('[StripePaymentService] Subscription updated successfully:', {
         subscriptionId: updated.id,

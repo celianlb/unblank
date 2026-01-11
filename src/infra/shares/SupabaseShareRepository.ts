@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ShareRepository } from '@/domain/shares/ports/ShareRepository';
-import { Share, ShareWithUser, CreateShareDTO, UpdateShareDTO } from '@/domain/shares/models/Share';
+import { Share, ShareWithUser, ShareWithFolder, CreateShareDTO, UpdateShareDTO } from '@/domain/shares/models/Share';
 
 export class ShareLimitError extends Error {
   constructor(message: string, public currentCount: number, public maxCount: number) {
@@ -236,7 +236,7 @@ export class SupabaseShareRepository implements ShareRepository {
     return (shares && shares.length > 0) || false;
   }
 
-  async getSharedWithUser(userEmail: string): Promise<ShareWithUser[]> {
+  async getSharedWithUser(userEmail: string): Promise<ShareWithFolder[]> {
     // Récupérer les shares sans faire de jointure avec folders (pour éviter les problèmes RLS)
     const { data: shares, error } = await this.supabase
       .from('shares')

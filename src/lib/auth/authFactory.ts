@@ -112,7 +112,7 @@ class AuthFactory {
    * Crée une nouvelle instance du use case ResetPassword
    */
   static createResetPasswordUseCase(): ResetPasswordUseCase {
-    return new ResetPasswordUseCase();
+    return new ResetPasswordUseCase(this.getAuthRepository());
   }
 
   /**

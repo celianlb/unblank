@@ -27,10 +27,7 @@ export function useAuth() {
       const currentSession = await getCurrentSessionUseCase.execute();
       if (currentSession) {
         setSession(currentSession);
-        setUser({
-          id: currentSession.userId,
-          email: currentSession.email,
-        });
+        setUser(currentSession.user);
       }
     } catch (err) {
       console.error('Error loading session:', err);
@@ -51,10 +48,7 @@ export function useAuth() {
 
         // Update state
         setSession(userSession);
-        setUser({
-          id: userSession.userId,
-          email: userSession.email,
-        });
+        setUser(userSession.user);
 
         // Note: Redirection is now handled by the calling component
         // via useAuthContext and useEffect monitoring session state
