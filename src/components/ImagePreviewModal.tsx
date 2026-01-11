@@ -98,9 +98,15 @@ export default function ImagePreviewModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 lg:p-8">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 lg:p-8"
+      onClick={onClose}
+    >
       {/* Modal Container - Fully responsive */}
-      <div className="w-full max-w-[95vw] xl:max-w-[1267px] h-[95vh] max-h-[939px] bg-[#FEF8EE] border-3 sm:border-4 md:border-[6px] border-black rounded-2xl sm:rounded-3xl md:rounded-[48px] relative box-border overflow-hidden flex flex-col md:flex-row">
+      <div
+        className="w-full max-w-[95vw] xl:max-w-[1267px] h-[95vh] max-h-[939px] bg-[#FEF8EE] border-3 sm:border-4 md:border-[6px] border-black rounded-2xl sm:rounded-3xl md:rounded-[48px] relative box-border overflow-hidden flex flex-col md:flex-row"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -121,46 +127,7 @@ export default function ImagePreviewModal({
         </div>
 
         {/* Right side content - Scrollable */}
-        <div className="flex-1 flex flex-col p-3 sm:p-4 md:p-6 lg:p-10 pt-0 md:pt-6 lg:pt-10 overflow-y-auto gap-3 sm:gap-4 md:gap-6">
-          {/* Edit tags button */}
-          <div className="w-full sm:w-auto">
-            <Tooltip
-              content="Vous n'avez pas la permission de modifier les tags dans ce dossier partagé"
-              disabled={canEdit}
-              position="bottom"
-            >
-              <div className="relative inline-block w-full sm:w-auto">
-                <button
-                  onClick={() => canEdit && setIsEditTagsOpen(true)}
-                  disabled={!canEdit}
-                  className={`w-full sm:w-auto h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 transition-all ${
-                    !canEdit
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none"
-                  }`}
-                >
-                  <Pencil
-                    className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0D0D0D]"
-                    strokeWidth={2}
-                  />
-                  <span className="text-xs sm:text-sm md:text-base leading-tight font-medium uppercase text-[#0D0D0D] font-[Heebo]">
-                    Éditer les tags
-                  </span>
-                </button>
-                {!canEdit && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center pointer-events-none">
-                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">
-                      !
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Tooltip>
-          </div>
-
-          {/* Spacer for desktop to push link bar down */}
-          <div className="hidden md:block flex-1 min-h-[100px]" />
-
+        <div className="flex-1 flex flex-col p-3 sm:p-4 md:p-6 lg:p-10 pt-16 md:pt-20 lg:pt-24 overflow-y-auto gap-3 sm:gap-4 md:gap-6">
           {/* Link bar */}
           <div className="w-full h-auto min-h-[50px] sm:min-h-[60px] md:min-h-[70px] lg:min-h-[84px] bg-[#FEF8EE] border-2 sm:border-[3px] border-black rounded-lg sm:rounded-xl md:rounded-2xl flex flex-row justify-center items-center px-2.5 sm:px-4 md:px-5 py-2.5 sm:py-3 md:py-4 gap-2 sm:gap-3 md:gap-4 lg:gap-[21px] box-border">
             <span className="flex-1 text-sm sm:text-base md:text-xl lg:text-2xl xl:text-[29px] leading-tight tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
@@ -246,14 +213,50 @@ export default function ImagePreviewModal({
             </div>
 
             {/* Tags associés */}
-            <div className="flex flex-row justify-between items-center w-full min-h-[24px] sm:min-h-[28px] md:min-h-[32px] lg:min-h-[35px]">
+            <div className="flex flex-col items-start w-full gap-1">
               <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl leading-tight tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo] underline">
                 Tags associés :
               </span>
-              <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl leading-tight tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo] text-right max-w-[50%] truncate">
+              <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl leading-tight tracking-[-0.03em] font-medium text-[#0D0D0D] font-[Heebo] break-words">
                 {currentTags.map((tag) => `#${tag}`).join(", ")}
               </span>
             </div>
+          </div>
+
+          {/* Edit tags button - Positionné en bas à droite */}
+          <div className="w-full flex justify-end">
+            <Tooltip
+              content="Vous n'avez pas la permission de modifier les tags dans ce dossier partagé"
+              disabled={canEdit}
+              position="bottom"
+            >
+              <div className="relative inline-block">
+                <button
+                  onClick={() => canEdit && setIsEditTagsOpen(true)}
+                  disabled={!canEdit}
+                  className={`h-9 sm:h-10 md:h-12 bg-[#FEF8EE] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 transition-all ${
+                    !canEdit
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:bg-[#FFEFD9] active:translate-y-[2px] active:shadow-none"
+                  }`}
+                >
+                  <Pencil
+                    className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0D0D0D]"
+                    strokeWidth={2}
+                  />
+                  <span className="text-xs sm:text-sm md:text-base leading-tight font-medium uppercase text-[#0D0D0D] font-[Heebo]">
+                    Éditer les tags
+                  </span>
+                </button>
+                {!canEdit && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center pointer-events-none">
+                    <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">
+                      !
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Tooltip>
           </div>
         </div>
       </div>

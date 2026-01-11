@@ -27,4 +27,5 @@ export interface CreateLinkData {
   imageFormat?: string;
   contentType?: string;
   tags?: string[];
+  autoTaggingEnabled?: boolean;
 }

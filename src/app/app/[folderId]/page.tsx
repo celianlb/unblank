@@ -7,7 +7,8 @@ import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
 import DetailedLinkCard from "@/components/DetailedLinkCard";
 import ImageCard from "@/components/ImageCard";
-import { getContentType } from "@/utils/linkUtils";
+import VideoCard from "@/components/VideoCard";
+import { getContentType, getVideoPlatformInfo } from "@/utils/linkUtils";
 import { useFolderBySlug } from "@/hooks/useFolders";
 import {
   useFolderLinks,
@@ -133,8 +134,9 @@ export default function FolderPage() {
     }
   };
 
-  // Séparer les liens en images et liens classiques
+  // Séparer les liens en images, vidéos et liens classiques
   const imageLinks = links.filter((link) => getContentType(link) === "image");
+  const videoLinks = links.filter((link) => getContentType(link) === "video");
   const regularLinks = links.filter((link) => getContentType(link) === "link");
 
   if (loading) {
@@ -206,6 +208,48 @@ export default function FolderPage() {
                       canEdit={canEdit}
                     />
                   ))}
+                </div>
+              </section>
+            )}
+
+            {/* Section Vidéos */}
+            {videoLinks.length > 0 && (
+              <section className="flex flex-col items-start gap-[21px] w-full">
+                {/* Titre */}
+                <h1
+                  className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+                  style={{ fontFamily: "Area Inktrap, sans-serif" }}
+                >
+                  Vidéos ({videoLinks.length})
+                </h1>
+
+                {/* Contenu des cartes vidéos */}
+                <div className="flex flex-row flex-wrap gap-8 w-full">
+                  {videoLinks.map((link) => {
+                    const platformInfo = getVideoPlatformInfo(link.url);
+                    // Pour les vidéos, utiliser screenshot_url en priorité, sinon original_image_url
+                    const thumbnailUrl = link.screenshot_url || link.original_image_url || "";
+
+                    return (
+                      <VideoCard
+                        key={link.id}
+                        linkId={link.id}
+                        platformName={platformInfo.platformName}
+                        platformUrl={platformInfo.platformUrl}
+                        videoUrl={link.url}
+                        thumbnailUrl={thumbnailUrl}
+                        title={link.title || "Vidéo sans titre"}
+                        description={link.description || ""}
+                        tags={link.tags?.map((t) => t.name) || []}
+                        isSelectionMode={isSelectionMode}
+                        isSelected={selectedLinkIds.has(link.id)}
+                        onCheckChange={handleCheckChange}
+                        onDelete={handleDeleteSingle}
+                        canDelete={canEdit}
+                        canEdit={canEdit}
+                      />
+                    );
+                  })}
                 </div>
               </section>
             )}

@@ -31,8 +31,10 @@ export class TagService {
       return { valid: false, error: 'Tag name cannot exceed 50 characters' };
     }
 
-    // Autoriser uniquement lettres, chiffres, espaces, tirets et underscores
-    const validPattern = /^[a-z0-9\s\-_]+$/;
+    // Autoriser lettres (y compris accentuées), chiffres, espaces, tirets et underscores
+    // \p{L} = toutes les lettres Unicode (y compris é, è, à, ç, etc.)
+    // \p{N} = tous les chiffres Unicode
+    const validPattern = /^[\p{L}\p{N}\s\-_]+$/u;
     if (!validPattern.test(normalized)) {
       return { valid: false, error: 'Tag name can only contain letters, numbers, spaces, hyphens and underscores' };
     }

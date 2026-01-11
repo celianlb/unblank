@@ -1,4 +1,5 @@
 import { getAccessToken } from './auth';
+import type { UserData } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -231,5 +232,49 @@ export async function getTagSuggestions(searchTerm: string, limit: number = 10):
   } catch (error) {
     console.error('[API] Error fetching tag suggestions:', error);
     return [];
+  }
+}
+
+/**
+ * Get current user profile with subscription info
+ */
+export async function getUserProfile(): Promise<UserData | null> {
+  try {
+    console.log('[API] Getting user profile...');
+    const token = await getAccessToken();
+
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const url = `${API_BASE_URL}/api/me`;
+    console.log('[API] Fetching user profile from:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('[API] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[API] Error response:', errorData);
+      throw new Error(errorData.error || 'Failed to fetch user profile');
+    }
+
+    const data = await response.json();
+    console.log('[API] User profile data:', data);
+
+    // Store user data in chrome storage
+    await chrome.storage.sync.set({ 'user_data': data });
+
+    return data;
+  } catch (error) {
+    console.error('[API] Error fetching user profile:', error);
+    return null;
   }
 }

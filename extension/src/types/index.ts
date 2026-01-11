@@ -19,6 +19,49 @@ export interface AuthSession {
   expiresAt: number;
   userId: string;
   email: string;
+  username?: string;
+  avatarUrl?: string;
+  subscription?: UserSubscription;
+}
+
+// Subscription types
+export type SubscriptionPlanType = 'free' | 'pro' | 'team';
+
+export interface SubscriptionFeatures {
+  monthlyLinksLimit: number; // -1 = unlimited
+  canUseAITags: boolean;
+  canCreateGroups: boolean;
+  canShareWithEdit: boolean;
+  maxShareMembers: number; // -1 = unlimited
+  hasUnlimitedCollaboration?: boolean;
+}
+
+export interface UserSubscription {
+  planType: SubscriptionPlanType;
+  status: string;
+  features: SubscriptionFeatures;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
+export interface UserUsage {
+  linksThisMonth: number;
+  linksLimit: number; // -1 = unlimited
+  linksRemaining: number; // -1 = unlimited
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string | null;
+  avatarUrl: string | null;
+  createdAt: string | null;
+}
+
+export interface UserData {
+  user: UserProfile;
+  subscription: UserSubscription;
+  usage: UserUsage;
 }
 
 // Storage types
@@ -27,6 +70,7 @@ export interface ExtensionStorage {
   apiKey?: string;
   settings?: UserSettings;
   auth_session?: AuthSession;
+  user_data?: UserData;
 }
 
 export interface UserSettings {

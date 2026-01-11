@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import LinkFactory from '@/lib/links/linkFactory';
+import AIFactory from '@/lib/ai/aiFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 import { LinkLimitError } from '@/infra/links/SupabaseLinkRepository';
 
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
       originalImageUrl,
       imageFormat,
       contentType,
-      tags
+      tags,
+      autoTaggingEnabled
     } = body;
 
     if (!url) {
@@ -125,6 +127,34 @@ export async function POST(request: NextRequest) {
       contentType,
       tags
     });
+
+    // ✅ Si le tagging automatique est activé, générer les tags via IA en arrière-plan
+    if (autoTaggingEnabled && link) {
+      const imageUrl = link.screenshot_url || link.original_image_url;
+
+      if (imageUrl) {
+        console.log('[Create Link] Auto-tagging enabled, scheduling AI tag generation for link:', link.id);
+
+        // Lancement asynchrone sans bloquer la réponse (fire-and-forget)
+        const generateAITagsUseCase = AIFactory.createGenerateAITagsUseCase(supabase);
+
+        generateAITagsUseCase.execute({
+          linkId: link.id,
+          userId: user.id,
+          imageUrl,
+          linkUrl: link.url,
+          linkTitle: link.title || undefined,
+          linkDescription: link.description || undefined,
+          replaceExisting: false,
+        }).then(() => {
+          console.log('[Create Link] AI tags generated successfully (background)');
+        }).catch((aiError) => {
+          console.error('[Create Link] Failed to generate AI tags (background, non-blocking):', aiError);
+        });
+      } else {
+        console.log('[Create Link] No image URL available for AI tagging');
+      }
+    }
 
     const response = NextResponse.json({
       success: true,

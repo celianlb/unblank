@@ -54,8 +54,14 @@ export default function EditLinkModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="w-[479px] bg-white border-4 border-black shadow-[4px_4px_0px_#000000] rounded-3xl p-8 flex flex-col gap-[10px] relative box-border">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="w-[479px] bg-white border-4 border-black shadow-[4px_4px_0px_#000000] rounded-3xl p-8 flex flex-col gap-[10px] relative box-border"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close button */}
         <button
           onClick={onClose}

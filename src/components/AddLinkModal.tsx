@@ -1,10 +1,11 @@
 "use client";
 
-import { X, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useCreateLink } from "@/hooks/useLinks";
 import { extractMetadata } from "@/utils/linkUtils";
+import { motion } from "framer-motion";
+import { Plus, WandSparkles, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface AddLinkModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function AddLinkModal({
   const [metadata, setMetadata] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [metadataError, setMetadataError] = useState<boolean>(false);
+  const [autoTaggingEnabled, setAutoTaggingEnabled] = useState(false);
 
   // Mutation React Query
   const createLink = useCreateLink(session?.user?.id || "", folderId);
@@ -42,6 +44,7 @@ export default function AddLinkModal({
       setMetadata(null);
       setErrorMessage(null);
       setMetadataError(false);
+      setAutoTaggingEnabled(false);
     }
   }, [isOpen]);
 
@@ -104,6 +107,7 @@ export default function AddLinkModal({
         imageFormat: metadata?.imageFormat || undefined,
         contentType: metadata?.contentType || undefined,
         tags: tags.length > 0 ? tags : undefined,
+        autoTaggingEnabled,
       });
 
       // Fermer la modale
@@ -242,6 +246,50 @@ export default function AddLinkModal({
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full h-32 px-4 py-3 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base resize-none font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
               />
+            </div>
+
+            {/* Toggle Tagging Automatique */}
+            <div className="flex flex-row items-center justify-between w-full p-4 bg-[#FFE3E8] border-2 border-black rounded-xl">
+              <div className="flex items-center gap-3">
+                <WandSparkles
+                  size={24}
+                  color={autoTaggingEnabled ? "#0D0D0D" : "#8B8B8B"}
+                  strokeWidth={2}
+                />
+                <span
+                  className="text-base font-medium font-[Heebo]"
+                  style={{ color: autoTaggingEnabled ? "#0D0D0D" : "#8B8B8B" }}
+                >
+                  Activer le tagging automatique
+                </span>
+              </div>
+              <motion.div
+                onClick={() => setAutoTaggingEnabled(!autoTaggingEnabled)}
+                animate={{
+                  backgroundColor: autoTaggingEnabled ? "#FF506F" : "#FFE3E8",
+                  borderColor: autoTaggingEnabled ? "#0D0D0D" : "#8B8B8B",
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="relative cursor-pointer rounded-full border-2 flex items-center"
+                style={{
+                  width: "52px",
+                  height: "30px",
+                  padding: "4px",
+                }}
+              >
+                <motion.div
+                  animate={{
+                    x: autoTaggingEnabled ? 18 : 0,
+                    backgroundColor: autoTaggingEnabled ? "#0D0D0D" : "#8B8B8B",
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                  }}
+                />
+              </motion.div>
             </div>
 
             {/* Tag Input */}

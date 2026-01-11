@@ -4,19 +4,82 @@ import { Link } from '@/domain/links/models';
  * Détermine le type de contenu d'un lien
  * Logique métier pure sans dépendances
  */
-export function getContentType(link: Link): 'image' | 'link' {
-  // Si on a une image originale ou un format d'image, c'est une image
+export function getContentType(link: Link): 'image' | 'video' | 'link' {
+  // PRIORITÉ 1 : Vérifier si le content_type est 'video'
+  if (link.content_type === 'video') {
+    return 'video';
+  }
+
+  // PRIORITÉ 2 : Fallback - détecter les vidéos par URL (pour les anciens liens créés avant le support des vidéos)
+  if (link.url) {
+    const url = link.url.toLowerCase();
+    if (
+      url.includes('youtube.com') ||
+      url.includes('youtu.be') ||
+      url.includes('vimeo.com') ||
+      url.includes('dailymotion.com')
+    ) {
+      return 'video';
+    }
+  }
+
+  // PRIORITÉ 3 : Si on a une image originale ou un format d'image, c'est une image
   if (link.original_image_url || link.image_format) {
     return 'image';
   }
 
-  // Si le content_type commence par 'image/', c'est une image
+  // PRIORITÉ 4 : Si le content_type commence par 'image/', c'est une image
   if (link.content_type && link.content_type.startsWith('image/')) {
     return 'image';
   }
 
-  // Sinon c'est un lien classique
+  // Par défaut : c'est un lien classique
   return 'link';
+}
+
+/**
+ * Extrait les informations de plateforme vidéo depuis une URL
+ */
+export function getVideoPlatformInfo(url: string): {
+  platformName: string;
+  platformUrl: string;
+} {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+
+    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+      return {
+        platformName: 'YouTube',
+        platformUrl: 'youtube.com',
+      };
+    }
+
+    if (hostname.includes('vimeo.com')) {
+      return {
+        platformName: 'Vimeo',
+        platformUrl: 'vimeo.com',
+      };
+    }
+
+    if (hostname.includes('dailymotion.com')) {
+      return {
+        platformName: 'Dailymotion',
+        platformUrl: 'dailymotion.com',
+      };
+    }
+
+    // Fallback pour les autres plateformes vidéo
+    return {
+      platformName: urlObj.hostname.replace('www.', ''),
+      platformUrl: urlObj.hostname,
+    };
+  } catch (error) {
+    return {
+      platformName: 'Vidéo',
+      platformUrl: 'unknown',
+    };
+  }
 }
 
 /**
