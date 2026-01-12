@@ -142,9 +142,8 @@ export class ShareService {
    * Exit a shared folder/group (revoke the share for the current user)
    * @param folderId - ID du dossier/groupe à quitter
    * @param userEmail - Email de l'utilisateur qui quitte
-   * @param childFolderIds - IDs des sous-dossiers (si c'est un groupe), fournis par le FolderService
    */
-  async exitFolder(folderId: string, userEmail: string, childFolderIds: string[] = []): Promise<void> {
+  async exitFolder(folderId: string, userEmail: string): Promise<void> {
     // Get the share for this user and folder
     const share = await this.shareRepository.getShareByFolderAndEmail(folderId, userEmail);
 
@@ -152,13 +151,9 @@ export class ShareService {
       throw new Error('No active share found for this folder');
     }
 
-    // If childFolderIds are provided, it's a group
-    if (childFolderIds.length > 0) {
-      // Revoke all shares for this user in the group and its child folders
-      await this.shareRepository.revokeGroupShares(folderId, userEmail, childFolderIds);
-    } else {
-      // Otherwise, just revoke the share for this specific folder
-      await this.shareRepository.revokeShare(share.id);
-    }
+    // Revoke the share for this folder/group
+    // Note: Les sous-dossiers d'un groupe n'ont pas de shares individuels,
+    // le share est uniquement sur le groupe parent
+    await this.shareRepository.revokeShare(share.id);
   }
 }
