@@ -68,19 +68,28 @@ export default function ProfileMenu({ isOpen, onClose }: ProfileMenuProps) {
         >
           Compte & Sécurité
         </button>
-        <button className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full">
+        <button
+          disabled
+          className="text-left px-3 py-2.5 text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed w-full"
+        >
           Préférences
         </button>
         <button
-          onClick={() => handleNavigate("/pricing")}
-          className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full"
+          disabled
+          className="text-left px-3 py-2.5 text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed w-full"
         >
           Abonnement & facturation
         </button>
-        <button className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full">
+        <button
+          disabled
+          className="text-left px-3 py-2.5 text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed w-full"
+        >
           Données & Confidentialité
         </button>
-        <button className="text-left px-3 py-2.5 text-sm font-medium text-black hover:bg-[#FFE3E8] transition-colors rounded-lg cursor-pointer w-full">
+        <button
+          disabled
+          className="text-left px-3 py-2.5 text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed w-full"
+        >
           Historique d&apos;activité
         </button>
 

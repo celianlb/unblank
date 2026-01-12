@@ -19,16 +19,16 @@ export default function HomePage() {
 
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-4xl font-bold text-[#0D0D0D]">
-                En construction
+                Bienvenue sur UnBlank
               </h1>
               <p className="text-lg text-[#636363]">
-                Cette page est en cours de développement
+                Organisez vos inspirations visuelles en un seul endroit
               </p>
             </div>
 
             <Link href="/app">
               <button className="mt-4 px-8 py-4 bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none transition-all border-3 border-black rounded-xl shadow-[4px_4px_0px_#000000] text-black font-bold text-lg cursor-pointer">
-                Accéder à l&apos;app
+                Commencer
               </button>
             </Link>
           </div>
