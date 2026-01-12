@@ -155,21 +155,23 @@ export class SupabaseShareRepository implements ShareRepository {
 
     console.log('[GET SHARE] Looking for share:', { folderId, normalizedEmail });
 
-    const { data: share, error } = await this.supabase
+    // Utiliser une requête qui gère les doublons potentiels (prendre le plus récent)
+    const { data: shares, error } = await this.supabase
       .from('shares')
       .select('*')
       .eq('folder_id', folderId)
       .ilike('shared_with_email', normalizedEmail)
       .eq('is_active', true)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    console.log('[GET SHARE] Result:', { share: share?.id, error: error?.message });
+    console.log('[GET SHARE] Result:', { shareCount: shares?.length, shareId: shares?.[0]?.id, error: error?.message });
 
     if (error) {
       throw new Error(`Failed to get share by folder and email: ${error.message}`);
     }
 
-    return share;
+    return shares?.[0] || null;
   }
 
   async updateShare(shareId: string, data: UpdateShareDTO): Promise<Share> {
