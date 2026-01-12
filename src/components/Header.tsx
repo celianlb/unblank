@@ -11,10 +11,10 @@ import ProfileMenu from "./ProfileMenu";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import SearchModal from "./search/SearchModal";
 import Tooltip from "./Tooltip";
+import BetaTrialBanner from "./BetaTrialBanner";
 import { useFolderShares } from "@/hooks/useShares";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionService } from "@/domain/subscription/services/SubscriptionService";
-import { Subscription } from "@/domain/subscription/models/Subscription";
 
 interface HeaderProps {
   selectedCount?: number;
@@ -42,6 +42,12 @@ export default function Header({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [showExtensionMessage, setShowExtensionMessage] = useState(false);
+
+  const handleInstallExtensionClick = () => {
+    setShowExtensionMessage(true);
+    setTimeout(() => setShowExtensionMessage(false), 4000);
+  };
 
   const handleDeleteConfirm = async () => {
     if (onDeleteSelected) {
@@ -177,6 +183,7 @@ export default function Header({
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
       />
+      <BetaTrialBanner />
       <header
         className={`w-full bg-white border-b-[3px] border-black ${
           minimal
@@ -246,9 +253,21 @@ export default function Header({
             <div className="flex items-center justify-end gap-2 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 shrink-0 ml-auto">
               {/* Bouton Extension - Visible uniquement sur desktop (md et plus) */}
               {!minimal && (
-                <button className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center">
-                  Installer l&apos;extension
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={handleInstallExtensionClick}
+                    className="hidden md:flex h-11 lg:h-12 xl:h-[54px] px-4 lg:px-5 xl:px-[27px] rounded-xl border-2 border-black bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-0.5 active:shadow-none transition-all font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm lg:text-sm xl:text-base whitespace-nowrap cursor-pointer items-center justify-center"
+                  >
+                    Installer l&apos;extension
+                  </button>
+                  {showExtensionMessage && (
+                    <div className="absolute top-full right-0 mt-2 w-72 p-4 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <p className="text-sm text-black font-medium">
+                        🚀 L&apos;extension est en cours de publication sur les stores. Elle sera bientôt disponible !
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
               {minimal && (
                 <button

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Note: email est dans auth.users (disponible via user.email), pas dans public.users
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, username, avatar_url, created_at, subscription_plan, subscription_status, subscription_expires_at, monthly_links_used, monthly_links_limit')
+      .select('id, username, avatar_url, created_at, subscription_plan, subscription_status, subscription_expires_at, monthly_links_used, monthly_links_limit, trial_ends_at, is_beta_user, stripe_subscription_id')
       .eq('id', user.id)
       .single();
 
@@ -67,7 +67,24 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // 7. Construire la réponse
+    // 7. Calculer les informations du trial bêta
+    const isBetaUser = userData?.is_beta_user ?? false;
+    const trialEndsAt = userData?.trial_ends_at ? new Date(userData.trial_ends_at) : null;
+    const hasStripeSubscription = !!userData?.stripe_subscription_id;
+
+    // L'utilisateur est en trial si: bêta user + plan Pro + pas d'abonnement Stripe + trial non expiré
+    const isOnBetaTrial = isBetaUser &&
+      planType === 'pro' &&
+      !hasStripeSubscription &&
+      trialEndsAt &&
+      new Date() < trialEndsAt;
+
+    // Calculer les jours restants du trial
+    const trialDaysRemaining = trialEndsAt
+      ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : 0;
+
+    // 8. Construire la réponse
     return NextResponse.json({
       success: true,
       user: {
@@ -83,6 +100,13 @@ export async function GET(request: NextRequest) {
         features: features[planType],
         currentPeriodEnd: userData?.subscription_expires_at || null,
         cancelAtPeriodEnd: false,
+      },
+      // Informations du trial bêta
+      betaTrial: {
+        isOnTrial: isOnBetaTrial,
+        isBetaUser,
+        trialEndsAt: trialEndsAt?.toISOString() || null,
+        daysRemaining: isOnBetaTrial ? trialDaysRemaining : 0,
       },
       usage: {
         linksThisMonth: linksThisMonth,

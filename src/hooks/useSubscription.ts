@@ -50,6 +50,8 @@ export function useSubscription(): UseSubscriptionReturn {
           monthly_links_used: result.subscription.monthlyLinksUsed,
           monthly_links_limit: result.subscription.monthlyLinksLimit,
           last_reset_at: result.subscription.lastResetAt,
+          trial_ends_at: result.subscription.trialEndsAt,
+          is_beta_user: result.subscription.isBetaUser,
         });
       }
       

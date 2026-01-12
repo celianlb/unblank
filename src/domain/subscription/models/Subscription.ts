@@ -1,4 +1,4 @@
-import { SubscriptionPlanType, SubscriptionStatus, BillingInterval } from './SubscriptionPlan';
+import { SubscriptionPlanType, SubscriptionStatus } from './SubscriptionPlan';
 
 /**
  * Domain Model: Abonnement utilisateur
@@ -15,7 +15,9 @@ export class Subscription {
     public readonly expiresAt?: Date,
     public readonly monthlyLinksUsed: number = 0,
     public readonly monthlyLinksLimit: number = 50,
-    public readonly lastResetAt: Date = new Date()
+    public readonly lastResetAt: Date = new Date(),
+    public readonly trialEndsAt?: Date,
+    public readonly isBetaUser: boolean = false
   ) {}
 
   /**
@@ -56,6 +58,29 @@ export class Subscription {
   }
 
   /**
+   * Vérifier si l'utilisateur est en période d'essai bêta
+   */
+  isOnBetaTrial(): boolean {
+    if (!this.isBetaUser || !this.trialEndsAt) return false;
+    // En trial si: utilisateur bêta + plan Pro + pas d'abonnement Stripe + trial non expiré
+    return (
+      this.plan === 'pro' &&
+      !this.stripeSubscriptionId &&
+      new Date() < this.trialEndsAt
+    );
+  }
+
+  /**
+   * Calculer les jours restants du trial
+   */
+  getTrialDaysRemaining(): number {
+    if (!this.trialEndsAt) return 0;
+    const now = new Date();
+    const diffMs = this.trialEndsAt.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }
+
+  /**
    * Créer une subscription depuis la DB
    */
   static fromDatabase(data: {
@@ -69,6 +94,8 @@ export class Subscription {
     monthly_links_used: number;
     monthly_links_limit: number;
     last_reset_at: string;
+    trial_ends_at?: string;
+    is_beta_user?: boolean;
   }): Subscription {
     return new Subscription(
       data.id,
@@ -80,7 +107,9 @@ export class Subscription {
       data.subscription_expires_at ? new Date(data.subscription_expires_at) : undefined,
       data.monthly_links_used,
       data.monthly_links_limit,
-      new Date(data.last_reset_at)
+      new Date(data.last_reset_at),
+      data.trial_ends_at ? new Date(data.trial_ends_at) : undefined,
+      data.is_beta_user ?? false
     );
   }
 
@@ -98,6 +127,8 @@ export class Subscription {
       monthly_links_used: this.monthlyLinksUsed,
       monthly_links_limit: this.monthlyLinksLimit,
       last_reset_at: this.lastResetAt.toISOString(),
+      trial_ends_at: this.trialEndsAt?.toISOString(),
+      is_beta_user: this.isBetaUser,
     };
   }
 }
