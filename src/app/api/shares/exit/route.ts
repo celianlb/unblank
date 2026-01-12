@@ -44,16 +44,23 @@ export async function POST(request: NextRequest) {
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const shareService = ShareFactory.createShareService(supabase);
 
+    // Normaliser l'email en minuscules pour éviter les problèmes de casse
+    const userEmail = user.email!.toLowerCase();
+
+    console.log('[EXIT SHARE] Attempting to exit folder:', { folderId, userEmail });
+
     // Pour un utilisateur invité, on révoque simplement son share sur le dossier/groupe
     // Les sous-dossiers d'un groupe ne sont pas accessibles directement via RLS,
     // car le share est créé uniquement sur le groupe parent
-    await shareService.exitFolder(folderId, user.email!);
+    await shareService.exitFolder(folderId, userEmail);
+
+    console.log('[EXIT SHARE] Successfully exited folder:', { folderId, userEmail });
 
     return NextResponse.json({
       message: 'Successfully exited folder/group'
     });
   } catch (error) {
-    console.error('Error exiting folder/group:', error);
+    console.error('[EXIT SHARE] Error exiting folder/group:', error);
 
     // Handle specific error cases
     if (error instanceof Error && error.message === 'No active share found for this folder') {

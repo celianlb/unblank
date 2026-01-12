@@ -150,13 +150,20 @@ export class SupabaseShareRepository implements ShareRepository {
   }
 
   async getShareByFolderAndEmail(folderId: string, userEmail: string): Promise<Share | null> {
+    // Normaliser l'email en minuscules pour la recherche
+    const normalizedEmail = userEmail.toLowerCase();
+
+    console.log('[GET SHARE] Looking for share:', { folderId, normalizedEmail });
+
     const { data: share, error } = await this.supabase
       .from('shares')
       .select('*')
       .eq('folder_id', folderId)
-      .eq('shared_with_email', userEmail)
+      .ilike('shared_with_email', normalizedEmail)
       .eq('is_active', true)
       .maybeSingle();
+
+    console.log('[GET SHARE] Result:', { share: share?.id, error: error?.message });
 
     if (error) {
       throw new Error(`Failed to get share by folder and email: ${error.message}`);
@@ -181,19 +188,25 @@ export class SupabaseShareRepository implements ShareRepository {
   }
 
   async revokeShare(shareId: string): Promise<void> {
+    console.log('[REVOKE SHARE] Attempting to revoke share:', shareId);
+
     const { data, error } = await this.supabase
       .from('shares')
       .update({ is_active: false })
       .eq('id', shareId)
       .select();
 
+    console.log('[REVOKE SHARE] Result:', { data, error: error?.message });
+
     if (error) {
       throw new Error(`Failed to revoke share: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      throw new Error('Failed to revoke share - you may not have permission to modify this share');
+      throw new Error('Failed to revoke share - RLS policy may have blocked the update');
     }
+
+    console.log('[REVOKE SHARE] Successfully revoked share:', shareId);
   }
 
   async deleteShare(shareId: string): Promise<void> {
