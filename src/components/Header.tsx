@@ -185,11 +185,7 @@ export default function Header({
       />
       <BetaTrialBanner />
       <header
-        className={`w-full bg-white border-b-[3px] border-black ${
-          minimal
-            ? "h-auto"
-            : "h-auto sm:h-auto md:h-auto lg:h-auto xl:h-[232px]"
-        }`}
+        className="w-full bg-white border-b-[3px] border-black"
       >
         <div
           className={`w-full h-full px-[22px] ${
