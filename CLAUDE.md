@@ -92,7 +92,7 @@ const result = await useCase.execute(input);
 - `folders` - Hierarchical organization with groups and subfolders
 - `tags` - Manual and AI-powered automatic tagging (OpenAI integration)
 - `shares` - Folder sharing with read-only or edit permissions, exit functionality
-- `subscription` - Stripe integration (Free, Pro, Team plans) with usage limits
+- `subscription` - Stripe integration (Free, Pro plans) with usage limits
 - `search` - Full-text search with tag filtering
 
 ## Chrome Extension
@@ -107,7 +107,7 @@ Auth flow: User clicks login in extension → opens web app with `?ext=true` →
 ### Extension Features
 - Subscription-aware UI with feature gating based on plan
 - User profile hook (`useUserProfile`) for subscription/usage data
-- AI tag generation toggle for Pro/Team users
+- AI tag generation toggle for Pro users
 
 ## API Endpoints
 
@@ -200,6 +200,7 @@ Claude Code commands are available in `.claude/commands/`:
 - `ImagePreviewModal.tsx` - Full-size image preview with metadata
 
 ### Modals
+- `CreateNewModal.tsx` - Quick creation menu for folders, groups, or links
 - `AddLinkModal.tsx` - Create links with AI tagging option (subscription-aware)
 - `EditLinkModal.tsx` / `EditTagsModal.tsx` - Edit links and tags
 - `ShareLinkModal.tsx` - Share folders with permissions
@@ -209,37 +210,24 @@ Claude Code commands are available in `.claude/commands/`:
 
 Codebase comments and product content are in French.
 
-## Recent Updates (2025-01-11)
+## Recent Updates
 
-### AI-Powered Auto-Tagging
-- OpenAI GPT-4o-mini integration for automatic tag generation
-- `GenerateAITagsUseCase` in application layer
-- `OpenAITagService` infrastructure implementation
-- Tags generated from image analysis with French focus
+### 2025-01-12: Plan Simplification
+- **Removed Team plan** - Now only Free and Pro plans
+- Updated share member limits: 15 (Free) / 30 (Pro)
+- Added `CreateNewModal.tsx` for unified creation flow (folder, group, link)
+- Simplified pricing page with only two plan options
 
-### Subscription System
-- Full Stripe integration with Free, Pro, Team plans
-- Usage tracking (links per month)
-- Feature gating based on subscription plan
-- Customer portal for subscription management
-- Webhook handling for subscription events
-
-### Extension Subscription Awareness
-- `useUserProfile` hook for subscription data in extension
-- Feature toggles based on plan (AI tags, groups, etc.)
-- Usage limits displayed in extension UI
-
-### Video Link Support
-- Video detection for YouTube, Vimeo, Dailymotion
-- VideoCard and VideoPreviewModal components
-- Embedded video playback
-
-### Share Improvements
-- Exit functionality for shared folders/groups
-- Email validation for invites (no self-invite, no duplicates)
-- Subscription-based permission validation
-
-### Metadata Extraction
-- Server-side metadata extraction via metascraper
-- Content type detection (image, video, link)
-- Image format extraction
+### 2025-01-11: AI & Subscription Features
+- **AI-Powered Auto-Tagging**: OpenAI GPT-4o-mini integration
+  - `GenerateAITagsUseCase` in application layer
+  - `OpenAITagService` infrastructure implementation
+  - Tags generated from image analysis with French focus
+- **Subscription System**: Full Stripe integration (Free, Pro)
+  - Usage tracking (links per month)
+  - Feature gating based on subscription plan
+  - Customer portal for subscription management
+- **Video Link Support**: YouTube, Vimeo, Dailymotion detection
+  - VideoCard and VideoPreviewModal components
+- **Share Improvements**: Exit functionality, email validation
+- **Metadata Extraction**: Simple regex-based extraction (no external dependencies)

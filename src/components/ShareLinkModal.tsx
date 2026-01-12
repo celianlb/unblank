@@ -128,7 +128,7 @@ export default function ShareLinkModal({
       // Détecter si c'est une erreur de limite de partage
       if (error?.message?.includes("limite de partage")) {
         const upgradeMessage = isProUser
-          ? "Limite atteinte.\nPassez à Team pour plus de membres"
+          ? "Limite de 30 membres atteinte"
           : "Limite atteinte.\nPassez à Pro pour plus de membres";
         setInviteError(upgradeMessage);
       } else {
@@ -174,16 +174,16 @@ export default function ShareLinkModal({
             </h2>
 
             {/* Tabs */}
-            <div className="flex flex-row gap-2 w-full border-b-2 border-black">
+            <div className="flex flex-row w-full border-b-2 border-black">
               <Tooltip
-                content="Le partage par lien nécessite le plan Pro ou Team"
+                content="Le partage par lien nécessite le plan Pro"
                 disabled={!isFreeUser}
                 className="flex-1"
               >
                 <button
                   onClick={() => !isFreeUser && setActiveTab("link")}
                   disabled={isFreeUser}
-                  className={`w-full pb-3 text-[18px] font-bold font-[Heebo] transition-colors ${
+                  className={`w-full pb-3 text-[18px] font-bold font-[Heebo] transition-colors whitespace-nowrap ${
                     isFreeUser
                       ? "text-[#A8A8A8] opacity-50 cursor-not-allowed"
                       : activeTab === "link"
@@ -196,7 +196,7 @@ export default function ShareLinkModal({
               </Tooltip>
               <button
                 onClick={() => setActiveTab("email")}
-                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer ${
+                className={`flex-1 pb-3 text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer whitespace-nowrap ${
                   activeTab === "email"
                     ? "text-[#0D0D0D] border-b-4 border-[#0D0D0D] -mb-[2px]"
                     : "text-[#A8A8A8] hover:text-[#0D0D0D]"
@@ -234,7 +234,7 @@ export default function ShareLinkModal({
 
                   {/* Lecture et édition */}
                   <Tooltip
-                    content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                    content="Le partage avec droits d'édition nécessite le plan Pro"
                     disabled={!isFreeUser}
                   >
                     <div
@@ -347,7 +347,7 @@ export default function ShareLinkModal({
 
                     {/* Lecture et édition */}
                     <Tooltip
-                      content="Le partage avec droits d'édition nécessite le plan Pro ou Team"
+                      content="Le partage avec droits d'édition nécessite le plan Pro"
                       disabled={!isFreeUser}
                     >
                       <div

@@ -5,7 +5,7 @@ import { useCreateLink } from "@/hooks/useLinks";
 import { useSubscription } from "@/hooks/useSubscription";
 import { extractMetadata } from "@/utils/linkUtils";
 import { motion } from "framer-motion";
-import { Plus, WandSparkles, X, Lock } from "lucide-react";
+import { Lock, Plus, WandSparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface AddLinkModalProps {
@@ -36,9 +36,7 @@ export default function AddLinkModal({
   const createLink = useCreateLink(session?.user?.id || "", folderId);
 
   // Vérifier si l'utilisateur peut utiliser l'IA (pro avec statut actif)
-  const canUseAI =
-    subscription?.isActive() &&
-    subscription?.plan === "pro";
+  const canUseAI = subscription?.isActive() && subscription?.plan === "pro";
 
   // Réinitialiser le formulaire quand la modale s'ouvre/ferme
   useEffect(() => {
@@ -214,7 +212,8 @@ export default function AddLinkModal({
             {metadataError && (
               <div className="flex items-start gap-2 p-3 bg-amber-50 border-2 border-amber-500 rounded-xl">
                 <span className="text-sm font-medium text-amber-700 font-[Heebo]">
-                  Impossible d'extraire les métadonnées. Vous pouvez continuer en remplissant les champs manuellement.
+                  Impossible d'extraire les métadonnées. Vous pouvez continuer
+                  en remplissant les champs manuellement.
                 </span>
               </div>
             )}
@@ -377,14 +376,16 @@ export default function AddLinkModal({
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={createLink.isPending || isLoadingMetadata || !url.trim()}
+              disabled={
+                createLink.isPending || isLoadingMetadata || !url.trim()
+              }
               className="w-full h-14 rounded-xl bg-[#FF506F] transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-black font-bold text-base font-[Heebo] disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:bg-[#FF6080] enabled:active:translate-y-[2px] enabled:active:shadow-none enabled:cursor-pointer"
             >
               {createLink.isPending
                 ? "Ajout en cours..."
                 : isLoadingMetadata
-                  ? "Extraction en cours..."
-                  : "Ajouter le lien"}
+                ? "Extraction en cours..."
+                : "Ajouter le lien"}
             </button>
           </form>
         </div>

@@ -6,6 +6,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import AddLinkModal from "./AddLinkModal";
 import CreateFolderModal from "./CreateFolderModal";
 import CreateGroupModal from "./CreateGroupModal";
+import CreateNewModal from "./CreateNewModal";
 import ProfileMenu from "./ProfileMenu";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import SearchModal from "./search/SearchModal";
@@ -37,6 +38,7 @@ export default function Header({
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [isCreateNewModalOpen, setIsCreateNewModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -156,6 +158,16 @@ export default function Header({
         isOpen={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
       />
+      <CreateNewModal
+        isOpen={isCreateNewModalOpen}
+        onClose={() => setIsCreateNewModalOpen(false)}
+        onCreateFolder={() => setIsCreateFolderModalOpen(true)}
+        onCreateGroup={() => setIsCreateGroupModalOpen(true)}
+        onAddLink={() => setIsAddLinkModalOpen(true)}
+        canCreateFolder={canCreateFolder && !currentFolderId}
+        canCreateGroup={!isInGroup && !currentFolderId}
+        canAddLink={canAddLink && !isInGroup}
+      />
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -173,7 +185,7 @@ export default function Header({
         }`}
       >
         <div
-          className={`w-full h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 ${
+          className={`w-full h-full px-[22px] ${
             minimal ? "py-4" : "py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8"
           }`}
         >
@@ -183,30 +195,51 @@ export default function Header({
             }`}
           >
             {!minimal && (
-              <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
-                <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 pointer-events-none">
-                  <Search className="w-full h-full" strokeWidth={2} />
+              <div className="flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8 flex-1">
+                <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
+                  <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 pointer-events-none">
+                    <Search className="w-full h-full" strokeWidth={2} />
+                  </div>
+                  {/* Keyboard shortcut badge */}
+                  <div className="hidden lg:flex absolute left-12 sm:left-14 md:left-16 lg:left-[72px] xl:left-[88px] top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-md border border-[#636363] bg-white pointer-events-none">
+                    <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
+                      {typeof navigator !== "undefined" &&
+                      navigator.platform.toLowerCase().includes("mac")
+                        ? "⌘"
+                        : "Ctrl"}
+                    </span>
+                    <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
+                      K
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Rechercher un dossier, une image, un lien"
+                    onClick={() => setIsSearchModalOpen(true)}
+                    onFocus={(e) => e.target.blur()}
+                    readOnly
+                    className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
+                  />
                 </div>
-                {/* Keyboard shortcut badge */}
-                <div className="hidden lg:flex absolute left-12 sm:left-14 md:left-16 lg:left-[72px] xl:left-[88px] top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-md border border-[#636363] bg-white pointer-events-none">
-                  <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
-                    {typeof navigator !== "undefined" &&
-                    navigator.platform.toLowerCase().includes("mac")
-                      ? "⌘"
-                      : "Ctrl"}
+
+                {/* Bouton Ajouter */}
+                <button
+                  onClick={() => setIsCreateNewModalOpen(true)}
+                  disabled={isLoading}
+                  className={`h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-7 rounded-xl md:rounded-2xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 xl:gap-2 whitespace-nowrap shrink-0 ${
+                    isLoading
+                      ? "bg-[#FF506F] opacity-50 cursor-not-allowed"
+                      : "bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-0.5 active:shadow-none cursor-pointer"
+                  }`}
+                >
+                  <Plus
+                    className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-black shrink-0"
+                    strokeWidth={2.5}
+                  />
+                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-base xl:text-lg">
+                    Ajouter
                   </span>
-                  <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
-                    K
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Rechercher un dossier, une image, un lien"
-                  onClick={() => setIsSearchModalOpen(true)}
-                  onFocus={(e) => e.target.blur()}
-                  readOnly
-                  className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
-                />
+                </button>
               </div>
             )}
 
@@ -263,159 +296,46 @@ export default function Header({
             </div>
           </div>
 
-          {!minimal && (
-            <div className="flex items-center justify-between pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
-              <div className="flex items-center gap-3 sm:gap-3 md:gap-3 lg:gap-3 xl:gap-4">
-                <Tooltip
-                  content="Vous n'avez pas la permission de créer des dossiers dans ce groupe partagé"
-                  disabled={canCreateFolder || isLoading || !!currentFolderId}
-                >
-                  <div className="relative inline-block">
-                    <button
-                      onClick={() =>
-                        !isLoading &&
-                        !currentFolderId &&
-                        canCreateFolder &&
-                        setIsCreateFolderModalOpen(true)
-                      }
-                      disabled={
-                        isLoading || !!currentFolderId || !canCreateFolder
-                      }
-                      className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${
-                        isLoading || currentFolderId || !canCreateFolder
-                          ? "bg-[#FF506F] opacity-50 cursor-not-allowed"
-                          : "bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-[2px] active:shadow-none cursor-pointer"
-                      }`}
-                    >
-                      <Plus
-                        className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0"
-                        strokeWidth={2}
-                      />
-                      <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">
-                        Créer un dossier
-                      </span>
-                    </button>
-                    {!canCreateFolder &&
-                      !isLoading &&
-                      !isLoadingGroupShares &&
-                      !currentFolderId && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
-                          <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">
-                            !
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                </Tooltip>
-
-                <button
-                  onClick={() =>
+          {/* Delete button - appears when items are selected */}
+          {!minimal && selectedCount > 0 && (
+            <div className="flex items-center justify-end pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
+              <Tooltip
+                content={
+                  currentFolderId
+                    ? "Vous n'avez pas la permission de supprimer des liens dans ce dossier partagé"
+                    : "Vous n'avez pas la permission de supprimer des dossiers dans ce groupe partagé"
+                }
+                disabled={canDelete || isLoading}
+              >
+                <div className="relative inline-block">
+                  <button
+                    onClick={() => canDelete && setIsDeleteModalOpen(true)}
+                    disabled={!canDelete || isLoading}
+                    className={`h-12 px-6 rounded-xl transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap ${
+                      !canDelete || isLoading
+                        ? "bg-[#FEF8EE] opacity-50 cursor-not-allowed"
+                        : "bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer"
+                    }`}
+                  >
+                    <Trash
+                      className="w-6 h-6 text-black shrink-0"
+                      strokeWidth={2}
+                    />
+                    <span className="text-black font-bold text-base">
+                      Supprimer
+                    </span>
+                  </button>
+                  {!canDelete &&
                     !isLoading &&
-                    !isInGroup &&
-                    !currentFolderId &&
-                    setIsCreateGroupModalOpen(true)
-                  }
-                  disabled={isLoading || isInGroup || !!currentFolderId}
-                  className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${
-                    isLoading || isInGroup || currentFolderId
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer"
-                  }`}
-                >
-                  <Plus
-                    className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0"
-                    strokeWidth={2}
-                  />
-                  <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">
-                    Créer un groupe
-                  </span>
-                </button>
-
-                <Tooltip
-                  content={
-                    linkLimitReason
-                      ? linkLimitReason
-                      : "Vous n'avez pas la permission d'ajouter des liens dans ce dossier partagé"
-                  }
-                  disabled={canAddLink || isInGroup || isLoading}
-                >
-                  <div className="relative inline-block">
-                    <button
-                      onClick={() =>
-                        !isLoading &&
-                        !isInGroup &&
-                        canAddLink &&
-                        setIsAddLinkModalOpen(true)
-                      }
-                      disabled={isLoading || isInGroup || !canAddLink}
-                      className={`h-9 sm:h-10 md:h-11 lg:h-11 xl:h-12 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-6 rounded-lg md:rounded-xl bg-[#FEF8EE] transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 xl:gap-2.5 whitespace-nowrap ${
-                        isLoading || isInGroup || !canAddLink
-                          ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer"
-                      }`}
-                    >
-                      <Plus
-                        className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black shrink-0"
-                        strokeWidth={2}
-                      />
-                      <span className="text-black font-bold text-xs sm:text-sm md:text-sm lg:text-sm xl:text-base">
-                        Ajouter un lien
-                      </span>
-                    </button>
-                    {!canAddLink &&
-                      !isInGroup &&
-                      !isLoading &&
-                      !isLoadingShares && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
-                          <span className="text-[10px] sm:text-xs md:text-xs lg:text-xs xl:text-sm font-black text-black">
-                            !
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                </Tooltip>
-              </div>
-
-              {/* Delete button - appears when items are selected */}
-              {selectedCount > 0 && (
-                <Tooltip
-                  content={
-                    currentFolderId
-                      ? "Vous n'avez pas la permission de supprimer des liens dans ce dossier partagé"
-                      : "Vous n'avez pas la permission de supprimer des dossiers dans ce groupe partagé"
-                  }
-                  disabled={canDelete || isLoading}
-                >
-                  <div className="relative inline-block">
-                    <button
-                      onClick={() => canDelete && setIsDeleteModalOpen(true)}
-                      disabled={!canDelete || isLoading}
-                      className={`h-12 px-6 rounded-xl transition-all border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2.5 whitespace-nowrap ${
-                        !canDelete || isLoading
-                          ? "bg-[#FEF8EE] opacity-50 cursor-not-allowed"
-                          : "bg-[#FEF8EE] hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none cursor-pointer"
-                      }`}
-                    >
-                      <Trash
-                        className="w-6 h-6 text-black shrink-0"
-                        strokeWidth={2}
-                      />
-                      <span className="text-black font-bold text-base">
-                        Supprimer
-                      </span>
-                    </button>
-                    {!canDelete &&
-                      !isLoading &&
-                      !isLoadingDeletePermissions && (
-                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
-                          <span className="text-sm font-black text-black">
-                            !
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                </Tooltip>
-              )}
+                    !isLoadingDeletePermissions && (
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
+                        <span className="text-sm font-black text-black">
+                          !
+                        </span>
+                      </div>
+                    )}
+                </div>
+              </Tooltip>
             </div>
           )}
         </div>

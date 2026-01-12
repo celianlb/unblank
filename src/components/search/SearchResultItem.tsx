@@ -5,17 +5,29 @@ import { ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SearchResultItemProps {
-  link: Link;
+  link: Link & { folder_slug?: string };
   folderName?: string;
+}
+
+// Génère un slug à partir du nom du dossier (même logique que FolderService.generateSlug)
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with -
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing -
 }
 
 export default function SearchResultItem({ link, folderName }: SearchResultItemProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    // Navigate to the folder containing this link
-    if (link.folder_id) {
-      router.push(`/app/folder/${link.folder_id}`);
+    // Navigate to the folder containing this link using the slug
+    if (link.folder_id && folderName) {
+      // Use folder_slug if available, otherwise generate from folder name
+      const slug = (link as any).folder_slug || generateSlug(folderName);
+      router.push(`/app/${slug}`);
     }
   };
 
