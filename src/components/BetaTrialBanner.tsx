@@ -21,7 +21,7 @@ export default function BetaTrialBanner({ className = "" }: BetaTrialBannerProps
     <div
       className={`w-full bg-gradient-to-r from-[#FFE3E8] to-[#E8D4FF] border-b-2 border-black ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2.5">
+      <div className="w-full px-4 py-2.5 flex items-center justify-center gap-2.5">
         <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#FF506F] border-2 border-black">
           <Sparkles className="w-4 h-4 text-white" strokeWidth={2.5} />
         </div>

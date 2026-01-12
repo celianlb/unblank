@@ -1,6 +1,7 @@
 "use client";
 
 import { X, Folder, Link } from "lucide-react";
+import Image from "next/image";
 
 interface CreateNewModalProps {
   isOpen: boolean;
@@ -12,27 +13,6 @@ interface CreateNewModalProps {
   canCreateGroup?: boolean;
   canAddLink?: boolean;
 }
-
-// Icône de groupe personnalisée
-const GroupIcon = () => (
-  <svg
-    width="80"
-    height="80"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 3h6v6H3z" />
-    <path d="M14 4h6" />
-    <path d="M14 9h6" />
-    <path d="M3 14h6v6H3z" />
-    <path d="M14 15h6" />
-    <path d="M14 20h6" />
-  </svg>
-);
 
 export default function CreateNewModal({
   isOpen,
@@ -128,9 +108,13 @@ export default function CreateNewModal({
                   : "opacity-50 cursor-not-allowed"
               }`}
             >
-              <div className="w-16 h-16 text-[#0D0D0D]">
-                <GroupIcon />
-              </div>
+              <Image
+                src="/group-folder.png"
+                alt="Groupe de dossier"
+                width={64}
+                height={64}
+                className="w-16 h-16"
+              />
               <span
                 className="text-[18px] font-bold text-[#0D0D0D] text-center leading-tight"
                 style={{ fontFamily: "Area Inktrap, sans-serif" }}

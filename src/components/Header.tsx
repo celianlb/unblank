@@ -197,7 +197,7 @@ export default function Header({
           }`}
         >
           <div
-            className={`flex flex-row items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-3 md:mb-4 lg:mb-6 xl:mb-8 ${
+            className={`flex flex-row items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 ${
               minimal ? "justify-end" : "justify-between"
             }`}
           >
