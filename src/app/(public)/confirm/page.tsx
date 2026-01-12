@@ -77,9 +77,9 @@ export default function ConfirmPage() {
 
         setStatus('success');
 
-        // Redirect to dashboard after 3 seconds
+        // Redirect to onboarding after 3 seconds (onboarding will redirect to /app if already completed)
         setTimeout(() => {
-          router.push('/app');
+          router.push('/onboarding');
         }, 3000);
 
       } catch (err) {
@@ -129,13 +129,13 @@ export default function ConfirmPage() {
               </h1>
 
               <p className="text-base md:text-lg text-[#0D0D0D] text-center opacity-80">
-                Votre adresse email a été confirmée. Vous allez être redirigé vers votre tableau de bord...
+                Votre adresse email a été confirmée. Plus qu&apos;une étape...
               </p>
 
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => router.push('/app')}
+                onClick={() => router.push('/onboarding')}
                 className="w-full h-[54px] shadow-[3px_3px_0px_#000000]"
               >
                 Accéder à l&apos;application

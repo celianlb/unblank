@@ -32,8 +32,8 @@ export default function RegisterPage() {
           email: user.email,
         });
       } else {
-        // Regular access: redirect to dashboard
-        router.push("/app");
+        // Regular access: redirect to onboarding (will redirect to /app if already completed)
+        router.push("/onboarding");
       }
     }
   }, [fromExtension, user, session, router]);

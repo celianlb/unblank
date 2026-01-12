@@ -109,6 +109,12 @@ CREATE TABLE public.users (
   stripe_customer_id text UNIQUE,
   stripe_subscription_id text UNIQUE,
   stripe_price_id text,
+  trial_ends_at timestamp with time zone,
+  is_beta_user boolean DEFAULT false,
+  onboarding_completed boolean DEFAULT false,
+  usage_type text CHECK (usage_type IS NULL OR usage_type = ANY (ARRAY['personal'::text, 'professional'::text, 'mixed'::text])),
+  domain text[],
+  discovery_source text,
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

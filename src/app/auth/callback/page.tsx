@@ -41,8 +41,19 @@ export default function AuthCallbackPage() {
               // Redirect to the share link
               router.push(oauthRedirect);
             } else {
-              // Regular access: redirect to app
-              router.push('/app');
+              // Check if user has completed onboarding
+              const { data: userData } = await supabase
+                .from('users')
+                .select('onboarding_completed')
+                .eq('id', session.user.id)
+                .single();
+
+              // Redirect to onboarding if not completed, otherwise to app
+              if (userData && !userData.onboarding_completed) {
+                router.push('/onboarding');
+              } else {
+                router.push('/app');
+              }
             }
           }
         } else if (event === 'SIGNED_OUT') {

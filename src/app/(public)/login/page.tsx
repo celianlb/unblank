@@ -8,6 +8,7 @@ import { Card, Panel } from "@/components/shared";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useAuth } from "@/lib/auth";
 import { isFromExtension, sendSessionToExtension } from "@/lib/extension/extensionBridge";
+import { supabase } from "@/infra/db/supabase";
 
 function LoginContent() {
   const router = useRouter();
@@ -28,25 +29,40 @@ function LoginContent() {
 
   // Check if user is already authenticated
   useEffect(() => {
-    if (!loading && session) {
-      if (fromExtension) {
-        // Coming from extension: send session and close tab
-        sendSessionToExtension({
-          accessToken: session.accessToken,
-          refreshToken: session.refreshToken,
-          expiresAt: session.expiresAt,
-          userId: session.user.id,
-          email: session.user.email,
-        });
-      } else {
-        // Regular access: redirect to app or to the share link
-        if (redirectTo) {
-          router.push(redirectTo);
+    const handleAuthRedirect = async () => {
+      if (!loading && session) {
+        if (fromExtension) {
+          // Coming from extension: send session and close tab
+          sendSessionToExtension({
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+            expiresAt: session.expiresAt,
+            userId: session.user.id,
+            email: session.user.email,
+          });
         } else {
-          router.push('/app');
+          // Regular access: check if onboarding is completed
+          if (redirectTo) {
+            router.push(redirectTo);
+          } else {
+            // Check onboarding status
+            const { data: userData } = await supabase
+              .from('users')
+              .select('onboarding_completed')
+              .eq('id', session.user.id)
+              .single();
+
+            if (userData && !userData.onboarding_completed) {
+              router.push('/onboarding');
+            } else {
+              router.push('/app');
+            }
+          }
         }
       }
-    }
+    };
+
+    handleAuthRedirect();
   }, [loading, session, fromExtension, redirectTo, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
