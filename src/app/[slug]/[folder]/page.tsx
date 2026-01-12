@@ -149,7 +149,7 @@ export default function FolderPage() {
           currentGroupId={group?.id}
           isLoading={true}
         />
-        <main className="w-full px-[64px] py-[40px]" />
+        <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
   }
@@ -164,7 +164,7 @@ export default function FolderPage() {
         isLoading={loadingData}
       />
 
-      <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
+      <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
         <Breadcrumb
           groupName={group?.name}

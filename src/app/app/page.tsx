@@ -18,6 +18,11 @@ import { useSharedFolders } from "@/hooks/useSharedFolders";
 import { useFolderShares } from "@/hooks/useShares";
 import { LinkService } from "@/domain/links/services/LinkService";
 import { formatLastUpdate, formatDateAdded } from "@/utils/formatters";
+import {
+  FolderGroupCardSkeleton,
+  FolderCardSkeleton,
+  LinkCardSkeleton,
+} from "@/components/skeletons";
 
 // Helper component to render FolderCard with permission checking
 function SharedFolderCard({
@@ -272,17 +277,23 @@ export default function AppPage() {
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Groupe de dossier */}
-        {loadingGroups ? null : groups.length > 0 ? (
+        {loadingGroups ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
-            {/* Titre */}
+            <div className="h-[43px] w-64 bg-[#E5E5E5] animate-pulse rounded-md" />
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {[...Array(2)].map((_, i) => (
+                <FolderGroupCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ) : groups.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Groupe de dossier ({groups.length})
             </h1>
-
-            {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {groups.map((group) => (
                 <FolderGroupCard
@@ -300,17 +311,23 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Dossiers */}
-        {loadingFolders ? null : sortedFolders.length > 0 ? (
+        {loadingFolders ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
-            {/* Titre */}
+            <div className="h-[43px] w-48 bg-[#E5E5E5] animate-pulse rounded-md" />
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {[...Array(3)].map((_, i) => (
+                <FolderCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ) : sortedFolders.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Dossiers ({sortedFolders.length})
             </h1>
-
-            {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {sortedFolders.map((folder) => (
                 <FolderCard
@@ -329,17 +346,23 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Groupes partagés */}
-        {loadingSharedFolders ? null : sharedGroups.length > 0 ? (
+        {loadingSharedFolders ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
-            {/* Titre */}
+            <div className="h-[43px] w-56 bg-[#E5E5E5] animate-pulse rounded-md" />
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {[...Array(2)].map((_, i) => (
+                <FolderGroupCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ) : sharedGroups.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Groupes partagés ({sharedGroups.length})
             </h1>
-
-            {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {sharedGroups.map((group) => (
                 <SharedGroupCard
@@ -353,17 +376,23 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Dossiers partagés */}
-        {loadingSharedFolders ? null : sharedFolders.length > 0 ? (
+        {loadingSharedFolders ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
-            {/* Titre */}
+            <div className="h-[43px] w-56 bg-[#E5E5E5] animate-pulse rounded-md" />
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {[...Array(2)].map((_, i) => (
+                <FolderCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ) : sharedFolders.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Dossiers partagés ({sharedFolders.length})
             </h1>
-
-            {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {sharedFolders.map((folder) => (
                 <SharedFolderCard
@@ -378,17 +407,23 @@ export default function AppPage() {
         ) : null}
 
         {/* Section Liens récents */}
-        {loadingLinks ? null : uniqueLinks.length > 0 ? (
+        {loadingLinks ? (
           <section className="flex flex-col items-start gap-[21px] w-full">
-            {/* Titre */}
+            <div className="h-[43px] w-48 bg-[#E5E5E5] animate-pulse rounded-md" />
+            <div className="flex flex-row flex-wrap gap-8 w-full">
+              {[...Array(6)].map((_, i) => (
+                <LinkCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        ) : uniqueLinks.length > 0 ? (
+          <section className="flex flex-col items-start gap-[21px] w-full">
             <h1
               className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               Liens récents ({totalLinksCount})
             </h1>
-
-            {/* Contenu des cartes */}
             <div className="flex flex-row flex-wrap gap-8 w-full">
               {uniqueLinks.map((link) => (
                 <LinkCard
@@ -410,8 +445,6 @@ export default function AppPage() {
                 />
               ))}
             </div>
-
-            {/* Infinite scroll trigger */}
             {hasNextPage && (
               <div
                 ref={setLoadMoreElement}

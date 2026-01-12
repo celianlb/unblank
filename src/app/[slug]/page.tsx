@@ -106,7 +106,7 @@ export default function GroupPage() {
     return (
       <div className="min-h-screen w-full bg-white">
         <Header currentGroupId={group?.id} isInGroup={true} isLoading={true} />
-        <main className="w-full px-[64px] py-[40px]" />
+        <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function GroupPage() {
     <div className="min-h-screen w-full bg-white">
       <Header currentGroupId={group?.id} isInGroup={true} isLoading={loadingData} />
 
-      <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
+      <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
         <Breadcrumb groupName={group?.name} isLoading={loadingGroup} />
 

@@ -17,6 +17,11 @@ import {
 } from "@/hooks/useLinks";
 import { formatDateAdded } from "@/utils/formatters";
 import { useFolderShares } from "@/hooks/useShares";
+import {
+  ImageCardSkeleton,
+  VideoCardSkeleton,
+  DetailedLinkCardSkeleton,
+} from "@/components/skeletons";
 
 export default function FolderPage() {
   const params = useParams();
@@ -148,7 +153,7 @@ export default function FolderPage() {
           currentFolderId={folder?.id}
           isLoading={true}
         />
-        <main className="w-full px-[64px] py-[40px]" />
+        <main className="w-full px-[22px] py-[22px]" />
       </div>
     );
   }
@@ -162,7 +167,7 @@ export default function FolderPage() {
         isLoading={loadingData}
       />
 
-      <main className="w-full px-[64px] py-[40px] flex flex-col gap-16">
+      <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
         <Breadcrumb folderName={folder?.name} isLoading={loadingFolder} />
 
@@ -172,20 +177,47 @@ export default function FolderPage() {
           </div>
         )}
 
+        {/* Loading state with skeletons */}
+        {loadingData && (
+          <>
+            <section className="flex flex-col items-start gap-[21px] w-full">
+              <div className="h-[43px] w-32 bg-[#E5E5E5] animate-pulse rounded-md" />
+              <div className="flex flex-row flex-wrap gap-8 w-full">
+                {[...Array(4)].map((_, i) => (
+                  <ImageCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            <section className="flex flex-col items-start gap-[21px] w-full">
+              <div className="h-[43px] w-32 bg-[#E5E5E5] animate-pulse rounded-md" />
+              <div className="flex flex-row flex-wrap gap-8 w-full">
+                {[...Array(2)].map((_, i) => (
+                  <VideoCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            <section className="flex flex-col items-start gap-[21px] w-full">
+              <div className="h-[43px] w-24 bg-[#E5E5E5] animate-pulse rounded-md" />
+              <div className="flex flex-row flex-wrap gap-8 w-full">
+                {[...Array(3)].map((_, i) => (
+                  <DetailedLinkCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
         {folder && !loadingData && (
           <>
             {/* Section Images */}
             {imageLinks.length > 0 && (
               <section className="flex flex-col items-start gap-[21px] w-full">
-                {/* Titre */}
                 <h1
                   className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
                   style={{ fontFamily: "Area Inktrap, sans-serif" }}
                 >
                   Images ({imageLinks.length})
                 </h1>
-
-                {/* Contenu des cartes images */}
                 <div className="flex flex-row flex-wrap gap-8 w-full">
                   {imageLinks.map((link) => (
                     <ImageCard
@@ -215,20 +247,17 @@ export default function FolderPage() {
             {/* Section Vidéos */}
             {videoLinks.length > 0 && (
               <section className="flex flex-col items-start gap-[21px] w-full">
-                {/* Titre */}
                 <h1
                   className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
                   style={{ fontFamily: "Area Inktrap, sans-serif" }}
                 >
                   Vidéos ({videoLinks.length})
                 </h1>
-
-                {/* Contenu des cartes vidéos */}
                 <div className="flex flex-row flex-wrap gap-8 w-full">
                   {videoLinks.map((link) => {
                     const platformInfo = getVideoPlatformInfo(link.url);
-                    // Pour les vidéos, utiliser screenshot_url en priorité, sinon original_image_url
-                    const thumbnailUrl = link.screenshot_url || link.original_image_url || "";
+                    const thumbnailUrl =
+                      link.screenshot_url || link.original_image_url || "";
 
                     return (
                       <VideoCard
@@ -257,18 +286,14 @@ export default function FolderPage() {
             {/* Section Liens */}
             {regularLinks.length > 0 && (
               <section className="flex flex-col items-start gap-[21px] w-full">
-                {/* Titre */}
                 <h1
                   className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
                   style={{ fontFamily: "Area Inktrap, sans-serif" }}
                 >
                   Liens ({regularLinks.length})
                 </h1>
-
-                {/* Contenu des cartes liens */}
                 <div className="flex flex-row flex-wrap gap-8 w-full">
                   {regularLinks.map((link) => {
-                    // Extraire le nom du site depuis l'URL
                     const url = new URL(link.url);
                     const siteName =
                       link.title || url.hostname.replace("www.", "");
