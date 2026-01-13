@@ -104,9 +104,30 @@ export class SupabaseLinkRepository implements LinkRepository {
 
   async createLink(userId: string, data: CreateLinkData): Promise<Link | null> {
     try {
-      // 1. Si le lien est dans un dossier, récupérer le propriétaire du dossier
+      // 1. Déterminer le dossier cible
+      let targetFolderId = data.folderId || null;
       let linkOwnerId = userId;
 
+      // Si aucun dossier n'est spécifié, utiliser le dossier "Récents" de l'utilisateur
+      if (!targetFolderId) {
+        const { data: recentsFolder, error: recentsFolderError } = await this.supabase
+          .from('folders')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('name', 'Récents')
+          .eq('is_system', true)
+          .maybeSingle();
+
+        if (recentsFolderError) {
+          console.error('Error fetching Récents folder:', recentsFolderError);
+        }
+
+        if (recentsFolder) {
+          targetFolderId = recentsFolder.id;
+        }
+      }
+
+      // 2. Si le lien est dans un dossier spécifique, récupérer le propriétaire du dossier
       if (data.folderId) {
         const { data: folder, error: folderError } = await this.supabase
           .from('folders')
@@ -124,12 +145,12 @@ export class SupabaseLinkRepository implements LinkRepository {
         }
       }
 
-      // 2. Créer le lien avec le user_id du propriétaire du dossier (ou de l'utilisateur si pas de dossier)
+      // 3. Créer le lien avec le user_id du propriétaire du dossier (ou de l'utilisateur si pas de dossier)
       const { data: link, error: linkError } = await this.supabase
         .from('links')
         .insert({
           user_id: linkOwnerId,
-          folder_id: data.folderId || null,
+          folder_id: targetFolderId,
           url: data.url,
           title: data.title || null,
           description: data.description || null,
@@ -158,7 +179,7 @@ export class SupabaseLinkRepository implements LinkRepository {
         throw new Error('Failed to create link');
       }
 
-      // 3. Ajouter les tags si fournis
+      // 4. Ajouter les tags si fournis
       if (data.tags && data.tags.length > 0 && this.tagService) {
         for (const tagName of data.tags) {
           // ✅ CLEAN ARCHITECTURE: Utiliser TagService pour normalisation et création
@@ -178,7 +199,7 @@ export class SupabaseLinkRepository implements LinkRepository {
         }
       }
 
-      // 4. Récupérer le lien complet avec les tags
+      // 5. Récupérer le lien complet avec les tags
       const { data: completeLink } = await this.supabase
         .from('links')
         .select(`
