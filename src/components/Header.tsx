@@ -199,15 +199,8 @@ export default function Header({
                       : "bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-0.5 active:shadow-none cursor-pointer"
                   }`}
                 >
-                  <Plus
-                    className="w-5 h-5 text-black shrink-0"
-                    strokeWidth={2.5}
-                  />
-                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-sm xl:text-base">
-                    Ajouter
-                  </span>
                   {/* Keyboard shortcut badge */}
-                  <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-md border border-black bg-white ml-1">
+                  <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-md border border-black bg-white mr-1">
                     <span className="text-xs text-black font-medium font-[Heebo]">
                       {typeof navigator !== "undefined" &&
                       navigator.platform.toLowerCase().includes("mac")
@@ -218,6 +211,13 @@ export default function Header({
                       E
                     </span>
                   </div>
+                  <Plus
+                    className="w-5 h-5 text-black shrink-0"
+                    strokeWidth={2.5}
+                  />
+                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-sm xl:text-base">
+                    Ajouter
+                  </span>
                 </button>
               </div>
             )}
