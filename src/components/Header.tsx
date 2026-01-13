@@ -164,20 +164,20 @@ export default function Header({
             {!minimal && (
               <div className="flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8 flex-1">
                 <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
-                  <div className="absolute left-3 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 pointer-events-none">
-                    <Search className="w-full h-full" strokeWidth={2.5} />
-                  </div>
                   {/* Keyboard shortcut badge */}
-                  <div className="hidden lg:flex absolute left-10 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-[#636363] bg-white pointer-events-none">
-                    <span className="text-xs text-[#636363] font-medium font-[Heebo]">
+                  <div className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-black bg-[#FF506F] pointer-events-none">
+                    <span className="text-xs text-black font-medium font-[Heebo]">
                       {typeof navigator !== "undefined" &&
                       navigator.platform.toLowerCase().includes("mac")
                         ? "⌘"
                         : "Ctrl"}
                     </span>
-                    <span className="text-xs text-[#636363] font-medium font-[Heebo]">
+                    <span className="text-xs text-black font-medium font-[Heebo]">
                       K
                     </span>
+                  </div>
+                  <div className="absolute left-3 lg:left-[72px] top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 pointer-events-none">
+                    <Search className="w-full h-full" strokeWidth={2.5} />
                   </div>
                   <input
                     type="text"
@@ -185,7 +185,7 @@ export default function Header({
                     onClick={() => setIsSearchModalOpen(true)}
                     onFocus={(e) => e.target.blur()}
                     readOnly
-                    className="w-full h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] pl-10 sm:pl-10 md:pl-11 lg:pl-[120px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-2xl border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-sm xl:text-base shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
+                    className="w-full h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] pl-10 sm:pl-10 md:pl-11 lg:pl-[100px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-2xl border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-sm xl:text-base shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
                   />
                 </div>
 
