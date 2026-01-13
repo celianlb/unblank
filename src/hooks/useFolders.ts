@@ -32,6 +32,18 @@ export function useFolderBySlug(userId: string | undefined, slug: string | undef
 }
 
 /**
+ * Hook pour récupérer un dossier par son ID
+ */
+export function useFolderById(folderId: string | undefined | null) {
+  return useQuery({
+    queryKey: ['folder-by-id', folderId],
+    queryFn: () => folderService.getFolderById(folderId!),
+    enabled: !!folderId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
  * Hook pour récupérer les sous-dossiers d'un dossier parent
  */
 export function useSubFolders(userId: string | undefined, parentFolderId: string | undefined) {
@@ -41,6 +53,19 @@ export function useSubFolders(userId: string | undefined, parentFolderId: string
     enabled: !!userId && !!parentFolderId,
     staleTime: 0,
     refetchOnMount: true,
+  });
+}
+
+/**
+ * Hook pour récupérer la chaîne des dossiers ancêtres (du plus éloigné au plus proche)
+ * Utilisé pour le breadcrumb navigation
+ */
+export function useFolderAncestors(folderId: string | undefined) {
+  return useQuery({
+    queryKey: ['folder-ancestors', folderId],
+    queryFn: () => folderService.getFolderAncestors(folderId!),
+    enabled: !!folderId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

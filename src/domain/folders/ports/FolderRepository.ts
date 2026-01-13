@@ -6,6 +6,11 @@ import { Folder } from '../models/Folder';
  */
 export interface FolderRepository {
   /**
+   * Récupère un dossier par son ID
+   */
+  getFolderById(folderId: string): Promise<Folder | null>;
+
+  /**
    * Récupère un dossier par son slug (nom normalisé)
    */
   getFolderBySlug(userId: string, slug: string): Promise<Folder | null>;
@@ -39,4 +44,9 @@ export interface FolderRepository {
    * Supprime un ou plusieurs dossiers
    */
   deleteFolders(folderIds: string[]): Promise<boolean>;
+
+  /**
+   * Récupère la chaîne des dossiers ancêtres (du plus éloigné au plus proche)
+   */
+  getFolderAncestors(folderId: string): Promise<Folder[]>;
 }

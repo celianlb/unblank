@@ -22,6 +22,13 @@ export class FolderService {
   }
 
   /**
+   * Récupère un dossier par son ID
+   */
+  async getFolderById(folderId: string): Promise<Folder | null> {
+    return this.folderRepository.getFolderById(folderId);
+  }
+
+  /**
    * Récupère un dossier par son slug (nom normalisé)
    */
   async getFolderBySlug(userId: string, slug: string): Promise<Folder | null> {
@@ -96,5 +103,12 @@ export class FolderService {
   async getSubFolderIds(userId: string, folderId: string): Promise<string[]> {
     const folders = await this.folderRepository.getSubFolders(userId, folderId);
     return folders.map(f => f.id);
+  }
+
+  /**
+   * Récupère la chaîne des dossiers ancêtres (du plus éloigné au plus proche)
+   */
+  async getFolderAncestors(folderId: string): Promise<Folder[]> {
+    return this.folderRepository.getFolderAncestors(folderId);
   }
 }

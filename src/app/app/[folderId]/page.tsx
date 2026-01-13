@@ -10,7 +10,7 @@ import DetailedLinkCard from "@/components/DetailedLinkCard";
 import ImageCard from "@/components/ImageCard";
 import VideoCard from "@/components/VideoCard";
 import { getContentType, getVideoPlatformInfo } from "@/utils/linkUtils";
-import { useFolderBySlug, useSubFolders } from "@/hooks/useFolders";
+import { useFolderBySlug, useFolderAncestors, useSubFolders } from "@/hooks/useFolders";
 import {
   useFolderLinks,
   useDeleteLinks,
@@ -39,6 +39,10 @@ export default function FolderPage() {
     session?.user?.id,
     folderId
   );
+
+  // Récupérer la chaîne des dossiers ancêtres pour le breadcrumb
+  const { data: ancestors = [] } = useFolderAncestors(folder?.id);
+
   const { data: subFolders = [], isLoading: loadingSubFolders } = useSubFolders(
     session?.user?.id,
     folder?.id
@@ -46,6 +50,12 @@ export default function FolderPage() {
   const { data: links = [], isLoading: loadingLinks } = useFolderLinks(
     folder?.id
   );
+
+  // Construire le tableau des parents pour le breadcrumb (du plus éloigné au plus proche)
+  const breadcrumbParents = ancestors.map((ancestor) => ({
+    name: ancestor.name,
+    slug: ancestor.slug,
+  }));
 
   // Mutations pour la suppression
   const deleteLinks = useDeleteLinks(folder?.id);
@@ -175,7 +185,11 @@ export default function FolderPage() {
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb folderName={folder?.name} isLoading={loadingFolder} />
+        <Breadcrumb
+          parents={breadcrumbParents}
+          currentName={folder?.name}
+          isLoading={loadingFolder}
+        />
 
         {!folder && !loadingData && (
           <div className="flex items-center justify-center py-16">
