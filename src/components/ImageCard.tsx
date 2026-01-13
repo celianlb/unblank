@@ -101,10 +101,10 @@ export default function ImageCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-full sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] h-[280px] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] bg-[#FEF8EE] border-3 sm:border-4 border-black rounded-2xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
+        className="group/card w-[calc(50%-6px)] sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] aspect-[4/5] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] sm:aspect-auto bg-[#FEF8EE] border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
       >
         {/* Image - full bleed with overflow */}
-        <div className="absolute left-0 top-[-18px] sm:top-[-20px] md:top-[-22px] w-[calc(100%-8px)] sm:w-[192px] md:w-[222px] lg:w-[242px] xl:w-[264px] h-[290px] sm:h-[310px] md:h-[344px] lg:h-[360px] xl:h-[374px] overflow-hidden rounded-xl sm:rounded-[16px] ml-1">
+        <div className="absolute inset-0 sm:left-0 sm:top-[-20px] sm:right-auto sm:bottom-auto w-full sm:w-[192px] md:w-[222px] lg:w-[242px] xl:w-[264px] h-full sm:h-[310px] md:h-[344px] lg:h-[360px] xl:h-[374px] overflow-hidden rounded-xl sm:rounded-[16px] sm:ml-1">
           <img
             src={thumbnailUrl}
             alt="Preview"
@@ -259,6 +259,8 @@ export default function ImageCard({
         folder={folder}
         tags={tags}
         canEdit={canEdit}
+        canDelete={canDelete}
+        onDelete={onDelete}
       />
     </>
   );

@@ -273,7 +273,7 @@ export default function FolderPage() {
                 >
                   Images ({imageLinks.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-8 w-full">
+                <div className="flex flex-row flex-wrap gap-3 sm:gap-8 w-full">
                   {imageLinks.map((link) => (
                     <ImageCard
                       key={link.id}
