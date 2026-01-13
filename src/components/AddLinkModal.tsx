@@ -169,10 +169,10 @@ export default function AddLinkModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[479px] pointer-events-auto"
+          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[479px] max-h-[90vh] overflow-y-auto pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <form onSubmit={handleSubmit} className="flex flex-col p-8 gap-6">
+          <form onSubmit={handleSubmit} className="flex flex-col p-6 sm:p-8 gap-4 sm:gap-6">
             {/* Header */}
             <div className="flex items-center justify-center mb-2 relative w-full">
               <h2 className="text-2xl font-bold text-black">Nouveau lien</h2>
@@ -250,7 +250,7 @@ export default function AddLinkModal({
                 placeholder=""
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full h-32 px-4 py-3 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base resize-none font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
+                className="w-full h-20 sm:h-32 px-4 py-3 rounded-xl border-2 border-black bg-white text-black placeholder-gray-400 focus:outline-none focus:border-black text-base resize-none font-[Heebo] font-normal placeholder:font-[Heebo] placeholder:font-normal"
               />
             </div>
 
@@ -320,7 +320,7 @@ export default function AddLinkModal({
             </div>
 
             {/* Tag Input */}
-            <div className="flex flex-col items-start p-0 gap-1.5 w-full h-[165px]">
+            <div className="flex flex-col items-start p-0 gap-1.5 w-full min-h-[120px] sm:min-h-[165px]">
               <div className="flex flex-row items-center px-3 gap-4 w-full h-[45px] bg-white border border-dashed border-gray-300 rounded-xl">
                 <input
                   type="text"
