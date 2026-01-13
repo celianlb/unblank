@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import AddLinkModal from "./AddLinkModal";
 import CreateFolderModal from "./CreateFolderModal";
-import CreateGroupModal from "./CreateGroupModal";
 import CreateNewModal from "./CreateNewModal";
 import ProfileMenu from "./ProfileMenu";
 import DeleteConfirmModal from "./DeleteConfirmModal";
@@ -20,8 +19,6 @@ interface HeaderProps {
   selectedCount?: number;
   onDeleteSelected?: () => void;
   currentFolderId?: string;
-  currentGroupId?: string;
-  isInGroup?: boolean; // Pour savoir si on est dans un groupe (pas un dossier)
   isLoading?: boolean; // Pour désactiver les boutons pendant le chargement
   minimal?: boolean; // Pour afficher seulement le menu profil (sans recherche et actions)
 }
@@ -30,14 +27,11 @@ export default function Header({
   selectedCount = 0,
   onDeleteSelected,
   currentFolderId,
-  currentGroupId,
-  isInGroup = false,
   isLoading = false,
   minimal = false,
 }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
-  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isCreateNewModalOpen, setIsCreateNewModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -72,21 +66,12 @@ export default function Header({
   // Récupérer l'abonnement pour vérifier les limites
   const { subscription } = useSubscription();
 
-  // Récupérer les permissions du groupe actuel (pour le bouton "Créer un dossier")
-  const { data: groupShares = [], isLoading: isLoadingGroupShares } =
-    useFolderShares(currentGroupId || null);
-
-  // Vérifier si l'utilisateur a la permission d'éditer dans le dossier (pour "Ajouter un lien")
+  // Vérifier si l'utilisateur a la permission d'éditer dans le dossier
   const currentUserShare = shares.find(
     (share: any) => share.user?.email === currentUser?.email
   );
 
-  // Vérifier si l'utilisateur a la permission d'éditer dans le groupe (pour "Créer un dossier")
-  const currentUserGroupShare = groupShares.find(
-    (share: any) => share.user?.email === currentUser?.email
-  );
-
-  // Logique de permission pour "Ajouter un lien" :
+  // Logique de permission pour "Ajouter un lien" et "Créer un dossier" :
   // - Si pas de dossier (currentFolderId null/undefined) : peut éditer
   // - Si dossier existe mais les shares sont en cours de chargement : on attend (canEdit = false pour éviter le flash)
   // - Si dossier existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
@@ -105,34 +90,12 @@ export default function Header({
     : { allowed: true, reason: undefined }; // Nouvel utilisateur, pas encore de limite
 
   const canAddLink = canEdit && canAddLinkResult.allowed;
-  const linkLimitReason = canAddLinkResult.reason;
-
-  // Logique de permission pour "Créer un dossier" (dans un groupe) :
-  // - Si pas de groupe (currentGroupId null/undefined) : peut créer
-  // - Si groupe existe mais les shares sont en cours de chargement : on attend
-  // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut créer
-  // - Si groupe partagé : vérifier la permission (edit ou owner)
-  const canCreateFolder =
-    !currentGroupId ||
-    (!isLoadingGroupShares &&
-      (groupShares.length === 0 ||
-        currentUserGroupShare?.permission === "edit" ||
-        currentUserGroupShare?.permission === "owner"));
 
   // Logique de permission pour "Supprimer" :
-  // - Si dans un dossier : utiliser canEdit (pour supprimer des liens)
-  // - Si dans un groupe : utiliser canCreateFolder (pour supprimer des dossiers)
+  // - Si dans un dossier : utiliser canEdit
   // - Sinon (home/récents) : toujours autorisé
-  const canDelete = currentFolderId
-    ? canEdit
-    : currentGroupId
-    ? canCreateFolder
-    : true;
-  const isLoadingDeletePermissions = currentFolderId
-    ? isLoadingShares
-    : currentGroupId
-    ? isLoadingGroupShares
-    : false;
+  const canDelete = currentFolderId ? canEdit : true;
+  const isLoadingDeletePermissions = currentFolderId ? isLoadingShares : false;
 
   // Global keyboard listener for Cmd+K / Ctrl+K
   useEffect(() => {
@@ -158,21 +121,15 @@ export default function Header({
       <CreateFolderModal
         isOpen={isCreateFolderModalOpen}
         onClose={() => setIsCreateFolderModalOpen(false)}
-        parentFolderId={currentGroupId}
-      />
-      <CreateGroupModal
-        isOpen={isCreateGroupModalOpen}
-        onClose={() => setIsCreateGroupModalOpen(false)}
+        parentFolderId={currentFolderId}
       />
       <CreateNewModal
         isOpen={isCreateNewModalOpen}
         onClose={() => setIsCreateNewModalOpen(false)}
         onCreateFolder={() => setIsCreateFolderModalOpen(true)}
-        onCreateGroup={() => setIsCreateGroupModalOpen(true)}
         onAddLink={() => setIsAddLinkModalOpen(true)}
-        canCreateFolder={canCreateFolder && !currentFolderId}
-        canCreateGroup={!isInGroup && !currentFolderId}
-        canAddLink={canAddLink && !isInGroup}
+        canCreateFolder={canEdit}
+        canAddLink={canAddLink}
       />
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
@@ -315,11 +272,7 @@ export default function Header({
           {!minimal && selectedCount > 0 && (
             <div className="flex items-center justify-end pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
               <Tooltip
-                content={
-                  currentFolderId
-                    ? "Vous n'avez pas la permission de supprimer des liens dans ce dossier partagé"
-                    : "Vous n'avez pas la permission de supprimer des dossiers dans ce groupe partagé"
-                }
+                content="Vous n'avez pas la permission de supprimer dans ce dossier partagé"
                 disabled={canDelete || isLoading}
               >
                 <div className="relative inline-block">

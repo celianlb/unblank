@@ -10,7 +10,7 @@ export async function OPTIONS(request: NextRequest) {
 
 /**
  * PATCH /api/folders/[folderId]/move
- * Déplace un dossier dans un groupe
+ * Déplace un dossier vers un autre dossier parent
  * Vérifie les permissions (propriétaire ou permission edit via shares)
  */
 export async function PATCH(
@@ -20,10 +20,8 @@ export async function PATCH(
   const origin = request.headers.get('origin');
 
   try {
-    // Await params (Next.js 15 requirement)
     const { folderId } = await params;
 
-    // Get the access token from the Authorization header
     const authHeader = request.headers.get('Authorization');
     const accessToken = authHeader?.replace('Bearer ', '');
 
@@ -35,7 +33,6 @@ export async function PATCH(
       return addCorsHeaders(response, origin);
     }
 
-    // Create Supabase client with the user's access token
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -48,7 +45,6 @@ export async function PATCH(
       }
     );
 
-    // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
@@ -60,10 +56,9 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { groupId } = body;
+    const { parentFolderId } = body;
 
-    // ✅ Vérifier les permissions sur le dossier à déplacer
-    // 1. Vérifier si l'utilisateur est le propriétaire du dossier
+    // Vérifier les permissions sur le dossier à déplacer
     const { data: folder } = await supabase
       .from('folders')
       .select('user_id')
@@ -80,7 +75,6 @@ export async function PATCH(
 
     const isOwner = folder.user_id === user.id;
 
-    // 2. Si pas propriétaire, vérifier les permissions de partage sur le dossier
     if (!isOwner) {
       const { data: share } = await supabase
         .from('shares')
@@ -102,39 +96,39 @@ export async function PATCH(
       }
     }
 
-    // ✅ Si on déplace vers un groupe, vérifier les permissions sur le groupe de destination
-    if (groupId) {
-      const { data: targetGroup } = await supabase
+    // Si on déplace vers un dossier parent, vérifier les permissions sur le dossier de destination
+    if (parentFolderId) {
+      const { data: targetFolder } = await supabase
         .from('folders')
         .select('user_id')
-        .eq('id', groupId)
+        .eq('id', parentFolderId)
         .single();
 
-      if (!targetGroup) {
+      if (!targetFolder) {
         const response = NextResponse.json(
-          { error: 'Target group not found' },
+          { error: 'Target folder not found' },
           { status: 404 }
         );
         return addCorsHeaders(response, origin);
       }
 
-      const isGroupOwner = targetGroup.user_id === user.id;
+      const isTargetOwner = targetFolder.user_id === user.id;
 
-      if (!isGroupOwner) {
-        const { data: groupShare } = await supabase
+      if (!isTargetOwner) {
+        const { data: targetShare } = await supabase
           .from('shares')
           .select('permission')
-          .eq('folder_id', groupId)
+          .eq('folder_id', parentFolderId)
           .eq('shared_with_email', user.email)
           .eq('is_active', true)
           .eq('permission', 'edit')
           .maybeSingle();
 
-        const hasGroupEditPermission = groupShare?.permission === 'edit';
+        const hasTargetEditPermission = targetShare?.permission === 'edit';
 
-        if (!hasGroupEditPermission) {
+        if (!hasTargetEditPermission) {
           const response = NextResponse.json(
-            { error: 'You do not have permission to move folders into this group' },
+            { error: 'You do not have permission to move folders into this folder' },
             { status: 403 }
           );
           return addCorsHeaders(response, origin);
@@ -142,11 +136,9 @@ export async function PATCH(
       }
     }
 
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const folderService = FolderFactory.createFolderService(supabase);
 
-    // Move folder using the domain service
-    const success = await folderService.moveFolderToGroup(folderId, groupId);
+    const success = await folderService.moveFolderToParent(folderId, parentFolderId);
 
     if (!success) {
       const response = NextResponse.json(
@@ -169,4 +161,3 @@ export async function PATCH(
     return addCorsHeaders(response, origin);
   }
 }
-

@@ -1,16 +1,13 @@
 "use client";
 
 import { X, Folder, Link } from "lucide-react";
-import Image from "next/image";
 
 interface CreateNewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateFolder: () => void;
-  onCreateGroup: () => void;
   onAddLink: () => void;
   canCreateFolder?: boolean;
-  canCreateGroup?: boolean;
   canAddLink?: boolean;
 }
 
@@ -18,10 +15,8 @@ export default function CreateNewModal({
   isOpen,
   onClose,
   onCreateFolder,
-  onCreateGroup,
   onAddLink,
   canCreateFolder = true,
-  canCreateGroup = true,
   canAddLink = true,
 }: CreateNewModalProps) {
   if (!isOpen) return null;
@@ -30,13 +25,6 @@ export default function CreateNewModal({
     if (canCreateFolder) {
       onClose();
       onCreateFolder();
-    }
-  };
-
-  const handleCreateGroup = () => {
-    if (canCreateGroup) {
-      onClose();
-      onCreateGroup();
     }
   };
 
@@ -55,7 +43,7 @@ export default function CreateNewModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[520px] pointer-events-auto flex flex-col p-8 gap-8 relative"
+          className="bg-white border-4 border-black rounded-[24px] shadow-[4px_4px_0px_#000000] w-full max-w-[400px] pointer-events-auto flex flex-col p-8 gap-8 relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
@@ -78,7 +66,7 @@ export default function CreateNewModal({
           </h2>
 
           {/* Options Grid */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {/* Dossier */}
             <button
               onClick={handleCreateFolder}
@@ -95,31 +83,6 @@ export default function CreateNewModal({
                 style={{ fontFamily: "Area Inktrap, sans-serif" }}
               >
                 Dossier
-              </span>
-            </button>
-
-            {/* Groupe de dossier */}
-            <button
-              onClick={handleCreateGroup}
-              disabled={!canCreateGroup}
-              className={`flex flex-col items-center justify-center gap-4 p-6 rounded-xl border-3 border-black bg-[#FEF8EE] transition-all ${
-                canCreateGroup
-                  ? "hover:bg-[#FFE3E8] active:translate-y-[1px] cursor-pointer"
-                  : "opacity-50 cursor-not-allowed"
-              }`}
-            >
-              <Image
-                src="/group-folder.png"
-                alt="Groupe de dossier"
-                width={64}
-                height={64}
-                className="w-16 h-16"
-              />
-              <span
-                className="text-[18px] font-bold text-[#0D0D0D] text-center leading-tight"
-                style={{ fontFamily: "Area Inktrap, sans-serif" }}
-              >
-                Groupe de dossier
               </span>
             </button>
 

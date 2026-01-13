@@ -29,52 +29,38 @@ export class FolderService {
   }
 
   /**
-   * Récupère un groupe par son slug
-   */
-  async getGroupBySlug(userId: string, slug: string): Promise<Folder | null> {
-    return this.folderRepository.getGroupBySlug(userId, slug);
-  }
-
-  /**
-   * Récupère tous les dossiers d'un utilisateur (non-groupes)
+   * Récupère tous les dossiers top-level d'un utilisateur (sans parent)
    */
   async getUserFolders(userId: string): Promise<Folder[]> {
     return this.folderRepository.getUserFolders(userId);
   }
 
   /**
-   * Récupère tous les groupes de dossiers d'un utilisateur
+   * Récupère les sous-dossiers d'un dossier parent
    */
-  async getUserGroups(userId: string): Promise<Folder[]> {
-    return this.folderRepository.getUserGroups(userId);
-  }
-
-  /**
-   * Récupère les dossiers d'un groupe spécifique
-   */
-  async getGroupFolders(userId: string, groupId: string): Promise<Folder[]> {
-    return this.folderRepository.getGroupFolders(userId, groupId);
+  async getSubFolders(userId: string, parentFolderId: string): Promise<Folder[]> {
+    return this.folderRepository.getSubFolders(userId, parentFolderId);
   }
 
   /**
    * Crée un nouveau dossier
    * Contient la logique métier de validation si nécessaire
    */
-  async createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup?: boolean): Promise<Folder | null> {
+  async createFolder(userId: string, name: string, parentFolderId?: string | null): Promise<Folder | null> {
     // Validation métier: le nom ne peut pas être vide
     if (!name || name.trim().length === 0) {
       console.error('Folder name cannot be empty');
       return null;
     }
 
-    return this.folderRepository.createFolder(userId, name, parentFolderId, isGroup);
+    return this.folderRepository.createFolder(userId, name, parentFolderId);
   }
 
   /**
-   * Déplace un dossier dans un groupe
+   * Déplace un dossier vers un autre dossier parent
    */
-  async moveFolderToGroup(folderId: string, groupId: string | null): Promise<boolean> {
-    return this.folderRepository.moveFolderToGroup(folderId, groupId);
+  async moveFolderToParent(folderId: string, parentFolderId: string | null): Promise<boolean> {
+    return this.folderRepository.moveFolderToParent(folderId, parentFolderId);
   }
 
   /**
@@ -104,11 +90,11 @@ export class FolderService {
   }
 
   /**
-   * Récupère les IDs des dossiers enfants d'un groupe (retourne un tableau vide si ce n'est pas un groupe)
-   * Utilisé pour gérer les partages lors de la sortie d'un groupe
+   * Récupère les IDs des sous-dossiers d'un dossier
+   * Utilisé pour gérer les partages lors de la sortie d'un dossier parent
    */
-  async getGroupFolderIds(userId: string, folderId: string): Promise<string[]> {
-    const folders = await this.folderRepository.getGroupFolders(userId, folderId);
+  async getSubFolderIds(userId: string, folderId: string): Promise<string[]> {
+    const folders = await this.folderRepository.getSubFolders(userId, folderId);
     return folders.map(f => f.id);
   }
 }

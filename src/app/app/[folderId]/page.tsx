@@ -5,19 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
+import FolderCard from "@/components/FolderCard";
 import DetailedLinkCard from "@/components/DetailedLinkCard";
 import ImageCard from "@/components/ImageCard";
 import VideoCard from "@/components/VideoCard";
 import { getContentType, getVideoPlatformInfo } from "@/utils/linkUtils";
-import { useFolderBySlug } from "@/hooks/useFolders";
+import { useFolderBySlug, useSubFolders } from "@/hooks/useFolders";
 import {
   useFolderLinks,
   useDeleteLinks,
   useDeleteLink,
 } from "@/hooks/useLinks";
-import { formatDateAdded } from "@/utils/formatters";
+import { formatDateAdded, formatLastUpdate } from "@/utils/formatters";
 import { useFolderShares } from "@/hooks/useShares";
 import {
+  FolderCardSkeleton,
   ImageCardSkeleton,
   VideoCardSkeleton,
   DetailedLinkCardSkeleton,
@@ -36,6 +38,10 @@ export default function FolderPage() {
   const { data: folder, isLoading: loadingFolder } = useFolderBySlug(
     session?.user?.id,
     folderId
+  );
+  const { data: subFolders = [], isLoading: loadingSubFolders } = useSubFolders(
+    session?.user?.id,
+    folder?.id
   );
   const { data: links = [], isLoading: loadingLinks } = useFolderLinks(
     folder?.id
@@ -67,7 +73,7 @@ export default function FolderPage() {
       currentUserShare?.permission === "edit" ||
       currentUserShare?.permission === "owner");
 
-  const loadingData = loadingFolder || loadingLinks;
+  const loadingData = loadingFolder || loadingSubFolders || loadingLinks;
   const selectedCount = selectedLinkIds.size;
   const isSelectionMode = selectedCount > 0;
 
@@ -181,6 +187,14 @@ export default function FolderPage() {
         {loadingData && (
           <>
             <section className="flex flex-col items-start gap-[21px] w-full">
+              <div className="h-[43px] w-40 bg-[#E5E5E5] animate-pulse rounded-md" />
+              <div className="flex flex-row flex-wrap gap-8 w-full">
+                {[...Array(2)].map((_, i) => (
+                  <FolderCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            <section className="flex flex-col items-start gap-[21px] w-full">
               <div className="h-[43px] w-32 bg-[#E5E5E5] animate-pulse rounded-md" />
               <div className="flex flex-row flex-wrap gap-8 w-full">
                 {[...Array(4)].map((_, i) => (
@@ -209,6 +223,33 @@ export default function FolderPage() {
 
         {folder && !loadingData && (
           <>
+            {/* Section Sous-dossiers */}
+            {subFolders.length > 0 && (
+              <section className="flex flex-col items-start gap-[21px] w-full">
+                <h1
+                  className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+                  style={{ fontFamily: "Area Inktrap, sans-serif" }}
+                >
+                  Sous-dossiers ({subFolders.length})
+                </h1>
+                <div className="flex flex-row flex-wrap gap-8 w-full">
+                  {subFolders.map((subFolder) => (
+                    <FolderCard
+                      key={subFolder.id}
+                      id={subFolder.id}
+                      title={subFolder.name}
+                      slug={subFolder.slug}
+                      itemCount={subFolder.link_count || 0}
+                      lastUpdate={formatLastUpdate(subFolder.updated_at)}
+                      isSystem={subFolder.is_system}
+                      previewImages={subFolder.preview_images}
+                      canDelete={canEdit}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Section Images */}
             {imageLinks.length > 0 && (
               <section className="flex flex-col items-start gap-[21px] w-full">
@@ -320,10 +361,10 @@ export default function FolderPage() {
               </section>
             )}
 
-            {/* Message si aucun lien */}
-            {links.length === 0 && (
+            {/* Message si aucun contenu */}
+            {links.length === 0 && subFolders.length === 0 && (
               <div className="flex items-center justify-center py-16">
-                <p className="text-gray-500">Aucun lien dans ce dossier</p>
+                <p className="text-gray-500">Ce dossier est vide</p>
               </div>
             )}
           </>
