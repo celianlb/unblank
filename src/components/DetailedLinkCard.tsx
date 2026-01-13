@@ -141,9 +141,9 @@ export default function DetailedLinkCard({
           </div>
 
           {/* Site name and URL - Frame 129 */}
-          <div className="flex flex-col items-start gap-[10px]">
+          <div className="flex flex-col items-start gap-[10px] flex-1 min-w-0">
             <h3
-              className="text-[28px] leading-[30px] font-extrabold text-[#0D0D0D]"
+              className="text-[28px] leading-[30px] font-extrabold text-[#0D0D0D] line-clamp-2"
               style={{ fontFamily: "Area Inktrap, sans-serif" }}
             >
               {siteName}
