@@ -36,7 +36,7 @@ export default function LinkCard({
   dimensions = "615×856 px",
   fileSize = "2,3 Mo",
   dateAdded = new Date().toLocaleDateString("fr-FR"),
-  folder = "Affiche horreur",
+  folder = "Récents",
   isSelectionMode = false,
   isSelected = false,
   onCheckChange,
