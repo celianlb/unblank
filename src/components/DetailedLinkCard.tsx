@@ -171,31 +171,34 @@ export default function DetailedLinkCard({
             <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {displayLink}
             </span>
-            <button
-              onClick={handleCopy}
-              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
-            >
-              {isCopied ? (
-                <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
-              ) : (
-                <Copy
-                  className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
-                  strokeWidth={2}
-                />
-              )}
-            </button>
-            <button
-              onClick={handleOpenLink}
-              className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
-            >
-              <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
-            </button>
+            <Tooltip content={isCopied ? "Copié !" : "Copier le lien"}>
+              <button
+                onClick={handleCopy}
+                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
+              >
+                {isCopied ? (
+                  <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+                ) : (
+                  <Copy
+                    className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                    strokeWidth={2}
+                  />
+                )}
+              </button>
+            </Tooltip>
+            <Tooltip content="Ouvrir dans un nouvel onglet">
+              <button
+                onClick={handleOpenLink}
+                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
+              </button>
+            </Tooltip>
           </div>
 
           {/* Edit button */}
           <Tooltip
-            content="Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"
-            disabled={canEdit}
+            content={canEdit ? "Modifier" : "Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"}
           >
             <div className="relative inline-block">
               <button
@@ -219,18 +222,20 @@ export default function DetailedLinkCard({
 
           {/* Delete button - Frame 73 */}
           {canDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsDeleteModalOpen(true);
-              }}
-              className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
-            >
-              <Trash
-                className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
-                strokeWidth={2}
-              />
-            </button>
+            <Tooltip content="Supprimer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
+              >
+                <Trash
+                  className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
           )}
         </div>
 

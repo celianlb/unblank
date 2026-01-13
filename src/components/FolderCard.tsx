@@ -8,6 +8,7 @@ import ExitConfirmModal from "./ExitConfirmModal";
 import FolderSettingsModal from "./FolderSettingsModal";
 import ShareLinkModal from "./ShareLinkModal";
 import RenameFolderModal from "./RenameFolderModal";
+import Tooltip from "./Tooltip";
 import { useDeleteFolders, useRenameFolder } from "@/hooks/useFolders";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -204,57 +205,63 @@ export default function FolderCard({
           <div className="flex flex-row items-center justify-between w-full mt-auto">
             <div className="flex flex-row items-center gap-2">
               {/* Frame 173 - Edit Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canDelete) setIsRenameModalOpen(true);
-                }}
-                disabled={!canDelete}
-                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
-                  !canDelete
-                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
-                    : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
-                }`}
-              >
-                <Pencil
-                  className={`w-5 h-5 ${
-                    !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+              <Tooltip content="Renommer" disabled={!canDelete}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (canDelete) setIsRenameModalOpen(true);
+                  }}
+                  disabled={!canDelete}
+                  className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                    !canDelete
+                      ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                      : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
                   }`}
-                  strokeWidth={2}
-                />
-              </button>
+                >
+                  <Pencil
+                    className={`w-5 h-5 ${
+                      !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+                    }`}
+                    strokeWidth={2}
+                  />
+                </button>
+              </Tooltip>
 
               {/* Frame 172 - Share Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canDelete) setIsShareModalOpen(true);
-                }}
-                disabled={!canDelete}
-                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
-                  !canDelete
-                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
-                    : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
-                }`}
-              >
-                <Share2
-                  className={`w-5 h-5 ${
-                    !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+              <Tooltip content="Partager" disabled={!canDelete}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (canDelete) setIsShareModalOpen(true);
+                  }}
+                  disabled={!canDelete}
+                  className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg transition-colors ${
+                    !canDelete
+                      ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                      : "bg-[#0D0D0D] hover:bg-black cursor-pointer"
                   }`}
-                  strokeWidth={2}
-                />
-              </button>
+                >
+                  <Share2
+                    className={`w-5 h-5 ${
+                      !canDelete ? "text-gray-400" : "text-[#FEF8EE]"
+                    }`}
+                    strokeWidth={2}
+                  />
+                </button>
+              </Tooltip>
 
               {/* Frame 170 - Settings Button (Groupement) */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsSettingsModalOpen(true);
-                }}
-                className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black cursor-pointer transition-colors"
-              >
-                <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-              </button>
+              <Tooltip content="Paramètres">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSettingsModalOpen(true);
+                  }}
+                  className="flex flex-row justify-center items-center p-2 w-9 h-9 bg-[#0D0D0D] rounded-lg hover:bg-black cursor-pointer transition-colors"
+                >
+                  <Settings className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+                </button>
+              </Tooltip>
             </div>
 
             {/* Frame 72 - Exit/Trash Button */}
@@ -265,40 +272,44 @@ export default function FolderCard({
               - Sinon → bouton Supprimer
             */}
             {isShared && !isOwned ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExitModalOpen(true);
-                }}
-                className="flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg bg-[#C5C5C5] cursor-pointer group"
-              >
-                <LogOut
-                  className="w-5 h-5 text-black transition-colors group-hover:text-[#FF5070]"
-                  strokeWidth={2}
-                />
-              </button>
+              <Tooltip content="Quitter le dossier">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExitModalOpen(true);
+                  }}
+                  className="flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg bg-[#C5C5C5] cursor-pointer group"
+                >
+                  <LogOut
+                    className="w-5 h-5 text-black transition-colors group-hover:text-[#FF5070]"
+                    strokeWidth={2}
+                  />
+                </button>
+              </Tooltip>
             ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canDelete) setIsDeleteModalOpen(true);
-                }}
-                disabled={!canDelete}
-                className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
-                  !canDelete
-                    ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
-                    : "bg-[#C5C5C5] cursor-pointer"
-                }`}
-              >
-                <Trash
-                  className={`w-5 h-5 transition-colors ${
+              <Tooltip content="Supprimer" disabled={!canDelete}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (canDelete) setIsDeleteModalOpen(true);
+                  }}
+                  disabled={!canDelete}
+                  className={`flex flex-row justify-center items-center p-2 w-9 h-9 rounded-lg group ${
                     !canDelete
-                      ? "text-gray-400"
-                      : "text-black group-hover:text-[#FF5070]"
+                      ? "bg-[#C5C5C5] cursor-not-allowed opacity-50"
+                      : "bg-[#C5C5C5] cursor-pointer"
                   }`}
-                  strokeWidth={2}
-                />
-              </button>
+                >
+                  <Trash
+                    className={`w-5 h-5 transition-colors ${
+                      !canDelete
+                        ? "text-gray-400"
+                        : "text-black group-hover:text-[#FF5070]"
+                    }`}
+                    strokeWidth={2}
+                  />
+                </button>
+              </Tooltip>
             )}
           </div>
         )}

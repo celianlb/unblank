@@ -4,6 +4,7 @@ import { Copy, ExternalLink, Trash, Check } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import ImagePreviewModal from "./ImagePreviewModal";
+import Tooltip from "./Tooltip";
 
 interface ImageCardProps {
   linkId: string;
@@ -156,20 +157,26 @@ export default function ImageCard({
 
         {/* Delete button - hidden by default, shown on hover */}
         {canDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteModalOpen(true);
-            }}
+          <div
             className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${
               showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer`}
+            }`}
           >
-            <Trash
-              className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors"
-              strokeWidth={2}
-            />
-          </button>
+            <Tooltip content="Supprimer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer flex"
+              >
+                <Trash
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
+          </div>
         )}
 
         {/* Tags - hidden by default, shown on hover */}
@@ -201,31 +208,35 @@ export default function ImageCard({
           <span className="flex-1 text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}
           </span>
-          <button
-            onClick={handleCopy}
-            className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer transition-all"
-          >
-            {isCopied ? (
-              <Check
-                className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
+          <Tooltip content={isCopied ? "Copié !" : "Copier le lien"}>
+            <button
+              onClick={handleCopy}
+              className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer transition-all"
+            >
+              {isCopied ? (
+                <Check
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
+                  strokeWidth={2}
+                />
+              ) : (
+                <Copy
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                  strokeWidth={2}
+                />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content="Ouvrir dans un nouvel onglet">
+            <button
+              onClick={handleOpenLink}
+              className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer"
+            >
+              <ExternalLink
+                className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]"
                 strokeWidth={2}
               />
-            ) : (
-              <Copy
-                className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D] hover:text-[#FF506F]"
-                strokeWidth={2}
-              />
-            )}
-          </button>
-          <button
-            onClick={handleOpenLink}
-            className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center cursor-pointer"
-          >
-            <ExternalLink
-              className="w-4 h-4 sm:w-5 sm:h-5 text-[#0D0D0D]"
-              strokeWidth={2}
-            />
-          </button>
+            </button>
+          </Tooltip>
         </div>
       </div>
 
