@@ -178,7 +178,7 @@ export default function Header({
                     onClick={() => setIsSearchModalOpen(true)}
                     onFocus={(e) => e.target.blur()}
                     readOnly
-                    className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
+                    className="w-full h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-xl xl:rounded-xl border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-sm xl:text-base shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
                   />
                 </div>
 
@@ -186,17 +186,17 @@ export default function Header({
                 <button
                   onClick={() => setIsCreateNewModalOpen(true)}
                   disabled={isLoading}
-                  className={`h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-7 rounded-xl md:rounded-2xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 xl:gap-2 whitespace-nowrap shrink-0 ${
+                  className={`h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-5 xl:px-[27px] rounded-xl md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${
                     isLoading
                       ? "bg-[#FF506F] opacity-50 cursor-not-allowed"
                       : "bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-0.5 active:shadow-none cursor-pointer"
                   }`}
                 >
                   <Plus
-                    className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-black shrink-0"
+                    className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 xl:w-5 xl:h-5 text-black shrink-0"
                     strokeWidth={2.5}
                   />
-                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-base xl:text-lg">
+                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-sm xl:text-base">
                     Ajouter
                   </span>
                 </button>
