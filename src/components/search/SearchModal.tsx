@@ -362,7 +362,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           >
             {/* Initial State - Show recent links */}
             {showInitialState && (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 {isLoadingRecent ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="w-8 h-8 animate-spin text-[#636363]" strokeWidth={2} />
@@ -404,7 +404,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {/* Results List */}
             {hasResults && (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 {allResults.map((link) => (
                   <SearchResultItem
                     key={link.id}

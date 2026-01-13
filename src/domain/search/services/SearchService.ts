@@ -1,6 +1,5 @@
 import { SearchRepository } from '../ports/SearchRepository';
 import { SearchParams, SearchResult, TagWithCount } from '../models/SearchResult';
-import { Link } from '@/domain/links/models/Link';
 
 /**
  * Service du domaine pour les opérations de recherche
@@ -37,9 +36,13 @@ export class SearchService {
       offset,
     });
 
+    // Filtrer pour ne garder que les liens de l'utilisateur actuel
+    // (mesure de sécurité supplémentaire contre les bugs RLS)
+    const userLinks = links.filter(link => link.user_id === userId);
+
     // Déterminer s'il y a plus de résultats
-    const hasMore = links.length > limit;
-    const resultLinks = hasMore ? links.slice(0, limit) : links;
+    const hasMore = userLinks.length > limit;
+    const resultLinks = hasMore ? userLinks.slice(0, limit) : userLinks;
 
     return {
       links: resultLinks,
