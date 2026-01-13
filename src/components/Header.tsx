@@ -97,19 +97,26 @@ export default function Header({
   const canDelete = currentFolderId ? canEdit : true;
   const isLoadingDeletePermissions = currentFolderId ? isLoadingShares : false;
 
-  // Global keyboard listener for Cmd+K / Ctrl+K
+  // Global keyboard listener for Cmd+K / Ctrl+K (search) and Cmd+N / Ctrl+N (add)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K on Mac, Ctrl+K on Windows/Linux
+      // Cmd+K on Mac, Ctrl+K on Windows/Linux - Open search
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsSearchModalOpen(true);
+      }
+      // Cmd+N on Mac, Ctrl+N on Windows/Linux - Open create new modal
+      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+        e.preventDefault();
+        if (!minimal && !isLoading) {
+          setIsCreateNewModalOpen(true);
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [minimal, isLoading]);
 
   return (
     <>
