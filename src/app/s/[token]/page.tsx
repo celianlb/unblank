@@ -218,7 +218,7 @@ export default function ShareTokenPage() {
       <div className="min-h-screen flex items-center justify-center bg-[#FEF8EE]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-[#0D0D0D]" />
-          <p className="text-[18px] font-[Heebo] text-[#A8A8A8]">
+          <p className="text-[18px]  text-[#A8A8A8]">
             Chargement du partage...
           </p>
         </div>
@@ -239,12 +239,12 @@ export default function ShareTokenPage() {
           >
             Lien invalide
           </h1>
-          <p className="text-[16px] text-[#A8A8A8] font-[Heebo] text-center">
+          <p className="text-[16px] text-[#A8A8A8]  text-center">
             {error}
           </p>
           <button
             onClick={() => router.push("/")}
-            className="w-full h-[46px] bg-[#0D0D0D] hover:bg-[#2D2D2D] border-2 border-black rounded-xl text-white text-[18px] font-bold font-[Heebo] transition-colors cursor-pointer"
+            className="w-full h-[46px] bg-[#0D0D0D] hover:bg-[#2D2D2D] border-2 border-black rounded-xl text-white text-[18px] font-bold  transition-colors cursor-pointer"
           >
             Retour à l&apos;accueil
           </button>
@@ -306,7 +306,7 @@ export default function ShareTokenPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Bookmark className="w-5 h-5 text-[#0D0D0D]" />
-              <p className="text-sm font-[Heebo] text-[#0D0D0D]">
+              <p className="text-sm  text-[#0D0D0D]">
                 <strong>
                   {data?.folder?.owner?.username || "Quelqu'un"}
                 </strong>{" "}
@@ -337,7 +337,7 @@ export default function ShareTokenPage() {
             {data?.folder?.name}
           </h1>
           {data?.folder?.owner && (
-            <p className="text-[16px] text-[#A8A8A8] font-[Heebo]">
+            <p className="text-[16px] text-[#A8A8A8] ">
               Partagé par{" "}
               <strong>{data.folder.owner.username || "un utilisateur"}</strong>
             </p>
