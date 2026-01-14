@@ -357,6 +357,8 @@ export default function FolderPage() {
                     const siteName =
                       link.title || url.hostname.replace("www.", "");
                     const siteUrl = url.hostname;
+                    // Utiliser screenshot_url ou fallback sur original_image_url pour les anciens liens
+                    const thumbnailUrl = link.screenshot_url || link.original_image_url;
 
                     return (
                       <DetailedLinkCard
@@ -365,7 +367,7 @@ export default function FolderPage() {
                         siteName={siteName}
                         siteUrl={siteUrl}
                         description={link.description || ""}
-                        thumbnailUrl={link.screenshot_url}
+                        thumbnailUrl={thumbnailUrl}
                         link={link.url}
                         tags={link.tags?.map((t) => t.name) || []}
                         isSelectionMode={isSelectionMode}
