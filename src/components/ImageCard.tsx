@@ -1,9 +1,10 @@
 "use client";
 
-import { Copy, ExternalLink, Trash, Check } from "lucide-react";
+import { Copy, ExternalLink, Trash, Check, FolderInput } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import ImagePreviewModal from "./ImagePreviewModal";
+import MoveToFolderModal from "./MoveToFolderModal";
 import Tooltip from "./Tooltip";
 
 interface ImageCardProps {
@@ -21,6 +22,7 @@ interface ImageCardProps {
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
   canEdit?: boolean;
+  currentFolderId?: string | null;
 }
 
 export default function ImageCard({
@@ -38,9 +40,11 @@ export default function ImageCard({
   onDelete,
   canDelete = true,
   canEdit = true,
+  currentFolderId,
 }: ImageCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -101,10 +105,10 @@ export default function ImageCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-[calc(50%-6px)] sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] aspect-[4/5] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] sm:aspect-auto bg-[#FEF8EE] border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
+        className="group/card w-[calc(50%-6px)] sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] aspect-[4/5] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] sm:aspect-auto bg-black border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
       >
-        {/* Image - full bleed with overflow */}
-        <div className="absolute inset-0 sm:left-0 sm:top-[-20px] sm:right-auto sm:bottom-auto w-full sm:w-[192px] md:w-[222px] lg:w-[242px] xl:w-[264px] h-full sm:h-[310px] md:h-[344px] lg:h-[360px] xl:h-[374px] overflow-hidden rounded-xl sm:rounded-[16px] sm:ml-1">
+        {/* Image - full bleed */}
+        <div className="absolute inset-0 overflow-hidden">
           <img
             src={thumbnailUrl}
             alt="Preview"
@@ -155,13 +159,30 @@ export default function ImageCard({
           </div>
         </div>
 
-        {/* Delete button - hidden by default, shown on hover */}
-        {canDelete && (
-          <div
-            className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${
-              showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            }`}
-          >
+        {/* Action buttons - hidden by default, shown on hover */}
+        <div
+          className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } gap-1.5`}
+        >
+          {/* Move button */}
+          <Tooltip content="Déplacer">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMoveModalOpen(true);
+              }}
+              className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#FEF8EE] border border-black rounded-md sm:rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+            >
+              <FolderInput
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
+                strokeWidth={2}
+              />
+            </button>
+          </Tooltip>
+
+          {/* Delete button */}
+          {canDelete && (
             <Tooltip content="Supprimer">
               <button
                 onClick={(e) => {
@@ -176,8 +197,8 @@ export default function ImageCard({
                 />
               </button>
             </Tooltip>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
@@ -261,6 +282,15 @@ export default function ImageCard({
         canEdit={canEdit}
         canDelete={canDelete}
         onDelete={onDelete}
+      />
+
+      <MoveToFolderModal
+        isOpen={isMoveModalOpen}
+        onClose={() => setIsMoveModalOpen(false)}
+        itemId={linkId}
+        itemType="link"
+        itemName={displayLink}
+        currentFolderId={currentFolderId}
       />
     </>
   );

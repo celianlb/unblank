@@ -1,9 +1,10 @@
 "use client";
 
-import { Copy, ExternalLink, Pencil, Trash, Check } from "lucide-react";
+import { Copy, ExternalLink, Pencil, Trash, Check, FolderInput } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import EditLinkModal from "./EditLinkModal";
+import MoveToFolderModal from "./MoveToFolderModal";
 import Tooltip from "./Tooltip";
 
 interface DetailedLinkCardProps {
@@ -12,6 +13,7 @@ interface DetailedLinkCardProps {
   siteUrl: string;
   description: string;
   faviconUrl?: string;
+  thumbnailUrl?: string | null; // Image OG du site web
   link: string;
   tags?: string[];
   isSelectionMode?: boolean;
@@ -19,6 +21,7 @@ interface DetailedLinkCardProps {
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
   canEdit?: boolean;
+  currentFolderId?: string | null;
 }
 
 export default function DetailedLinkCard({
@@ -27,6 +30,7 @@ export default function DetailedLinkCard({
   siteUrl,
   description,
   faviconUrl,
+  thumbnailUrl,
   link,
   tags = [],
   isSelectionMode = false,
@@ -34,11 +38,47 @@ export default function DetailedLinkCard({
   onDelete,
   canDelete = true,
   canEdit = true,
+  currentFolderId,
 }: DetailedLinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  // Détecter si on a une thumbnail
+  const hasThumbnail = !!thumbnailUrl;
+
+  // Générer l'URL du favicon automatiquement depuis le domaine
+  const getAutoFaviconUrl = (url: string): string => {
+    try {
+      // Utiliser Google Favicon Service pour récupérer le favicon
+      const domain = url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    } catch {
+      return '';
+    }
+  };
+
+  // Utiliser le favicon fourni ou le générer automatiquement
+  const effectiveFaviconUrl = faviconUrl || getAutoFaviconUrl(siteUrl || link);
+
+  // Proxy external images to avoid CORS issues
+  const getProxiedImageUrl = (url: string, size?: "thumbnail" | "full") => {
+    if (url.startsWith("http") && !url.includes("localhost")) {
+      const params = new URLSearchParams({ url });
+      if (size === "thumbnail") {
+        params.set("w", "400");
+        params.set("q", "75");
+      }
+      return `/api/proxy-image?${params.toString()}`;
+    }
+    return url;
+  };
+
+  const proxiedThumbnail = thumbnailUrl
+    ? getProxiedImageUrl(thumbnailUrl, "thumbnail")
+    : null;
 
   const handleDelete = () => {
     onDelete?.(linkId);
@@ -86,7 +126,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
+      <div className={`w-[350px] ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden`}>
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">
@@ -127,17 +167,21 @@ export default function DetailedLinkCard({
         <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
           {/* Favicon */}
           <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center bg-white shrink-0 overflow-hidden">
-            {faviconUrl ? (
+            {effectiveFaviconUrl ? (
               <img
-                src={faviconUrl}
+                src={effectiveFaviconUrl}
                 alt={siteName}
-                className="w-full h-full object-cover"
+                className="w-10 h-10 object-contain"
+                onError={(e) => {
+                  // Fallback: afficher l'initiale du site si le favicon ne charge pas
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
               />
-            ) : (
-              <span className="text-xs font-normal text-black font-[Heebo]">
-                Favicon
-              </span>
-            )}
+            ) : null}
+            <span className={`text-2xl font-bold text-black ${effectiveFaviconUrl ? 'hidden' : ''}`}>
+              {siteName.charAt(0).toUpperCase()}
+            </span>
           </div>
 
           {/* Site name and URL - Frame 129 */}
@@ -157,6 +201,23 @@ export default function DetailedLinkCard({
           </div>
         </div>
 
+        {/* Thumbnail - affiché uniquement si présent */}
+        {hasThumbnail && proxiedThumbnail && (
+          <div className="w-full h-[150px] overflow-hidden rounded-lg border-2 border-black bg-[#C4C4C4]">
+            <img
+              src={proxiedThumbnail}
+              alt={siteName}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Cacher l'image si erreur de chargement
+                e.currentTarget.parentElement!.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
         {/* Description - Frame 28 */}
         <div className="flex flex-col items-start gap-1 w-full">
           <p className="text-xs leading-[110%] font-normal text-[#0D0D0D] font-[Heebo] line-clamp-3">
@@ -164,10 +225,10 @@ export default function DetailedLinkCard({
           </p>
         </div>
 
-        {/* Link bar with actions - Frame 136 */}
-        <div className="flex flex-row items-center gap-[10px] w-full h-[41px]">
-          {/* Link input */}
-          <div className="flex-1 h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex flex-row items-center justify-center px-[10px] gap-[10px]">
+        {/* Link bar with actions */}
+        <div className="flex flex-row items-center gap-2.5 w-full h-[41px]">
+          {/* Link input - fond blanc si pas de thumbnail (car le fond de la card est beige) */}
+          <div className={`flex-1 h-[41px] ${hasThumbnail ? 'bg-[#FEF8EE]' : 'bg-white'} border-2 border-black rounded-lg flex flex-row items-center justify-center px-2.5 gap-2.5`}>
             <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
               {displayLink}
             </span>
@@ -196,6 +257,19 @@ export default function DetailedLinkCard({
             </Tooltip>
           </div>
 
+          {/* Move button */}
+          <Tooltip content="Déplacer vers un dossier">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMoveModalOpen(true);
+              }}
+              className="w-[41px] h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex items-center justify-center p-2 shrink-0 cursor-pointer hover:bg-[#FFE3E8] transition-all"
+            >
+              <FolderInput className="w-5 h-5 text-black" strokeWidth={2} />
+            </button>
+          </Tooltip>
+
           {/* Edit button */}
           <Tooltip
             content={canEdit ? "Modifier" : "Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"}
@@ -220,7 +294,7 @@ export default function DetailedLinkCard({
             </div>
           </Tooltip>
 
-          {/* Delete button - Frame 73 */}
+          {/* Delete button */}
           {canDelete && (
             <Tooltip content="Supprimer">
               <button
@@ -239,13 +313,13 @@ export default function DetailedLinkCard({
           )}
         </div>
 
-        {/* Tags - Frame 145 */}
+        {/* Tags */}
         {tags.length > 0 && (
           <div className="flex flex-row items-start gap-1.5 w-full overflow-hidden">
             {tags.map((tag, index) => (
               <div
                 key={index}
-                className="flex flex-row justify-center items-center px-2 py-1 h-[29px] bg-[#FEF8EE] border-2 border-black rounded-lg shrink-0"
+                className={`flex flex-row justify-center items-center px-2 py-1 h-[29px] ${hasThumbnail ? 'bg-[#FEF8EE]' : 'bg-white'} border-2 border-black rounded-lg shrink-0`}
               >
                 <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
                   #{tag}
@@ -270,6 +344,15 @@ export default function DetailedLinkCard({
         currentDescription={description}
         currentTags={tags}
         onSave={handleSaveEdit}
+      />
+
+      <MoveToFolderModal
+        isOpen={isMoveModalOpen}
+        onClose={() => setIsMoveModalOpen(false)}
+        itemId={linkId}
+        itemType="link"
+        itemName={siteName}
+        currentFolderId={currentFolderId}
       />
     </>
   );

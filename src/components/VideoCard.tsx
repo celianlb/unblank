@@ -1,9 +1,10 @@
 "use client";
 
-import { Trash, Copy, ExternalLink, Check } from "lucide-react";
+import { Trash, Copy, ExternalLink, Check, FolderInput } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import VideoPreviewModal from "./VideoPreviewModal";
+import MoveToFolderModal from "./MoveToFolderModal";
 import Tooltip from "./Tooltip";
 
 interface VideoCardProps {
@@ -21,6 +22,7 @@ interface VideoCardProps {
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
   canEdit?: boolean;
+  currentFolderId?: string | null;
 }
 
 export default function VideoCard({
@@ -38,10 +40,40 @@ export default function VideoCard({
   onDelete,
   canDelete = true,
   canEdit = true,
+  currentFolderId,
 }: VideoCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  // Extraire l'ID de la vidéo YouTube depuis l'URL
+  const getYouTubeVideoId = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      // Format: youtube.com/watch?v=VIDEO_ID
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      }
+      // Format: youtu.be/VIDEO_ID
+      if (urlObj.hostname.includes('youtu.be')) {
+        return urlObj.pathname.slice(1);
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
+  // Générer la thumbnail YouTube si pas fournie
+  const getYouTubeThumbnail = (url: string): string | null => {
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
+      // Utiliser maxresdefault pour la meilleure qualité, avec fallback sur hqdefault
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    return null;
+  };
 
   // Proxy external images to avoid CORS issues
   const getProxiedImageUrl = (url?: string, size?: "thumbnail" | "full") => {
@@ -61,7 +93,11 @@ export default function VideoCard({
     return url;
   };
 
-  const proxiedThumbnail = getProxiedImageUrl(thumbnailUrl, "thumbnail");
+  // Utiliser la thumbnail fournie, ou générer celle de YouTube si c'est une vidéo YouTube
+  const effectiveThumbnailUrl = thumbnailUrl ||
+    (platformName.toLowerCase().includes('youtube') ? getYouTubeThumbnail(videoUrl) : null);
+
+  const proxiedThumbnail = getProxiedImageUrl(effectiveThumbnailUrl || undefined, "thumbnail");
 
   const handleCheckChange = () => {
     const newValue = !isSelected;
@@ -185,13 +221,30 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* Delete button */}
-        {canDelete && (
-          <div
-            className={`absolute right-3 top-3 ${
-              showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } z-20`}
-          >
+        {/* Action buttons */}
+        <div
+          className={`absolute right-3 top-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } gap-1.5 z-20`}
+        >
+          {/* Move button */}
+          <Tooltip content="Déplacer">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMoveModalOpen(true);
+              }}
+              className="flex-row justify-center items-center p-2 w-9 h-9 bg-[#FEF8EE] border border-black rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+            >
+              <FolderInput
+                className="w-5 h-5 text-black"
+                strokeWidth={2}
+              />
+            </button>
+          </Tooltip>
+
+          {/* Delete button */}
+          {canDelete && (
             <Tooltip content="Supprimer">
               <button
                 onClick={(e) => {
@@ -206,8 +259,8 @@ export default function VideoCard({
                 />
               </button>
             </Tooltip>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Header with platform logo and info */}
         <div className="flex flex-row items-center p-3 gap-[10px] w-full bg-white z-10">
@@ -324,6 +377,15 @@ export default function VideoCard({
         linkId={linkId}
         tags={tags}
         canEdit={canEdit}
+      />
+
+      <MoveToFolderModal
+        isOpen={isMoveModalOpen}
+        onClose={() => setIsMoveModalOpen(false)}
+        itemId={linkId}
+        itemType="link"
+        itemName={title || displayLink}
+        currentFolderId={currentFolderId}
       />
     </>
   );
