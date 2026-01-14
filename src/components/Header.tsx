@@ -14,6 +14,7 @@ import BetaTrialBanner from "./BetaTrialBanner";
 import { useFolderShares } from "@/hooks/useShares";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionService } from "@/domain/subscription/services/SubscriptionService";
+import { useScrollHide } from "@/hooks/useScrollHide";
 
 interface HeaderProps {
   selectedCount?: number;
@@ -118,6 +119,9 @@ export default function Header({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [minimal, isLoading]);
 
+  // Hook pour cacher/afficher le header au scroll
+  const isHeaderVisible = useScrollHide({ threshold: 50 });
+
   return (
     <>
       <AddLinkModal
@@ -149,7 +153,9 @@ export default function Header({
       />
       <BetaTrialBanner />
       <header
-        className="w-full bg-white border-b-[3px] border-black"
+        className={`w-full bg-white border-b-[3px] border-black fixed top-0 left-0 right-0 z-40 transition-transform duration-300 ease-in-out ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
       >
         <div
           className={`w-full h-full px-[22px] ${
