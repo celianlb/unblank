@@ -22,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <link rel="stylesheet" href="https://use.typekit.net/wgb3eql.css" />
+      <head>
+        <link rel="stylesheet" href="https://use.typekit.net/wgb3eql.css" />
+      </head>
       <body className={heebo.variable}>
         <Providers>{children}</Providers>
       </body>

@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       description,
       folderId,
       originalImageUrl,
+      screenshotUrl,
       imageFormat,
       contentType,
       tags,
@@ -123,6 +124,7 @@ export async function POST(request: NextRequest) {
       description,
       folderId,
       originalImageUrl,
+      screenshotUrl,
       imageFormat,
       contentType,
       tags

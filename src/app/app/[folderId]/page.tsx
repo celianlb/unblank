@@ -360,6 +360,13 @@ export default function FolderPage() {
                     // Utiliser screenshot_url ou fallback sur original_image_url pour les anciens liens
                     const thumbnailUrl = link.screenshot_url || link.original_image_url;
 
+                    // DEBUG: Log pour voir les valeurs
+                    console.log(`[DEBUG] Link: ${link.url}`, {
+                      screenshot_url: link.screenshot_url,
+                      original_image_url: link.original_image_url,
+                      thumbnailUrl,
+                    });
+
                     return (
                       <DetailedLinkCard
                         key={link.id}

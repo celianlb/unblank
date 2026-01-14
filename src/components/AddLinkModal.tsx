@@ -108,6 +108,13 @@ export default function AddLinkModal({
       // - Pour les liens/vidéos avec og:image : screenshot_url (thumbnail)
       const isDirectImage = metadata?.contentType === 'image';
 
+      // DEBUG: Log pour voir ce qui est envoyé
+      console.log('[DEBUG] Creating link with metadata:', {
+        metadata,
+        isDirectImage,
+        screenshotUrl: !isDirectImage ? (metadata?.image || undefined) : undefined,
+      });
+
       await createLink.mutateAsync({
         url: url.trim(),
         title: title.trim() || undefined,

@@ -109,13 +109,19 @@ export default function ImageCard({
       >
         {/* Image - full bleed */}
         <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={thumbnailUrl}
-            alt="Preview"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover"
-          />
+          {thumbnailUrl ? (
+            <img
+              src={thumbnailUrl}
+              alt="Preview"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400 text-sm">No image</span>
+            </div>
+          )}
         </div>
 
         {/* Checkbox container - hidden by default, shown on hover */}
