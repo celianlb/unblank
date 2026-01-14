@@ -180,7 +180,7 @@ export default function VideoCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
+        className="group/card w-full bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
       >
         {/* Checkbox - shown when in selection mode */}
         {showHoverElements && (
@@ -227,21 +227,23 @@ export default function VideoCard({
             showHoverElements ? "flex" : "hidden group-hover/card:flex"
           } gap-1.5 z-20`}
         >
-          {/* Move button */}
-          <Tooltip content="Déplacer" position="bottom">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMoveModalOpen(true);
-              }}
-              className="flex-row justify-center items-center p-2 w-9 h-9 bg-[#FEF8EE] border border-black rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
-            >
-              <FolderInput
-                className="w-5 h-5 text-black"
-                strokeWidth={2}
-              />
-            </button>
-          </Tooltip>
+          {/* Move button - only show if user can edit */}
+          {canEdit && (
+            <Tooltip content="Déplacer" position="bottom">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMoveModalOpen(true);
+                }}
+                className="flex-row justify-center items-center p-2 w-9 h-9 bg-[#FEF8EE] border border-black rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+              >
+                <FolderInput
+                  className="w-5 h-5 text-black"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Delete button */}
           {canDelete && (
@@ -284,7 +286,7 @@ export default function VideoCard({
         </div>
 
         {/* Video Thumbnail - Full width, no border, reduced height */}
-        <div className="w-full h-[200px] bg-[#C4C4C4] overflow-hidden relative">
+        <div className="w-full h-[160px] sm:h-[180px] bg-[#C4C4C4] overflow-hidden relative">
           {proxiedThumbnail ? (
             <img
               src={proxiedThumbnail}

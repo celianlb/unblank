@@ -126,7 +126,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className={`w-[420px] ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden`}>
+      <div className={`w-full ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden`}>
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">
@@ -203,7 +203,7 @@ export default function DetailedLinkCard({
 
         {/* Thumbnail - affiché uniquement si présent */}
         {hasThumbnail && proxiedThumbnail && (
-          <div className="w-full h-[150px] overflow-hidden rounded-lg border-2 border-black bg-[#C4C4C4]">
+          <div className="w-full h-[120px] overflow-hidden rounded-lg border-2 border-black bg-[#C4C4C4]">
             <img
               src={proxiedThumbnail}
               alt={siteName}
@@ -257,42 +257,32 @@ export default function DetailedLinkCard({
             </Tooltip>
           </div>
 
-          {/* Move button */}
-          <Tooltip content="Déplacer vers un dossier">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMoveModalOpen(true);
-              }}
-              className="w-[41px] h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex items-center justify-center p-2 shrink-0 cursor-pointer hover:bg-[#FFE3E8] transition-all"
-            >
-              <FolderInput className="w-5 h-5 text-black" strokeWidth={2} />
-            </button>
-          </Tooltip>
-
-          {/* Edit button */}
-          <Tooltip
-            content={canEdit ? "Modifier" : "Vous n'avez pas la permission de modifier ce lien dans ce dossier partagé"}
-          >
-            <div className="relative inline-block">
+          {/* Move button - only show if user can edit */}
+          {canEdit && (
+            <Tooltip content="Déplacer vers un dossier">
               <button
-                onClick={canEdit ? handleEdit : undefined}
-                disabled={!canEdit}
-                className={`w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 transition-all ${
-                  !canEdit
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer hover:bg-[#1a1a1a]"
-                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMoveModalOpen(true);
+                }}
+                className="w-[41px] h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex items-center justify-center p-2 shrink-0 cursor-pointer hover:bg-[#FFE3E8] transition-all"
+              >
+                <FolderInput className="w-5 h-5 text-black" strokeWidth={2} />
+              </button>
+            </Tooltip>
+          )}
+
+          {/* Edit button - only show if user can edit */}
+          {canEdit && (
+            <Tooltip content="Modifier">
+              <button
+                onClick={handleEdit}
+                className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer hover:bg-[#1a1a1a] transition-all"
               >
                 <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
               </button>
-              {!canEdit && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF506F] rounded-full border-2 border-black flex items-center justify-center">
-                  <span className="text-xs font-black text-black">!</span>
-                </div>
-              )}
-            </div>
-          </Tooltip>
+            </Tooltip>
+          )}
 
           {/* Delete button */}
           {canDelete && (

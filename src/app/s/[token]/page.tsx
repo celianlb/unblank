@@ -353,7 +353,7 @@ export default function ShareTokenPage() {
             >
               Sous-dossiers ({data.subFolders.length})
             </h2>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-folders">
               {data.subFolders.map((subFolder) => (
                 <FolderCard
                   key={subFolder.id}
@@ -380,7 +380,7 @@ export default function ShareTokenPage() {
             >
               Images ({imageLinks.length})
             </h2>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-images">
               {imageLinks.map((link) => (
                 <ImageCard
                   key={link.id}
@@ -411,7 +411,7 @@ export default function ShareTokenPage() {
             >
               Vidéos ({videoLinks.length})
             </h2>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-videos">
               {videoLinks.map((link) => {
                 const platformInfo = getVideoPlatformInfo(link.url);
                 return (
@@ -445,7 +445,7 @@ export default function ShareTokenPage() {
             >
               Liens ({regularLinks.length})
             </h2>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-links">
               {regularLinks.map((link) => {
                 let siteName = link.title || "";
                 let siteUrl = "";

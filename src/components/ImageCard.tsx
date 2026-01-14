@@ -105,7 +105,7 @@ export default function ImageCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-[calc(50%-6px)] sm:w-[200px] md:w-[230px] lg:w-[250px] xl:w-[272px] aspect-[4/5] sm:h-[300px] md:h-[330px] lg:h-[345px] xl:h-[359px] sm:aspect-auto bg-black border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
+        className="group/card w-full aspect-[4/5] sm:aspect-[3/4] bg-black border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
       >
         {/* Image - full bleed */}
         <div className="absolute inset-0 overflow-hidden">
@@ -171,21 +171,23 @@ export default function ImageCard({
             showHoverElements ? "flex" : "hidden group-hover/card:flex"
           } gap-1.5`}
         >
-          {/* Move button */}
-          <Tooltip content="Déplacer">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMoveModalOpen(true);
-              }}
-              className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#FEF8EE] border border-black rounded-md sm:rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
-            >
-              <FolderInput
-                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
-                strokeWidth={2}
-              />
-            </button>
-          </Tooltip>
+          {/* Move button - only show if user can edit */}
+          {canEdit && (
+            <Tooltip content="Déplacer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMoveModalOpen(true);
+                }}
+                className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#FEF8EE] border border-black rounded-md sm:rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+              >
+                <FolderInput
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-black"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Delete button */}
           {canDelete && (
