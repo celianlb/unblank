@@ -89,7 +89,7 @@ const result = await useCase.execute(input);
 
 - `auth` - User authentication (email/password, OAuth via Google/Pinterest)
 - `links` - Saved bookmarks with metadata extraction and video support
-- `folders` - Hierarchical organization with groups and subfolders
+- `folders` - Hierarchical organization with subfolders (groups removed)
 - `tags` - Manual and AI-powered automatic tagging (OpenAI integration)
 - `shares` - Folder sharing with read-only or edit permissions, exit functionality
 - `subscription` - Stripe integration (Free, Pro plans) with usage limits
@@ -116,6 +116,7 @@ Auth flow: User clicks login in extension → opens web app with `?ext=true` →
 - `GET /api/links` - Get user links with pagination
 - `PATCH /api/links/[linkId]` - Update link
 - `DELETE /api/links/[linkId]` - Delete link
+- `PATCH /api/links/[linkId]/move` - Move link to a folder
 - `POST /api/links/[linkId]/generate-tags` - Generate AI tags for a link
 - `POST /api/extract-metadata` - Extract metadata from URL (title, description, image)
 
@@ -137,12 +138,14 @@ Auth flow: User clicks login in extension → opens web app with `?ext=true` →
 
 ### Shares
 - `POST /api/shares/invite` - Invite user to folder
-- `POST /api/shares/exit` - Exit shared folder/group
+- `POST /api/shares/exit` - Exit shared folder
 - `POST /api/shares/validate` - Validate share token
 - `GET /api/shares` - Get folder shares
+- `GET /api/shares/public-view` - Public view of shared folder (no auth required)
 
 ### User
 - `GET /api/me` - Get user profile, subscription, and usage data
+- `POST /api/onboarding` - Complete user onboarding
 
 ## Subscription Plans
 
@@ -150,7 +153,6 @@ Auth flow: User clicks login in extension → opens web app with `?ext=true` →
 |---------|------|----------------|
 | Monthly links | 50 | Unlimited |
 | AI Tags | ❌ | ✅ |
-| Folder Groups | ❌ | ✅ |
 | Edit sharing | ❌ | ✅ |
 | Share members | 15 | 30 |
 
@@ -200,11 +202,21 @@ Claude Code commands are available in `.claude/commands/`:
 - `ImagePreviewModal.tsx` - Full-size image preview with metadata
 
 ### Modals
-- `CreateNewModal.tsx` - Quick creation menu for folders, groups, or links
+- `CreateNewModal.tsx` - Quick creation menu for folders or links
 - `AddLinkModal.tsx` - Create links with AI tagging option (subscription-aware)
 - `EditLinkModal.tsx` / `EditTagsModal.tsx` - Edit links and tags
+- `MoveToFolderModal.tsx` - Move links between folders
 - `ShareLinkModal.tsx` - Share folders with permissions
 - `ExitConfirmModal.tsx` - Confirm exit from shared folders
+
+### UI Components
+- `BugReportButton.tsx` - Floating bug report button (beta)
+- `Tooltip.tsx` - Portal-based tooltips for proper z-index handling
+- `Header.tsx` - Navbar with scroll hide behavior (`useScrollHide` hook)
+
+### Onboarding
+- `OnboardingFlow.tsx` - New user onboarding wizard
+- `OnboardingStep1.tsx` / `OnboardingStep2.tsx` / `OnboardingStep3.tsx` - Onboarding steps
 
 ## Language
 
@@ -212,22 +224,28 @@ Codebase comments and product content are in French.
 
 ## Recent Updates
 
+### 2025-01-14: UX Improvements (v1.3.0)
+- **Search in tag names**: Full-text search now includes tag names
+- **Move links to folders**: New `MoveToFolderModal` component with move button on cards
+- **Scroll hide header**: Navbar disappears on scroll down (`useScrollHide` hook)
+- **Bug report button**: Floating button for beta feedback
+- **Portal-based tooltips**: Fixed z-index issues with tooltips
+
+### 2025-01-13: Architecture Simplification (v1.2.0)
+- **Removed folder groups**: Simplified architecture - folders can now contain subfolders directly
+- **Onboarding flow**: New user onboarding wizard
+- **Public share view**: View shared folders without authentication
+- **Skeleton components**: Loading states for all card types
+- **Keyboard shortcuts**: Cmd+K (search), Cmd+E (add link)
+
 ### 2025-01-12: Plan Simplification
 - **Removed Team plan** - Now only Free and Pro plans
 - Updated share member limits: 15 (Free) / 30 (Pro)
-- Added `CreateNewModal.tsx` for unified creation flow (folder, group, link)
+- Added `CreateNewModal.tsx` for unified creation flow
 - Simplified pricing page with only two plan options
 
 ### 2025-01-11: AI & Subscription Features
 - **AI-Powered Auto-Tagging**: OpenAI GPT-4o-mini integration
-  - `GenerateAITagsUseCase` in application layer
-  - `OpenAITagService` infrastructure implementation
-  - Tags generated from image analysis with French focus
 - **Subscription System**: Full Stripe integration (Free, Pro)
-  - Usage tracking (links per month)
-  - Feature gating based on subscription plan
-  - Customer portal for subscription management
 - **Video Link Support**: YouTube, Vimeo, Dailymotion detection
-  - VideoCard and VideoPreviewModal components
 - **Share Improvements**: Exit functionality, email validation
-- **Metadata Extraction**: Simple regex-based extraction (no external dependencies)

@@ -7,6 +7,19 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-14
+
+### Ajouté
+- Recherche textuelle dans les noms de tags
+- Bouton flottant pour signaler des bugs (beta)
+- Déplacement de liens vers un dossier (bouton sur les cards)
+- Header avec scroll hide (disparaît au scroll vers le bas)
+
+### Corrigé
+- Espacement du header et tooltips avec système de portal
+- Overflow et taille des cards
+- Affichage des ImageCards sur mobile
+
 ## [1.2.0] - 2025-01-13
 
 ### Ajouté
