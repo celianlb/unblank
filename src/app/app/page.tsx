@@ -218,8 +218,8 @@ export default function AppPage() {
         onDeleteSelected={handleDeleteSelected}
         isLoading={loadingFolders}
       />
-      {/* Spacer pour compenser le header fixe */}
-      <div className="h-[70px] sm:h-[76px] md:h-[84px] lg:h-[88px] xl:h-[102px]" />
+      {/* Spacer pour compenser le header fixe (inclut BetaTrialBanner ~44px) */}
+      <div className="h-[114px] sm:h-[120px] md:h-[128px] lg:h-[132px] xl:h-[146px]" />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Section Dossiers */}
