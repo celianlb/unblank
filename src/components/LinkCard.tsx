@@ -1,9 +1,11 @@
 "use client";
 
-import { Trash, Copy, ExternalLink, Check } from "lucide-react";
+import { Trash, Copy, ExternalLink, Check, FolderInput } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import ImagePreviewModal from "./ImagePreviewModal";
+import MoveToFolderModal from "./MoveToFolderModal";
+import Tooltip from "./Tooltip";
 
 interface LinkCardProps {
   id?: string;
@@ -23,6 +25,7 @@ interface LinkCardProps {
   onDelete?: (id: string) => void;
   canDelete?: boolean;
   canEdit?: boolean;
+  currentFolderId?: string | null;
 }
 
 export default function LinkCard({
@@ -36,16 +39,18 @@ export default function LinkCard({
   dimensions = "615×856 px",
   fileSize = "2,3 Mo",
   dateAdded = new Date().toLocaleDateString("fr-FR"),
-  folder = "Affiche horreur",
+  folder = "Récents",
   isSelectionMode = false,
   isSelected = false,
   onCheckChange,
   onDelete,
   canDelete = true,
   canEdit = true,
+  currentFolderId,
 }: LinkCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   // Proxy external images to avoid CORS issues
@@ -180,23 +185,46 @@ export default function LinkCard({
           </div>
         </div>
 
-        {/* Delete button - hidden by default, shown on hover */}
-        {canDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteModalOpen(true);
-            }}
-            className={`absolute right-3 top-3 ${
-              showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer`}
-          >
-            <Trash
-              className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors"
-              strokeWidth={2}
-            />
-          </button>
-        )}
+        {/* Action buttons - hidden by default, shown on hover */}
+        <div
+          className={`absolute right-2 sm:right-3 top-2 sm:top-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } gap-1.5`}
+        >
+          {/* Move button */}
+          <Tooltip content="Déplacer">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMoveModalOpen(true);
+              }}
+              className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#FEF8EE] border border-black rounded-md sm:rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+            >
+              <FolderInput
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
+                strokeWidth={2}
+              />
+            </button>
+          </Tooltip>
+
+          {/* Delete button */}
+          {canDelete && (
+            <Tooltip content="Supprimer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                className="flex-row justify-center items-center p-1.5 sm:p-2 w-7 h-7 sm:w-9 sm:h-9 bg-[#C5C5C5] rounded-md sm:rounded-lg cursor-pointer flex"
+              >
+                <Trash
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-black hover:text-[#FF5070] transition-colors"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
+          )}
+        </div>
 
         {/* Tags - hidden by default, shown on hover */}
         {tags.length > 0 && (
@@ -269,6 +297,17 @@ export default function LinkCard({
         tags={tags}
         canEdit={canEdit}
       />
+
+      {id && (
+        <MoveToFolderModal
+          isOpen={isMoveModalOpen}
+          onClose={() => setIsMoveModalOpen(false)}
+          itemId={id}
+          itemType="link"
+          itemName={title || displayLink}
+          currentFolderId={currentFolderId}
+        />
+      )}
     </>
   );
 }

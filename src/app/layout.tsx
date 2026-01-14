@@ -1,7 +1,7 @@
+import { Providers } from "@/components/Providers";
 import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
-import { Providers } from '@/components/Providers';
 
 const heebo = Heebo({
   subsets: ["latin"],
@@ -22,6 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <link rel="stylesheet" href="https://use.typekit.net/wgb3eql.css" />
       <body className={heebo.variable}>
         <Providers>{children}</Providers>
       </body>

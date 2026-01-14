@@ -6,39 +6,34 @@ import { Folder } from '../models/Folder';
  */
 export interface FolderRepository {
   /**
+   * Récupère un dossier par son ID
+   */
+  getFolderById(folderId: string): Promise<Folder | null>;
+
+  /**
    * Récupère un dossier par son slug (nom normalisé)
    */
   getFolderBySlug(userId: string, slug: string): Promise<Folder | null>;
 
   /**
-   * Récupère un groupe par son slug
-   */
-  getGroupBySlug(userId: string, slug: string): Promise<Folder | null>;
-
-  /**
-   * Récupère tous les dossiers d'un utilisateur (non-groupes)
+   * Récupère tous les dossiers top-level d'un utilisateur (sans parent)
    */
   getUserFolders(userId: string): Promise<Folder[]>;
 
   /**
-   * Récupère tous les groupes de dossiers d'un utilisateur
+   * Récupère les sous-dossiers d'un dossier parent
    */
-  getUserGroups(userId: string): Promise<Folder[]>;
-
-  /**
-   * Récupère les dossiers d'un groupe spécifique
-   */
-  getGroupFolders(userId: string, groupId: string): Promise<Folder[]>;
+  getSubFolders(userId: string, parentFolderId: string): Promise<Folder[]>;
 
   /**
    * Crée un nouveau dossier
    */
-  createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup?: boolean): Promise<Folder | null>;
+  createFolder(userId: string, name: string, parentFolderId?: string | null): Promise<Folder | null>;
 
   /**
-   * Déplace un dossier dans un groupe
+   * Déplace un dossier vers un autre dossier parent
    */
-  moveFolderToGroup(folderId: string, groupId: string | null): Promise<boolean>;
+  moveFolderToParent(folderId: string, parentFolderId: string | null): Promise<boolean>;
 
   /**
    * Renomme un dossier
@@ -49,4 +44,9 @@ export interface FolderRepository {
    * Supprime un ou plusieurs dossiers
    */
   deleteFolders(folderIds: string[]): Promise<boolean>;
+
+  /**
+   * Récupère la chaîne des dossiers ancêtres (du plus éloigné au plus proche)
+   */
+  getFolderAncestors(folderId: string): Promise<Folder[]>;
 }

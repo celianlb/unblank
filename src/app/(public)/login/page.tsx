@@ -107,15 +107,6 @@ function LoginContent() {
     await signInWithOAuth("google");
   };
 
-  const handlePinterestLogin = async () => {
-    clearError();
-    // If there's a redirect parameter, store it in localStorage for OAuth callback
-    if (redirectTo) {
-      localStorage.setItem("oauth_redirect", redirectTo);
-    }
-    await signInWithOAuth("pinterest");
-  };
-
   const handleForgotPassword = () => {
     // Passer l'email en query param si renseigné (UX cool!)
     if (email) {
@@ -137,7 +128,7 @@ function LoginContent() {
           {/* Logo UnBlank */}
             <div className="w-full max-w-[412px] mx-auto">
           <Image
-            src="/unblank-white.svg"
+            src="/UnBlank-white.svg"
             alt="UnBlank"
                 width={412}
             height={72}
@@ -242,30 +233,14 @@ function LoginContent() {
                   S&apos;inscrire
               </Button>
 
-                {/* OAuth Buttons Row */}
-                <div className="flex flex-col sm:flex-row gap-2.5 w-full">
+                {/* OAuth Button */}
                 <OAuthButton
                   provider="google"
                   onClick={handleGoogleLogin}
-                    className="flex-1 min-h-[90px]"
-                  >
-                    <span className="hidden sm:inline">
+                  className="w-full min-h-[90px]"
+                >
                   Continuer avec Google
-                    </span>
-                    <span className="sm:hidden">Google</span>
                 </OAuthButton>
-
-                <OAuthButton
-                  provider="pinterest"
-                  onClick={handlePinterestLogin}
-                    className="flex-1 min-h-[90px]"
-                  >
-                    <span className="hidden sm:inline">
-                  Se connecter avec Pinterest
-                    </span>
-                    <span className="sm:hidden">Pinterest</span>
-                </OAuthButton>
-                </div>
               </div>
             </div>
           </div>

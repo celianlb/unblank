@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import FolderFactory from '@/lib/folders/folderFactory';
+import LinkFactory from '@/lib/links/linkFactory';
 import { handleCorsPreFlight, addCorsHeaders } from '@/lib/api/cors';
 
 // Handle CORS preflight
@@ -9,18 +9,18 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 /**
- * PATCH /api/folders/[folderId]/move
- * Déplace un dossier vers un autre dossier parent
+ * PATCH /api/links/[linkId]/move
+ * Déplace un lien vers un autre dossier
  * Vérifie les permissions (propriétaire ou permission edit via shares)
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ folderId: string }> }
+  { params }: { params: Promise<{ linkId: string }> }
 ) {
   const origin = request.headers.get('origin');
 
   try {
-    const { folderId } = await params;
+    const { linkId } = await params;
 
     const authHeader = request.headers.get('Authorization');
     const accessToken = authHeader?.replace('Bearer ', '');
@@ -56,52 +56,61 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { parentFolderId } = body;
+    const { targetFolderId } = body;
 
-    // Vérifier les permissions sur le dossier à déplacer
-    const { data: folder } = await supabase
-      .from('folders')
-      .select('user_id')
-      .eq('id', folderId)
+    // Récupérer le lien avec son dossier actuel
+    const { data: link } = await supabase
+      .from('links')
+      .select('user_id, folder_id')
+      .eq('id', linkId)
       .single();
 
-    if (!folder) {
+    if (!link) {
       const response = NextResponse.json(
-        { error: 'Folder not found' },
+        { error: 'Link not found' },
         { status: 404 }
       );
       return addCorsHeaders(response, origin);
     }
 
-    const isOwner = folder.user_id === user.id;
+    // Vérifier que l'utilisateur est propriétaire du lien
+    const isLinkOwner = link.user_id === user.id;
 
-    if (!isOwner) {
-      const { data: share } = await supabase
-        .from('shares')
-        .select('permission')
-        .eq('folder_id', folderId)
-        .eq('shared_with_email', user.email)
-        .eq('is_active', true)
-        .eq('permission', 'edit')
-        .maybeSingle();
+    if (!isLinkOwner) {
+      // Vérifier si l'utilisateur a la permission edit sur le dossier source
+      if (link.folder_id) {
+        const { data: sourceShare } = await supabase
+          .from('shares')
+          .select('permission')
+          .eq('folder_id', link.folder_id)
+          .eq('shared_with_email', user.email)
+          .eq('is_active', true)
+          .eq('permission', 'edit')
+          .maybeSingle();
 
-      const hasEditPermission = share?.permission === 'edit';
-
-      if (!hasEditPermission) {
+        if (!sourceShare) {
+          const response = NextResponse.json(
+            { error: 'You do not have permission to move this link' },
+            { status: 403 }
+          );
+          return addCorsHeaders(response, origin);
+        }
+      } else {
+        // Lien sans dossier et l'utilisateur n'est pas propriétaire
         const response = NextResponse.json(
-          { error: 'You do not have permission to move this folder' },
+          { error: 'You do not have permission to move this link' },
           { status: 403 }
         );
         return addCorsHeaders(response, origin);
       }
     }
 
-    // Si on déplace vers un dossier parent, vérifier les permissions sur le dossier de destination
-    if (parentFolderId) {
+    // Si on déplace vers un dossier, vérifier les permissions sur le dossier de destination
+    if (targetFolderId) {
       const { data: targetFolder } = await supabase
         .from('folders')
         .select('user_id')
-        .eq('id', parentFolderId)
+        .eq('id', targetFolderId)
         .single();
 
       if (!targetFolder) {
@@ -118,17 +127,15 @@ export async function PATCH(
         const { data: targetShare } = await supabase
           .from('shares')
           .select('permission')
-          .eq('folder_id', parentFolderId)
+          .eq('folder_id', targetFolderId)
           .eq('shared_with_email', user.email)
           .eq('is_active', true)
           .eq('permission', 'edit')
           .maybeSingle();
 
-        const hasTargetEditPermission = targetShare?.permission === 'edit';
-
-        if (!hasTargetEditPermission) {
+        if (!targetShare) {
           const response = NextResponse.json(
-            { error: 'You do not have permission to move folders into this folder' },
+            { error: 'You do not have permission to move links into this folder' },
             { status: 403 }
           );
           return addCorsHeaders(response, origin);
@@ -136,13 +143,13 @@ export async function PATCH(
       }
     }
 
-    const folderService = FolderFactory.createFolderService(supabase);
+    const linkService = LinkFactory.createLinkService(supabase);
 
-    const success = await folderService.moveFolderToParent(folderId, parentFolderId);
+    const success = await linkService.moveLinkToFolder(linkId, targetFolderId);
 
     if (!success) {
       const response = NextResponse.json(
-        { error: 'Failed to move folder' },
+        { error: 'Failed to move link' },
         { status: 500 }
       );
       return addCorsHeaders(response, origin);
@@ -153,9 +160,9 @@ export async function PATCH(
     });
     return addCorsHeaders(response, origin);
   } catch (error) {
-    console.error('Error in folders move PATCH API:', error);
+    console.error('Error in links move PATCH API:', error);
     const response = NextResponse.json(
-      { error: 'Failed to move folder' },
+      { error: 'Failed to move link' },
       { status: 500 }
     );
     return addCorsHeaders(response, origin);

@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import AddLinkModal from "./AddLinkModal";
 import CreateFolderModal from "./CreateFolderModal";
-import CreateGroupModal from "./CreateGroupModal";
 import CreateNewModal from "./CreateNewModal";
 import ProfileMenu from "./ProfileMenu";
 import DeleteConfirmModal from "./DeleteConfirmModal";
@@ -15,13 +14,12 @@ import BetaTrialBanner from "./BetaTrialBanner";
 import { useFolderShares } from "@/hooks/useShares";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionService } from "@/domain/subscription/services/SubscriptionService";
+import { useScrollHide } from "@/hooks/useScrollHide";
 
 interface HeaderProps {
   selectedCount?: number;
   onDeleteSelected?: () => void;
   currentFolderId?: string;
-  currentGroupId?: string;
-  isInGroup?: boolean; // Pour savoir si on est dans un groupe (pas un dossier)
   isLoading?: boolean; // Pour désactiver les boutons pendant le chargement
   minimal?: boolean; // Pour afficher seulement le menu profil (sans recherche et actions)
 }
@@ -30,14 +28,11 @@ export default function Header({
   selectedCount = 0,
   onDeleteSelected,
   currentFolderId,
-  currentGroupId,
-  isInGroup = false,
   isLoading = false,
   minimal = false,
 }: HeaderProps) {
   const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
-  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [isCreateNewModalOpen, setIsCreateNewModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -72,21 +67,12 @@ export default function Header({
   // Récupérer l'abonnement pour vérifier les limites
   const { subscription } = useSubscription();
 
-  // Récupérer les permissions du groupe actuel (pour le bouton "Créer un dossier")
-  const { data: groupShares = [], isLoading: isLoadingGroupShares } =
-    useFolderShares(currentGroupId || null);
-
-  // Vérifier si l'utilisateur a la permission d'éditer dans le dossier (pour "Ajouter un lien")
+  // Vérifier si l'utilisateur a la permission d'éditer dans le dossier
   const currentUserShare = shares.find(
     (share: any) => share.user?.email === currentUser?.email
   );
 
-  // Vérifier si l'utilisateur a la permission d'éditer dans le groupe (pour "Créer un dossier")
-  const currentUserGroupShare = groupShares.find(
-    (share: any) => share.user?.email === currentUser?.email
-  );
-
-  // Logique de permission pour "Ajouter un lien" :
+  // Logique de permission pour "Ajouter un lien" et "Créer un dossier" :
   // - Si pas de dossier (currentFolderId null/undefined) : peut éditer
   // - Si dossier existe mais les shares sont en cours de chargement : on attend (canEdit = false pour éviter le flash)
   // - Si dossier existe mais pas de partages : l'utilisateur est propriétaire, peut éditer
@@ -105,48 +91,36 @@ export default function Header({
     : { allowed: true, reason: undefined }; // Nouvel utilisateur, pas encore de limite
 
   const canAddLink = canEdit && canAddLinkResult.allowed;
-  const linkLimitReason = canAddLinkResult.reason;
-
-  // Logique de permission pour "Créer un dossier" (dans un groupe) :
-  // - Si pas de groupe (currentGroupId null/undefined) : peut créer
-  // - Si groupe existe mais les shares sont en cours de chargement : on attend
-  // - Si groupe existe mais pas de partages : l'utilisateur est propriétaire, peut créer
-  // - Si groupe partagé : vérifier la permission (edit ou owner)
-  const canCreateFolder =
-    !currentGroupId ||
-    (!isLoadingGroupShares &&
-      (groupShares.length === 0 ||
-        currentUserGroupShare?.permission === "edit" ||
-        currentUserGroupShare?.permission === "owner"));
 
   // Logique de permission pour "Supprimer" :
-  // - Si dans un dossier : utiliser canEdit (pour supprimer des liens)
-  // - Si dans un groupe : utiliser canCreateFolder (pour supprimer des dossiers)
+  // - Si dans un dossier : utiliser canEdit
   // - Sinon (home/récents) : toujours autorisé
-  const canDelete = currentFolderId
-    ? canEdit
-    : currentGroupId
-    ? canCreateFolder
-    : true;
-  const isLoadingDeletePermissions = currentFolderId
-    ? isLoadingShares
-    : currentGroupId
-    ? isLoadingGroupShares
-    : false;
+  const canDelete = currentFolderId ? canEdit : true;
+  const isLoadingDeletePermissions = currentFolderId ? isLoadingShares : false;
 
-  // Global keyboard listener for Cmd+K / Ctrl+K
+  // Global keyboard listener for Cmd+K / Ctrl+K (search) and Cmd+E / Ctrl+E (add)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K on Mac, Ctrl+K on Windows/Linux
+      // Cmd+K on Mac, Ctrl+K on Windows/Linux - Open search
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsSearchModalOpen(true);
+      }
+      // Cmd+E on Mac, Ctrl+E on Windows/Linux - Open create new modal
+      if ((e.metaKey || e.ctrlKey) && e.key === "e") {
+        e.preventDefault();
+        if (!minimal && !isLoading) {
+          setIsCreateNewModalOpen(true);
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [minimal, isLoading]);
+
+  // Hook pour cacher/afficher le header au scroll
+  const isHeaderVisible = useScrollHide({ threshold: 50 });
 
   return (
     <>
@@ -158,21 +132,15 @@ export default function Header({
       <CreateFolderModal
         isOpen={isCreateFolderModalOpen}
         onClose={() => setIsCreateFolderModalOpen(false)}
-        parentFolderId={currentGroupId}
-      />
-      <CreateGroupModal
-        isOpen={isCreateGroupModalOpen}
-        onClose={() => setIsCreateGroupModalOpen(false)}
+        parentFolderId={currentFolderId}
       />
       <CreateNewModal
         isOpen={isCreateNewModalOpen}
         onClose={() => setIsCreateNewModalOpen(false)}
         onCreateFolder={() => setIsCreateFolderModalOpen(true)}
-        onCreateGroup={() => setIsCreateGroupModalOpen(true)}
         onAddLink={() => setIsAddLinkModalOpen(true)}
-        canCreateFolder={canCreateFolder && !currentFolderId}
-        canCreateGroup={!isInGroup && !currentFolderId}
-        canAddLink={canAddLink && !isInGroup}
+        canCreateFolder={canEdit}
+        canAddLink={canAddLink}
       />
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
@@ -185,7 +153,9 @@ export default function Header({
       />
       <BetaTrialBanner />
       <header
-        className="w-full bg-white border-b-[3px] border-black"
+        className={`w-full bg-white border-b-[3px] border-black fixed top-0 left-0 right-0 z-40 transition-transform duration-300 ease-in-out ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
       >
         <div
           className={`w-full h-full px-[22px] ${
@@ -200,20 +170,20 @@ export default function Header({
             {!minimal && (
               <div className="flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8 flex-1">
                 <div className="flex-1 md:flex-1 lg:max-w-[700px] xl:max-w-[903px] relative">
-                  <div className="absolute left-3 sm:left-4 md:left-5 lg:left-6 xl:left-8 top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 sm:w-6 sm:h-6 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 pointer-events-none">
-                    <Search className="w-full h-full" strokeWidth={2} />
-                  </div>
                   {/* Keyboard shortcut badge */}
-                  <div className="hidden lg:flex absolute left-12 sm:left-14 md:left-16 lg:left-[72px] xl:left-[88px] top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 lg:px-2.5 lg:py-1.5 rounded-md border border-[#636363] bg-white pointer-events-none">
-                    <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
+                  <div className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 rounded-md border border-black bg-[#FF506F] pointer-events-none">
+                    <span className="text-xs text-black font-medium font-[Heebo]">
                       {typeof navigator !== "undefined" &&
                       navigator.platform.toLowerCase().includes("mac")
                         ? "⌘"
                         : "Ctrl"}
                     </span>
-                    <span className="text-xs lg:text-sm text-[#636363] font-medium font-[Heebo]">
+                    <span className="text-xs text-black font-medium font-[Heebo]">
                       K
                     </span>
+                  </div>
+                  <div className="absolute left-3 lg:left-[72px] top-1/2 -translate-y-1/2 text-[#636363] w-5 h-5 pointer-events-none">
+                    <Search className="w-full h-full" strokeWidth={2.5} />
                   </div>
                   <input
                     type="text"
@@ -221,7 +191,7 @@ export default function Header({
                     onClick={() => setIsSearchModalOpen(true)}
                     onFocus={(e) => e.target.blur()}
                     readOnly
-                    className="w-full h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 pl-10 sm:pl-11 md:pl-12 lg:pl-[140px] xl:pl-[156px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-[16px] lg:rounded-[18px] xl:rounded-[20px] border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-base xl:text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
+                    className="w-full h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] pl-10 sm:pl-10 md:pl-11 lg:pl-[100px] pr-3 sm:pr-4 md:pr-5 lg:pr-6 xl:pr-8 rounded-xl md:rounded-2xl border-2 border-black bg-white text-[#636363] placeholder-[#636363] focus:outline-none text-sm sm:text-sm md:text-base lg:text-sm xl:text-base shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-ellipsis cursor-text"
                   />
                 </div>
 
@@ -229,17 +199,29 @@ export default function Header({
                 <button
                   onClick={() => setIsCreateNewModalOpen(true)}
                   disabled={isLoading}
-                  className={`h-11 sm:h-11 md:h-12 lg:h-16 xl:h-20 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-7 rounded-xl md:rounded-2xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] xl:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 xl:gap-2 whitespace-nowrap shrink-0 ${
+                  className={`h-11 sm:h-11 md:h-12 lg:h-12 xl:h-[54px] px-3 sm:px-4 md:px-5 lg:px-5 xl:px-[27px] rounded-xl md:rounded-xl transition-all border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${
                     isLoading
                       ? "bg-[#FF506F] opacity-50 cursor-not-allowed"
                       : "bg-[#FF506F] hover:bg-[#FF6080] active:translate-y-0.5 active:shadow-none cursor-pointer"
                   }`}
                 >
+                  {/* Keyboard shortcut badge */}
+                  <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-md border border-black bg-white mr-1">
+                    <span className="text-xs text-black font-medium font-[Heebo]">
+                      {typeof navigator !== "undefined" &&
+                      navigator.platform.toLowerCase().includes("mac")
+                        ? "⌘"
+                        : "Ctrl"}
+                    </span>
+                    <span className="text-xs text-black font-medium font-[Heebo]">
+                      E
+                    </span>
+                  </div>
                   <Plus
-                    className="w-5 h-5 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-black shrink-0"
+                    className="w-5 h-5 text-black shrink-0"
                     strokeWidth={2.5}
                   />
-                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-base xl:text-lg">
+                  <span className="text-black font-bold text-sm sm:text-sm md:text-sm lg:text-sm xl:text-base">
                     Ajouter
                   </span>
                 </button>
@@ -315,11 +297,7 @@ export default function Header({
           {!minimal && selectedCount > 0 && (
             <div className="flex items-center justify-end pt-3 sm:pt-3 md:pt-4 lg:pt-6 xl:pt-8">
               <Tooltip
-                content={
-                  currentFolderId
-                    ? "Vous n'avez pas la permission de supprimer des liens dans ce dossier partagé"
-                    : "Vous n'avez pas la permission de supprimer des dossiers dans ce groupe partagé"
-                }
+                content="Vous n'avez pas la permission de supprimer dans ce dossier partagé"
                 disabled={canDelete || isLoading}
               >
                 <div className="relative inline-block">

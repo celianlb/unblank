@@ -4,7 +4,6 @@ import ShareFactory from '@/lib/shares/shareFactory';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the access token from the Authorization header
     const authHeader = request.headers.get('Authorization');
     const accessToken = authHeader?.replace('Bearer ', '');
 
@@ -12,7 +11,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Create Supabase client with the user's access token
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -25,52 +23,28 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const shareService = ShareFactory.createShareService(supabase);
 
-    // Get folders shared with this user
-    console.log('[SHARED FOLDERS] Fetching for email:', user.email);
+    // Récupérer tous les dossiers partagés avec cet utilisateur
     const allShared = await shareService.getSharedFolders(user.email!);
-    console.log('[SHARED FOLDERS] Found:', allShared.length, 'total shared items');
 
-    // Séparer les groupes et les dossiers
-    const sharedGroups = allShared.filter(item => item.is_group === true);
-
-    // Récupérer tous les groupes que l'utilisateur possède
-    const { data: ownedGroups } = await supabase
-      .from('folders')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('is_group', true);
-
-    const ownedGroupIds = new Set(ownedGroups?.map(g => g.id) || []);
-
-    // Pour les dossiers partagés, exclure:
-    // 1. Ceux dont le groupe parent est AUSSI partagé (accessibles via le groupe partagé)
-    // 2. Ceux dont le groupe parent est possédé par l'utilisateur (accessibles via son propre groupe)
-    const sharedGroupIds = new Set(sharedGroups.map(g => g.id));
-    const sharedFolders = allShared.filter(item => {
-      if (item.is_group) return false; // Pas un dossier
-
-      // Si le dossier n'a pas de parent, toujours l'inclure
-      if (!item.parent_folder_id) return true;
-
-      // Exclure si le parent est un groupe partagé OU un groupe possédé
-      return !sharedGroupIds.has(item.parent_folder_id) && !ownedGroupIds.has(item.parent_folder_id);
+    // Filtrer pour ne garder que les dossiers top-level partagés
+    // (pas les sous-dossiers dont le parent est déjà partagé)
+    const sharedParentIds = new Set(allShared.map(f => f.id));
+    const sharedFolders = allShared.filter(folder => {
+      // Si pas de parent, toujours inclure
+      if (!folder.parent_folder_id) return true;
+      // Exclure si le parent est aussi partagé (accessible via le parent)
+      return !sharedParentIds.has(folder.parent_folder_id);
     });
 
-    console.log('[SHARED FOLDERS] Groups:', sharedGroups.length, 'Folders:', sharedFolders.length);
-
     return NextResponse.json({
-      folders: sharedFolders,
-      groups: sharedGroups,
-      all: allShared
+      folders: sharedFolders
     });
   } catch (error) {
     console.error('Error fetching shared folders:', error);

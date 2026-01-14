@@ -51,16 +51,11 @@ export async function GET(request: NextRequest) {
     // ✅ CLEAN ARCHITECTURE: Utilisation du service via la factory
     const folderService = FolderFactory.createFolderService(supabase);
 
-    // Fetch user's folders and groups using the domain service
-    const [folders, groups] = await Promise.all([
-      folderService.getUserFolders(user.id),
-      folderService.getUserGroups(user.id)
-    ]);
+    // Fetch user's folders using the domain service
+    const folders = await folderService.getUserFolders(user.id);
 
     const response = NextResponse.json({
-      folders,
-      groups,
-      all: [...groups, ...folders] // Combined list for convenience
+      folders
     });
     return addCorsHeaders(response, origin);
   } catch (error) {
@@ -115,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { name, parentFolderId, isGroup } = body;
+    const { name, parentFolderId } = body;
 
     if (!name) {
       const response = NextResponse.json(
@@ -125,7 +120,7 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(response, origin);
     }
 
-    // ✅ Vérifier les permissions si on crée dans un groupe partagé
+    // ✅ Vérifier les permissions si on crée dans un dossier parent partagé
     if (parentFolderId) {
       const { data: share } = await supabase
         .from('shares')
@@ -148,7 +143,7 @@ export async function POST(request: NextRequest) {
 
       if (!isOwner && !hasEditPermission) {
         const response = NextResponse.json(
-          { error: 'You do not have permission to create folders in this group' },
+          { error: 'You do not have permission to create folders in this folder' },
           { status: 403 }
         );
         return addCorsHeaders(response, origin);
@@ -162,8 +157,7 @@ export async function POST(request: NextRequest) {
     const folder = await folderService.createFolder(
       user.id,
       name,
-      parentFolderId,
-      isGroup
+      parentFolderId
     );
 
     if (!folder) {

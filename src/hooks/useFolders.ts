@@ -7,28 +7,15 @@ import { supabase } from '@/infra/db/supabase';
 const folderService = FolderFactory.getFolderService();
 
 /**
- * Hook pour récupérer tous les dossiers d'un utilisateur
+ * Hook pour récupérer tous les dossiers top-level d'un utilisateur
  */
 export function useFolders(userId: string | undefined) {
   return useQuery({
     queryKey: ['folders', userId],
     queryFn: () => folderService.getUserFolders(userId!),
     enabled: !!userId,
-    staleTime: 0, // Pas de cache, toujours frais
-    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
-  });
-}
-
-/**
- * Hook pour récupérer tous les groupes d'un utilisateur
- */
-export function useGroups(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['groups', userId],
-    queryFn: () => folderService.getUserGroups(userId!),
-    enabled: !!userId,
-    staleTime: 0, // Pas de cache, toujours frais
-    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
 
@@ -45,27 +32,40 @@ export function useFolderBySlug(userId: string | undefined, slug: string | undef
 }
 
 /**
- * Hook pour récupérer un groupe par son slug
+ * Hook pour récupérer un dossier par son ID
  */
-export function useGroupBySlug(userId: string | undefined, slug: string | undefined) {
+export function useFolderById(folderId: string | undefined | null) {
   return useQuery({
-    queryKey: ['group', userId, slug],
-    queryFn: () => folderService.getGroupBySlug(userId!, slug!),
-    enabled: !!userId && !!slug,
+    queryKey: ['folder-by-id', folderId],
+    queryFn: () => folderService.getFolderById(folderId!),
+    enabled: !!folderId,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Hook pour récupérer les sous-dossiers d'un groupe
+ * Hook pour récupérer les sous-dossiers d'un dossier parent
  */
-export function useGroupFolders(userId: string | undefined, groupId: string | undefined) {
+export function useSubFolders(userId: string | undefined, parentFolderId: string | undefined) {
   return useQuery({
-    queryKey: ['group-folders', groupId],
-    queryFn: () => folderService.getGroupFolders(userId!, groupId!),
-    enabled: !!userId && !!groupId,
-    staleTime: 0, // Pas de cache, toujours frais
-    refetchOnMount: true, // ✅ Refetch au montage si les données sont stale (après invalidation)
+    queryKey: ['sub-folders', parentFolderId],
+    queryFn: () => folderService.getSubFolders(userId!, parentFolderId!),
+    enabled: !!userId && !!parentFolderId,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+}
+
+/**
+ * Hook pour récupérer la chaîne des dossiers ancêtres (du plus éloigné au plus proche)
+ * Utilisé pour le breadcrumb navigation
+ */
+export function useFolderAncestors(folderId: string | undefined) {
+  return useQuery({
+    queryKey: ['folder-ancestors', folderId],
+    queryFn: () => folderService.getFolderAncestors(folderId!),
+    enabled: !!folderId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -77,8 +77,7 @@ export function useCreateFolder(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { name: string; parentFolderId?: string | null; isGroup?: boolean }) => {
-      // Récupérer le token d'accès depuis Supabase
+    mutationFn: async (data: { name: string; parentFolderId?: string | null }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
@@ -95,7 +94,6 @@ export function useCreateFolder(userId: string) {
         body: JSON.stringify({
           name: data.name,
           parentFolderId: data.parentFolderId,
-          isGroup: data.isGroup,
         }),
       });
 
@@ -111,16 +109,15 @@ export function useCreateFolder(userId: string) {
     onSuccess: (newFolder, variables) => {
       // Invalider les listes concernées
       queryClient.invalidateQueries({ queryKey: ['folders', userId] });
-      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
 
-      // Si c'est un sous-dossier, invalider le groupe parent
+      // Si c'est un sous-dossier, invalider le dossier parent
       if (variables.parentFolderId) {
         queryClient.invalidateQueries({
-          queryKey: ['group-folders', variables.parentFolderId]
+          queryKey: ['sub-folders', variables.parentFolderId]
         });
       }
-      
-      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+
+      // Invalider aussi les dossiers partagés
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
@@ -128,14 +125,12 @@ export function useCreateFolder(userId: string) {
 
 /**
  * Hook pour supprimer des dossiers
- * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useDeleteFolders(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (folderIds: string[]) => {
-      // Récupérer le token d'accès depuis Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
@@ -161,12 +156,10 @@ export function useDeleteFolders(userId: string) {
     },
 
     onSuccess: () => {
-      // Invalider TOUTES les queries de dossiers (car les liens sont déplacés vers Récents)
+      // Invalider TOUTES les queries de dossiers
       queryClient.invalidateQueries({ queryKey: ['folders'] });
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['group-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['sub-folders'] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
-      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
@@ -174,14 +167,12 @@ export function useDeleteFolders(userId: string) {
 
 /**
  * Hook pour renommer un dossier
- * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
  */
 export function useRenameFolder(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ folderId, newName }: { folderId: string; newName: string }) => {
-      // Récupérer le token d'accès depuis Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
@@ -208,28 +199,23 @@ export function useRenameFolder(userId: string) {
     },
 
     onSuccess: () => {
-      // Invalider toutes les queries de dossiers et groupes
+      // Invalider toutes les queries de dossiers
       queryClient.invalidateQueries({ queryKey: ['folders', userId] });
-      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
       queryClient.invalidateQueries({ queryKey: ['folder'] });
-      queryClient.invalidateQueries({ queryKey: ['group'] });
-      queryClient.invalidateQueries({ queryKey: ['group-folders'] });
-      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['sub-folders'] });
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });
 }
 
 /**
- * Hook pour déplacer un dossier vers un groupe
- * ✅ CLEAN ARCHITECTURE: Utilise l'API route avec vérification de permissions
+ * Hook pour déplacer un dossier vers un autre dossier parent
  */
-export function useMoveFolderToGroup(userId: string) {
+export function useMoveFolderToParent(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ folderId, groupId }: { folderId: string; groupId: string }) => {
-      // Récupérer le token d'accès depuis Supabase
+    mutationFn: async ({ folderId, parentFolderId }: { folderId: string; parentFolderId: string | null }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
@@ -243,7 +229,7 @@ export function useMoveFolderToGroup(userId: string) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ groupId }),
+        body: JSON.stringify({ parentFolderId }),
       });
 
       if (!response.ok) {
@@ -255,13 +241,9 @@ export function useMoveFolderToGroup(userId: string) {
     },
 
     onSuccess: (_, variables) => {
-      // Invalider les listes de dossiers et le groupe concerné
+      // Invalider les listes de dossiers
       queryClient.invalidateQueries({ queryKey: ['folders', userId] });
-      queryClient.invalidateQueries({ queryKey: ['groups', userId] });
-      queryClient.invalidateQueries({
-        queryKey: ['group-folders', variables.groupId]
-      });
-      // ✅ Invalider aussi les dossiers partagés pour que les autres utilisateurs voient le changement
+      queryClient.invalidateQueries({ queryKey: ['sub-folders'] });
       queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
     },
   });

@@ -1,9 +1,11 @@
 "use client";
 
-import { Trash, Copy, ExternalLink, Check } from "lucide-react";
+import { Trash, Copy, ExternalLink, Check, FolderInput } from "lucide-react";
 import { useState } from "react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import VideoPreviewModal from "./VideoPreviewModal";
+import MoveToFolderModal from "./MoveToFolderModal";
+import Tooltip from "./Tooltip";
 
 interface VideoCardProps {
   linkId: string;
@@ -20,6 +22,7 @@ interface VideoCardProps {
   onDelete?: (linkId: string) => void;
   canDelete?: boolean;
   canEdit?: boolean;
+  currentFolderId?: string | null;
 }
 
 export default function VideoCard({
@@ -37,10 +40,40 @@ export default function VideoCard({
   onDelete,
   canDelete = true,
   canEdit = true,
+  currentFolderId,
 }: VideoCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  // Extraire l'ID de la vidéo YouTube depuis l'URL
+  const getYouTubeVideoId = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      // Format: youtube.com/watch?v=VIDEO_ID
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      }
+      // Format: youtu.be/VIDEO_ID
+      if (urlObj.hostname.includes('youtu.be')) {
+        return urlObj.pathname.slice(1);
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
+  // Générer la thumbnail YouTube si pas fournie
+  const getYouTubeThumbnail = (url: string): string | null => {
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
+      // Utiliser maxresdefault pour la meilleure qualité, avec fallback sur hqdefault
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+    return null;
+  };
 
   // Proxy external images to avoid CORS issues
   const getProxiedImageUrl = (url?: string, size?: "thumbnail" | "full") => {
@@ -60,7 +93,11 @@ export default function VideoCard({
     return url;
   };
 
-  const proxiedThumbnail = getProxiedImageUrl(thumbnailUrl, "thumbnail");
+  // Utiliser la thumbnail fournie, ou générer celle de YouTube si c'est une vidéo YouTube
+  const effectiveThumbnailUrl = thumbnailUrl ||
+    (platformName.toLowerCase().includes('youtube') ? getYouTubeThumbnail(videoUrl) : null);
+
+  const proxiedThumbnail = getProxiedImageUrl(effectiveThumbnailUrl || undefined, "thumbnail");
 
   const handleCheckChange = () => {
     const newValue = !isSelected;
@@ -184,23 +221,46 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* Delete button */}
-        {canDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDeleteModalOpen(true);
-            }}
-            className={`absolute right-3 top-3 ${
-              showHoverElements ? "flex" : "hidden group-hover/card:flex"
-            } flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer z-20`}
-          >
-            <Trash
-              className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors"
-              strokeWidth={2}
-            />
-          </button>
-        )}
+        {/* Action buttons */}
+        <div
+          className={`absolute right-3 top-3 ${
+            showHoverElements ? "flex" : "hidden group-hover/card:flex"
+          } gap-1.5 z-20`}
+        >
+          {/* Move button */}
+          <Tooltip content="Déplacer">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMoveModalOpen(true);
+              }}
+              className="flex-row justify-center items-center p-2 w-9 h-9 bg-[#FEF8EE] border border-black rounded-lg cursor-pointer flex hover:bg-[#FFE3E8] transition-colors"
+            >
+              <FolderInput
+                className="w-5 h-5 text-black"
+                strokeWidth={2}
+              />
+            </button>
+          </Tooltip>
+
+          {/* Delete button */}
+          {canDelete && (
+            <Tooltip content="Supprimer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                className="flex-row justify-center items-center p-2 w-9 h-9 bg-[#C5C5C5] rounded-lg cursor-pointer flex"
+              >
+                <Trash
+                  className="w-5 h-5 text-black hover:text-[#FF5070] transition-colors"
+                  strokeWidth={2}
+                />
+              </button>
+            </Tooltip>
+          )}
+        </div>
 
         {/* Header with platform logo and info */}
         <div className="flex flex-row items-center p-3 gap-[10px] w-full bg-white z-10">
@@ -258,25 +318,29 @@ export default function VideoCard({
               <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
                 {displayLink}
               </span>
-              <button
-                onClick={handleCopy}
-                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
-              >
-                {isCopied ? (
-                  <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
-                ) : (
-                  <Copy
-                    className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
-                    strokeWidth={2}
-                  />
-                )}
-              </button>
-              <button
-                onClick={handleOpenLink}
-                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
-              >
-                <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
-              </button>
+              <Tooltip content={isCopied ? "Copié !" : "Copier le lien"}>
+                <button
+                  onClick={handleCopy}
+                  className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
+                >
+                  {isCopied ? (
+                    <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+                  ) : (
+                    <Copy
+                      className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                      strokeWidth={2}
+                    />
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip content="Ouvrir dans un nouvel onglet">
+                <button
+                  onClick={handleOpenLink}
+                  className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
+                </button>
+              </Tooltip>
             </div>
           </div>
 
@@ -313,6 +377,15 @@ export default function VideoCard({
         linkId={linkId}
         tags={tags}
         canEdit={canEdit}
+      />
+
+      <MoveToFolderModal
+        isOpen={isMoveModalOpen}
+        onClose={() => setIsMoveModalOpen(false)}
+        itemId={linkId}
+        itemType="link"
+        itemName={title || displayLink}
+        currentFolderId={currentFolderId}
       />
     </>
   );

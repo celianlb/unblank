@@ -5,19 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
+import FolderCard from "@/components/FolderCard";
 import DetailedLinkCard from "@/components/DetailedLinkCard";
 import ImageCard from "@/components/ImageCard";
 import VideoCard from "@/components/VideoCard";
 import { getContentType, getVideoPlatformInfo } from "@/utils/linkUtils";
-import { useFolderBySlug } from "@/hooks/useFolders";
+import { useFolderBySlug, useFolderAncestors, useSubFolders } from "@/hooks/useFolders";
 import {
   useFolderLinks,
   useDeleteLinks,
   useDeleteLink,
 } from "@/hooks/useLinks";
-import { formatDateAdded } from "@/utils/formatters";
+import { formatDateAdded, formatLastUpdate } from "@/utils/formatters";
 import { useFolderShares } from "@/hooks/useShares";
 import {
+  FolderCardSkeleton,
   ImageCardSkeleton,
   VideoCardSkeleton,
   DetailedLinkCardSkeleton,
@@ -37,9 +39,23 @@ export default function FolderPage() {
     session?.user?.id,
     folderId
   );
+
+  // Récupérer la chaîne des dossiers ancêtres pour le breadcrumb
+  const { data: ancestors = [] } = useFolderAncestors(folder?.id);
+
+  const { data: subFolders = [], isLoading: loadingSubFolders } = useSubFolders(
+    session?.user?.id,
+    folder?.id
+  );
   const { data: links = [], isLoading: loadingLinks } = useFolderLinks(
     folder?.id
   );
+
+  // Construire le tableau des parents pour le breadcrumb (du plus éloigné au plus proche)
+  const breadcrumbParents = ancestors.map((ancestor) => ({
+    name: ancestor.name,
+    slug: ancestor.slug,
+  }));
 
   // Mutations pour la suppression
   const deleteLinks = useDeleteLinks(folder?.id);
@@ -67,7 +83,7 @@ export default function FolderPage() {
       currentUserShare?.permission === "edit" ||
       currentUserShare?.permission === "owner");
 
-  const loadingData = loadingFolder || loadingLinks;
+  const loadingData = loadingFolder || loadingSubFolders || loadingLinks;
   const selectedCount = selectedLinkIds.size;
   const isSelectionMode = selectedCount > 0;
 
@@ -166,10 +182,16 @@ export default function FolderPage() {
         currentFolderId={folder?.id}
         isLoading={loadingData}
       />
+      {/* Spacer pour compenser le header fixe */}
+      <div className="h-[70px] sm:h-[76px] md:h-[84px] lg:h-[88px] xl:h-[102px]" />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb folderName={folder?.name} isLoading={loadingFolder} />
+        <Breadcrumb
+          parents={breadcrumbParents}
+          currentName={folder?.name}
+          isLoading={loadingFolder}
+        />
 
         {!folder && !loadingData && (
           <div className="flex items-center justify-center py-16">
@@ -180,6 +202,14 @@ export default function FolderPage() {
         {/* Loading state with skeletons */}
         {loadingData && (
           <>
+            <section className="flex flex-col items-start gap-[21px] w-full">
+              <div className="h-[43px] w-40 bg-[#E5E5E5] animate-pulse rounded-md" />
+              <div className="flex flex-row flex-wrap gap-8 w-full">
+                {[...Array(2)].map((_, i) => (
+                  <FolderCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
             <section className="flex flex-col items-start gap-[21px] w-full">
               <div className="h-[43px] w-32 bg-[#E5E5E5] animate-pulse rounded-md" />
               <div className="flex flex-row flex-wrap gap-8 w-full">
@@ -209,6 +239,33 @@ export default function FolderPage() {
 
         {folder && !loadingData && (
           <>
+            {/* Section Sous-dossiers */}
+            {subFolders.length > 0 && (
+              <section className="flex flex-col items-start gap-[21px] w-full">
+                <h1
+                  className="text-[32px] leading-[43px] tracking-[-0.03em] font-extrabold text-[#0D0D0D]"
+                  style={{ fontFamily: "Area Inktrap, sans-serif" }}
+                >
+                  Sous-dossiers ({subFolders.length})
+                </h1>
+                <div className="flex flex-row flex-wrap gap-8 w-full">
+                  {subFolders.map((subFolder) => (
+                    <FolderCard
+                      key={subFolder.id}
+                      id={subFolder.id}
+                      title={subFolder.name}
+                      slug={subFolder.slug}
+                      itemCount={subFolder.link_count || 0}
+                      lastUpdate={formatLastUpdate(subFolder.updated_at)}
+                      isSystem={subFolder.is_system}
+                      previewImages={subFolder.preview_images}
+                      canDelete={canEdit}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Section Images */}
             {imageLinks.length > 0 && (
               <section className="flex flex-col items-start gap-[21px] w-full">
@@ -218,7 +275,7 @@ export default function FolderPage() {
                 >
                   Images ({imageLinks.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-8 w-full">
+                <div className="flex flex-row flex-wrap gap-3 sm:gap-8 w-full">
                   {imageLinks.map((link) => (
                     <ImageCard
                       key={link.id}
@@ -238,6 +295,7 @@ export default function FolderPage() {
                       onDelete={handleDeleteSingle}
                       canDelete={canEdit}
                       canEdit={canEdit}
+                      currentFolderId={folderId}
                     />
                   ))}
                 </div>
@@ -257,7 +315,7 @@ export default function FolderPage() {
                   {videoLinks.map((link) => {
                     const platformInfo = getVideoPlatformInfo(link.url);
                     const thumbnailUrl =
-                      link.screenshot_url || link.original_image_url || "";
+                      link.screenshot_url || link.original_image_url || undefined;
 
                     return (
                       <VideoCard
@@ -276,6 +334,7 @@ export default function FolderPage() {
                         onDelete={handleDeleteSingle}
                         canDelete={canEdit}
                         canEdit={canEdit}
+                        currentFolderId={folderId}
                       />
                     );
                   })}
@@ -306,6 +365,7 @@ export default function FolderPage() {
                         siteName={siteName}
                         siteUrl={siteUrl}
                         description={link.description || ""}
+                        thumbnailUrl={link.screenshot_url}
                         link={link.url}
                         tags={link.tags?.map((t) => t.name) || []}
                         isSelectionMode={isSelectionMode}
@@ -313,6 +373,7 @@ export default function FolderPage() {
                         onDelete={handleDeleteSingle}
                         canDelete={canEdit}
                         canEdit={canEdit}
+                        currentFolderId={folderId}
                       />
                     );
                   })}
@@ -320,10 +381,10 @@ export default function FolderPage() {
               </section>
             )}
 
-            {/* Message si aucun lien */}
-            {links.length === 0 && (
+            {/* Message si aucun contenu */}
+            {links.length === 0 && subFolders.length === 0 && (
               <div className="flex items-center justify-center py-16">
-                <p className="text-gray-500">Aucun lien dans ce dossier</p>
+                <p className="text-gray-500">Ce dossier est vide</p>
               </div>
             )}
           </>

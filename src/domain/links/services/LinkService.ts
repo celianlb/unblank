@@ -90,6 +90,13 @@ export class LinkService {
   }
 
   /**
+   * Déplace un lien vers un autre dossier
+   */
+  async moveLinkToFolder(linkId: string, targetFolderId: string | null): Promise<boolean> {
+    return this.linkRepository.moveLinkToFolder(linkId, targetFolderId);
+  }
+
+  /**
    * Extrait les métadonnées d'une URL via l'API
    */
   static async extractMetadata(url: string): Promise<{

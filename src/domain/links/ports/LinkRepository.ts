@@ -34,4 +34,9 @@ export interface LinkRepository {
    * Met à jour les tags d'un lien
    */
   updateTags(linkId: string, userId: string, tags: string[]): Promise<boolean>;
+
+  /**
+   * Déplace un lien vers un autre dossier
+   */
+  moveLinkToFolder(linkId: string, targetFolderId: string | null): Promise<boolean>;
 }

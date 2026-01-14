@@ -9,6 +9,21 @@ import { Folder } from '@/domain/folders/models';
 export class SupabaseFolderRepository implements FolderRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
+  async getFolderById(folderId: string): Promise<Folder | null> {
+    const { data, error } = await this.supabase
+      .from('folders')
+      .select('*')
+      .eq('id', folderId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching folder by ID:', error);
+      return null;
+    }
+
+    return data;
+  }
+
   async getFolderBySlug(userId: string, slug: string): Promise<Folder | null> {
     const { data, error } = await this.supabase
       .rpc('get_folder_by_slug_with_count', {
@@ -25,45 +40,6 @@ export class SupabaseFolderRepository implements FolderRepository {
 
     // La fonction RPC retourne un tableau, on prend le premier élément
     return data?.[0] || null;
-  }
-
-  async getGroupBySlug(userId: string, slug: string): Promise<Folder | null> {
-    // D'abord essayer de récupérer comme groupe personnel
-    const { data: ownGroup, error: ownError } = await this.supabase
-      .from('folders')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_group', true)
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (ownGroup) {
-      return ownGroup;
-    }
-
-    // Si non trouvé, vérifier si c'est un groupe partagé
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user?.email) {
-      return null;
-    }
-
-    const { data: sharedGroup, error: sharedError } = await this.supabase
-      .from('folders')
-      .select(`
-        *,
-        shares!inner(*)
-      `)
-      .eq('is_group', true)
-      .eq('slug', slug)
-      .eq('shares.shared_with_email', user.email)
-      .eq('shares.is_active', true)
-      .maybeSingle();
-
-    if (sharedError && sharedError.code !== 'PGRST116') {
-      console.error('Error fetching shared group:', sharedError);
-    }
-
-    return sharedGroup || null;
   }
 
   async getUserFolders(userId: string): Promise<Folder[]> {
@@ -102,71 +78,16 @@ export class SupabaseFolderRepository implements FolderRepository {
     return foldersWithImages;
   }
 
-  async getUserGroups(userId: string): Promise<Folder[]> {
-    const { data, error } = await this.supabase
-      .rpc('get_user_groups_with_counts', { p_user_id: userId });
-
-    if (error) {
-      console.error('Error fetching groups:', error);
-      throw error;
-    }
-
-    const groups = data || [];
-
-    // Pour chaque groupe, récupérer 1 image par dossier enfant (max 4 dossiers)
-    const groupsWithImages = await Promise.all(
-      groups.map(async (group: Folder) => {
-        // Récupérer tous les dossiers du groupe (limité à 4)
-        const { data: groupFolders } = await this.supabase
-          .from('folders')
-          .select('id')
-          .eq('parent_folder_id', group.id)
-          .limit(4);
-
-        if (!groupFolders || groupFolders.length === 0) {
-          return { ...group, preview_images: [] };
-        }
-
-        // Pour chaque dossier, récupérer sa première image
-        const previewImagesPromises = groupFolders.map(async (folder) => {
-          const { data: links } = await this.supabase
-            .from('links')
-            .select('original_image_url, screenshot_url')
-            .eq('folder_id', folder.id)
-            .not('original_image_url', 'is', null)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (links && links.length > 0) {
-            return links[0].original_image_url || links[0].screenshot_url;
-          }
-          return null;
-        });
-
-        const allImages = await Promise.all(previewImagesPromises);
-        const previewImages = allImages.filter(Boolean) as string[];
-
-        return {
-          ...group,
-          preview_images: previewImages
-        };
-      })
-    );
-
-    return groupsWithImages;
-  }
-
-  async getGroupFolders(userId: string, groupId: string): Promise<Folder[]> {
-    // Récupérer les dossiers enfants du groupe
+  async getSubFolders(userId: string, parentFolderId: string): Promise<Folder[]> {
+    // Récupérer les sous-dossiers d'un dossier parent
     const { data: folders, error } = await this.supabase
       .from('folders')
       .select('*')
-      .eq('parent_folder_id', groupId)
-      .eq('is_group', false)
+      .eq('parent_folder_id', parentFolderId)
       .order('position', { ascending: true });
 
     if (error) {
-      console.error('Error fetching group folders:', error);
+      console.error('Error fetching sub-folders:', error);
       throw error;
     }
 
@@ -207,17 +128,15 @@ export class SupabaseFolderRepository implements FolderRepository {
     return foldersWithCountsAndImages;
   }
 
-  async createFolder(userId: string, name: string, parentFolderId?: string | null, isGroup: boolean = false): Promise<Folder | null> {
+  async createFolder(userId: string, name: string, parentFolderId?: string | null): Promise<Folder | null> {
     try {
-      // ✅ Le dossier appartient toujours au créateur (userId)
-      // Le trigger auto_share_folder_with_creator lui donnera automatiquement 'edit' permission
       const { data, error } = await this.supabase
         .from('folders')
         .insert({
-          user_id: userId,  // Toujours le créateur
+          user_id: userId,
           name: name,
-          is_group: isGroup,
-          parent_folder_id: parentFolderId,
+          is_group: false, // Toujours false maintenant
+          parent_folder_id: parentFolderId || null,
           position: 0
           // Le slug sera auto-généré par le trigger SQL
         })
@@ -239,22 +158,22 @@ export class SupabaseFolderRepository implements FolderRepository {
     }
   }
 
-  async moveFolderToGroup(folderId: string, groupId: string | null): Promise<boolean> {
+  async moveFolderToParent(folderId: string, parentFolderId: string | null): Promise<boolean> {
     try {
       const { error } = await this.supabase
         .from('folders')
-        .update({ parent_folder_id: groupId })
+        .update({ parent_folder_id: parentFolderId })
         .eq('id', folderId)
-        .eq('is_system', false); // Empêche le groupement des dossiers système
+        .eq('is_system', false); // Empêche le déplacement des dossiers système
 
       if (error) {
-        console.error('Error moving folder to group:', error);
+        console.error('Error moving folder:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error moving folder to group:', error);
+      console.error('Error moving folder:', error);
       return false;
     }
   }
@@ -299,5 +218,31 @@ export class SupabaseFolderRepository implements FolderRepository {
       console.error('Error deleting folders:', error);
       return false;
     }
+  }
+
+  async getFolderAncestors(folderId: string): Promise<Folder[]> {
+    const ancestors: Folder[] = [];
+    let currentFolderId: string | null = folderId;
+
+    // Récupérer d'abord le dossier courant pour obtenir son parent_folder_id
+    const currentFolder = await this.getFolderById(currentFolderId);
+    if (!currentFolder) {
+      return ancestors;
+    }
+
+    currentFolderId = currentFolder.parent_folder_id;
+
+    // Remonter la chaîne des parents (max 10 niveaux pour éviter les boucles infinies)
+    let maxIterations = 10;
+    while (currentFolderId && maxIterations > 0) {
+      const folder = await this.getFolderById(currentFolderId);
+      if (!folder) break;
+
+      ancestors.unshift(folder); // Ajouter au début pour avoir l'ordre du plus éloigné au plus proche
+      currentFolderId = folder.parent_folder_id;
+      maxIterations--;
+    }
+
+    return ancestors;
   }
 }

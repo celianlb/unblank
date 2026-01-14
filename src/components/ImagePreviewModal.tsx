@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Copy, ExternalLink, Check } from "lucide-react";
+import { X, Pencil, Copy, ExternalLink, Check, Trash } from "lucide-react";
 import EditTagsModal from "./EditTagsModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import Tooltip from "./Tooltip";
@@ -20,6 +21,8 @@ interface ImagePreviewModalProps {
   folder: string;
   tags: string[];
   canEdit?: boolean;
+  canDelete?: boolean;
+  onDelete?: (linkId: string) => void;
 }
 
 export default function ImagePreviewModal({
@@ -35,8 +38,11 @@ export default function ImagePreviewModal({
   folder,
   tags,
   canEdit = true,
+  canDelete = true,
+  onDelete,
 }: ImagePreviewModalProps) {
   const [isEditTagsOpen, setIsEditTagsOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentTags, setCurrentTags] = useState(tags);
   const [isSaving, setIsSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -51,6 +57,14 @@ export default function ImagePreviewModal({
 
   const handleOpenLink = () => {
     window.open(link, "_blank");
+  };
+
+  const handleDelete = () => {
+    if (onDelete && linkId) {
+      onDelete(linkId);
+      setIsDeleteModalOpen(false);
+      onClose();
+    }
   };
 
   const handleSaveTags = async (newTags: string[]) => {
@@ -223,8 +237,27 @@ export default function ImagePreviewModal({
             </div>
           </div>
 
-          {/* Edit tags button - Positionné en bas à droite */}
-          <div className="w-full flex justify-end">
+          {/* Action buttons - Positioned at bottom */}
+          <div className="w-full flex justify-end gap-2 sm:gap-3">
+            {/* Delete button */}
+            {canDelete && onDelete && (
+              <Tooltip content="Supprimer" position="bottom">
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="h-9 sm:h-10 md:h-12 bg-[#C5C5C5] border-2 border-[#0D0D0D] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] rounded-lg sm:rounded-xl flex flex-row justify-center items-center px-3 sm:px-4 md:px-6 py-2 md:py-3 gap-2 transition-all cursor-pointer hover:bg-[#FFE3E8] active:translate-y-[2px] active:shadow-none"
+                >
+                  <Trash
+                    className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0D0D0D]"
+                    strokeWidth={2}
+                  />
+                  <span className="text-xs sm:text-sm md:text-base leading-tight font-medium uppercase text-[#0D0D0D] font-[Heebo]">
+                    Supprimer
+                  </span>
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Edit tags button */}
             <Tooltip
               content="Vous n'avez pas la permission de modifier les tags dans ce dossier partagé"
               disabled={canEdit}
@@ -267,6 +300,13 @@ export default function ImagePreviewModal({
         onClose={() => setIsEditTagsOpen(false)}
         initialTags={currentTags}
         onSave={handleSaveTags}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
       />
     </div>
   );
