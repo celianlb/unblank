@@ -2,11 +2,11 @@ import Skeleton from "./Skeleton";
 
 export default function FolderCardSkeleton() {
   return (
-    <div className="w-[272px] min-h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none box-border flex flex-col gap-4 p-3">
+    <div className="w-full h-auto bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none box-border flex flex-col gap-4 p-3">
       {/* Images Grid (2 images side by side) */}
-      <div className="flex flex-row gap-2 w-full h-[185px]">
-        <Skeleton className="flex-1 h-[185px] rounded-lg" />
-        <Skeleton className="flex-1 h-[185px] rounded-lg" />
+      <div className="flex flex-row gap-2 w-full h-[150px] sm:h-[160px]">
+        <Skeleton className="flex-1 h-[150px] sm:h-[160px] rounded-lg" />
+        <Skeleton className="flex-1 h-[150px] sm:h-[160px] rounded-lg" />
       </div>
 
       {/* Title */}

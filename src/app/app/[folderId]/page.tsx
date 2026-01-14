@@ -248,7 +248,7 @@ export default function FolderPage() {
                 >
                   Sous-dossiers ({subFolders.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-8 w-full">
+                <div className="card-grid-folders">
                   {subFolders.map((subFolder) => (
                     <FolderCard
                       key={subFolder.id}
@@ -275,7 +275,7 @@ export default function FolderPage() {
                 >
                   Images ({imageLinks.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-3 sm:gap-8 w-full">
+                <div className="card-grid-images">
                   {imageLinks.map((link) => (
                     <ImageCard
                       key={link.id}
@@ -311,7 +311,7 @@ export default function FolderPage() {
                 >
                   Vidéos ({videoLinks.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-8 w-full">
+                <div className="card-grid-videos">
                   {videoLinks.map((link) => {
                     const platformInfo = getVideoPlatformInfo(link.url);
                     const thumbnailUrl =
@@ -351,7 +351,7 @@ export default function FolderPage() {
                 >
                   Liens ({regularLinks.length})
                 </h1>
-                <div className="flex flex-row flex-wrap gap-8 w-full">
+                <div className="card-grid-links">
                   {regularLinks.map((link) => {
                     const url = new URL(link.url);
                     const siteName =

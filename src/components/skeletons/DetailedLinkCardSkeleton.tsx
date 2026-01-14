@@ -2,7 +2,7 @@ import Skeleton from "./Skeleton";
 
 export default function DetailedLinkCardSkeleton() {
   return (
-    <div className="w-[350px] h-[237px] bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
+    <div className="w-full h-auto bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
       {/* Header with favicon and site info */}
       <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
         {/* Favicon */}

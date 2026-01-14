@@ -42,3 +42,91 @@ a {
   --font-family-display: 'Area Inktrap', var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-body: var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* Card Grid Layouts - Responsive auto-fill grids with max widths */
+/* Gap uniforme pour tous les types: 16px mobile, 20px desktop */
+/* Auto-fill avec minmax pour remplir tout l'espace sans rendre les cards trop larges */
+
+/* Grid pour images - Plus dense, max 220px par card */
+.card-grid-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+  gap: 1rem; /* 16px */
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card-grid-images {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem; /* 20px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-images {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Grid pour vidéos - Moyenne densité, max 290px par card */
+.card-grid-videos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+  gap: 1rem; /* 16px */
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card-grid-videos {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.25rem; /* 20px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-videos {
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  }
+}
+
+/* Grid pour folders - Moyenne densité, max 250px par card */
+.card-grid-folders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 1rem; /* 16px */
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card-grid-folders {
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    gap: 1.25rem; /* 20px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-folders {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* Grid pour liens détaillés - Moins dense, max 360px (pour les boutons) */
+.card-grid-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
+  gap: 1rem; /* 16px */
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card-grid-links {
+    grid-template-columns: repeat(auto-fill, minmax(325px, 1fr));
+    gap: 1.25rem; /* 20px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-links {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+}

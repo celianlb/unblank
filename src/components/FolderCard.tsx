@@ -152,12 +152,12 @@ export default function FolderCard({
     <>
       <div
         onClick={handleCardClick}
-        className="w-[272px] min-h-[359px] bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3"
+        className="w-full h-auto bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3"
       >
         {/* Frame 187 - Images Grid (2 images side by side) */}
-        <div className="flex flex-row gap-2 w-full h-[185px]">
+        <div className="flex flex-row gap-2 w-full h-[150px] sm:h-[160px]">
           {/* Frame 185 - Image 1 */}
-          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+          <div className="flex-1 h-[150px] sm:h-[160px] bg-[#C4C4C4] rounded-lg overflow-hidden">
             {image1 && (
               <img
                 src={image1}
@@ -169,7 +169,7 @@ export default function FolderCard({
             )}
           </div>
           {/* Frame 186 - Image 2 */}
-          <div className="flex-1 h-[185px] bg-[#C4C4C4] rounded-lg overflow-hidden">
+          <div className="flex-1 h-[150px] sm:h-[160px] bg-[#C4C4C4] rounded-lg overflow-hidden">
             {image2 && (
               <img
                 src={image2}

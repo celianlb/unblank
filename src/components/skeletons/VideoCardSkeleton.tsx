@@ -2,7 +2,7 @@ import Skeleton from "./Skeleton";
 
 export default function VideoCardSkeleton() {
   return (
-    <div className="w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border relative overflow-hidden">
+    <div className="w-full bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border relative overflow-hidden">
       {/* Header with platform logo and info */}
       <div className="flex flex-row items-center p-3 gap-[10px] w-full bg-white">
         {/* Platform Logo */}
@@ -16,7 +16,7 @@ export default function VideoCardSkeleton() {
       </div>
 
       {/* Video Thumbnail */}
-      <Skeleton className="w-full h-[200px]" />
+      <Skeleton className="w-full h-[160px] sm:h-[180px]" />
 
       {/* Bottom content */}
       <div className="flex flex-col gap-3 p-3 w-full">

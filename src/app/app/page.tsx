@@ -240,7 +240,7 @@ export default function AppPage() {
             >
               Dossiers ({sortedFolders.length})
             </h1>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-folders">
               {sortedFolders.map((folder) => (
                 <FolderCard
                   key={folder.id}
@@ -275,7 +275,7 @@ export default function AppPage() {
             >
               Dossiers partagés ({sharedFolders.length})
             </h1>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-folders">
               {sharedFolders.map((folder) => (
                 <SharedFolderCard
                   key={folder.id}
@@ -306,7 +306,7 @@ export default function AppPage() {
             >
               Liens récents ({totalLinksCount})
             </h1>
-            <div className="flex flex-row flex-wrap gap-8 w-full">
+            <div className="card-grid-folders">
               {uniqueLinks.map((link) => (
                 <LinkCard
                   key={link.id}
