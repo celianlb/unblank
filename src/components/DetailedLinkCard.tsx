@@ -126,7 +126,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className={`w-[350px] ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative`}>
+      <div className={`w-[420px] ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden`}>
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">

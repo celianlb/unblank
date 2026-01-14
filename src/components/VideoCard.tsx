@@ -180,7 +180,7 @@ export default function VideoCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative"
+        className="group/card w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
       >
         {/* Checkbox - shown when in selection mode */}
         {showHoverElements && (
@@ -228,7 +228,7 @@ export default function VideoCard({
           } gap-1.5 z-20`}
         >
           {/* Move button */}
-          <Tooltip content="Déplacer">
+          <Tooltip content="Déplacer" position="bottom">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -245,7 +245,7 @@ export default function VideoCard({
 
           {/* Delete button */}
           {canDelete && (
-            <Tooltip content="Supprimer">
+            <Tooltip content="Supprimer" position="bottom">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
