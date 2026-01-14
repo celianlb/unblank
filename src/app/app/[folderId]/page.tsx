@@ -182,6 +182,8 @@ export default function FolderPage() {
         currentFolderId={folder?.id}
         isLoading={loadingData}
       />
+      {/* Spacer pour compenser le header fixe */}
+      <div className="h-[70px] sm:h-[76px] md:h-[84px] lg:h-[88px] xl:h-[102px]" />
 
       <main className="w-full px-[22px] py-[22px] flex flex-col gap-16">
         {/* Breadcrumb Navigation */}
@@ -293,6 +295,7 @@ export default function FolderPage() {
                       onDelete={handleDeleteSingle}
                       canDelete={canEdit}
                       canEdit={canEdit}
+                      currentFolderId={folderId}
                     />
                   ))}
                 </div>
@@ -312,7 +315,7 @@ export default function FolderPage() {
                   {videoLinks.map((link) => {
                     const platformInfo = getVideoPlatformInfo(link.url);
                     const thumbnailUrl =
-                      link.screenshot_url || link.original_image_url || "";
+                      link.screenshot_url || link.original_image_url || undefined;
 
                     return (
                       <VideoCard
@@ -331,6 +334,7 @@ export default function FolderPage() {
                         onDelete={handleDeleteSingle}
                         canDelete={canEdit}
                         canEdit={canEdit}
+                        currentFolderId={folderId}
                       />
                     );
                   })}
@@ -361,6 +365,7 @@ export default function FolderPage() {
                         siteName={siteName}
                         siteUrl={siteUrl}
                         description={link.description || ""}
+                        thumbnailUrl={link.screenshot_url}
                         link={link.url}
                         tags={link.tags?.map((t) => t.name) || []}
                         isSelectionMode={isSelectionMode}
@@ -368,6 +373,7 @@ export default function FolderPage() {
                         onDelete={handleDeleteSingle}
                         canDelete={canEdit}
                         canEdit={canEdit}
+                        currentFolderId={folderId}
                       />
                     );
                   })}
