@@ -103,13 +103,19 @@ export default function AddLinkModal({
     if (!session?.user?.id || !url.trim()) return;
 
     try {
+      // Déterminer où stocker l'image selon le type de contenu
+      // - Pour les images directes : original_image_url
+      // - Pour les liens/vidéos avec og:image : screenshot_url (thumbnail)
+      const isDirectImage = metadata?.contentType === 'image';
+
       await createLink.mutateAsync({
         url: url.trim(),
         title: title.trim() || undefined,
         description: description.trim() || undefined,
         folderId: folderId,
-        originalImageUrl: metadata?.image || undefined,
-        imageFormat: metadata?.imageFormat || undefined,
+        originalImageUrl: isDirectImage ? (metadata?.image || undefined) : undefined,
+        screenshotUrl: !isDirectImage ? (metadata?.image || undefined) : undefined,
+        imageFormat: isDirectImage ? (metadata?.imageFormat || undefined) : undefined,
         contentType: metadata?.contentType || undefined,
         tags: tags.length > 0 ? tags : undefined,
         autoTaggingEnabled,

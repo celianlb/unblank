@@ -24,6 +24,7 @@ export interface CreateLinkData {
   description?: string;
   folderId?: string;
   originalImageUrl?: string;
+  screenshotUrl?: string;
   imageFormat?: string;
   contentType?: string;
   tags?: string[];
