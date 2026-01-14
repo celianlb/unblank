@@ -7,6 +7,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Modifié
+- Migration vers grilles CSS responsives pour tous les layouts (images, vidéos, liens, dossiers)
+- Cards adaptatives avec contraintes min/max par type de contenu
+
 ### Corrigé
 - Affichage des cards sur la page de partage public (utilisation des grilles CSS responsives)
 - Boutons d'action visibles en mode lecture seule sur la page de partage
