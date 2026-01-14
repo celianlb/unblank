@@ -7,6 +7,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Corrigé
+- Affichage des cards sur la page de partage public (utilisation des grilles CSS responsives)
+- Boutons d'action visibles en mode lecture seule sur la page de partage
+
 ## [1.3.0] - 2025-01-14
 
 ### Ajouté
