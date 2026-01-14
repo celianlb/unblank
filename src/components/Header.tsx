@@ -151,12 +151,12 @@ export default function Header({
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
       />
-      <BetaTrialBanner />
       <header
         className={`w-full bg-white border-b-[3px] border-black fixed top-0 left-0 right-0 z-40 transition-transform duration-300 ease-in-out ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
+        <BetaTrialBanner />
         <div
           className={`w-full h-full px-[22px] ${
             minimal ? "py-4" : "py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8"

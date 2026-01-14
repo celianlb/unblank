@@ -155,7 +155,7 @@ export class SupabaseLinkRepository implements LinkRepository {
           title: data.title || null,
           description: data.description || null,
           original_image_url: data.originalImageUrl || null,
-          screenshot_url: data.screenshotUrl || null,
+          screenshot_url: null,
           image_format: data.imageFormat || null,
           content_type: data.contentType || null,
           position: 0,

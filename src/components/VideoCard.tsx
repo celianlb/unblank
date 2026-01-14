@@ -180,7 +180,7 @@ export default function VideoCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
+        className="group/card w-full sm:w-[450px] bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative"
       >
         {/* Checkbox - shown when in selection mode */}
         {showHoverElements && (
