@@ -155,6 +155,7 @@ export class SupabaseLinkRepository implements LinkRepository {
           title: data.title || null,
           description: data.description || null,
           original_image_url: data.originalImageUrl || null,
+          screenshot_url: data.screenshotUrl || null,
           image_format: data.imageFormat || null,
           content_type: data.contentType || null,
           position: 0,
@@ -324,6 +325,28 @@ export class SupabaseLinkRepository implements LinkRepository {
       return true;
     } catch (error) {
       console.error('Error updating tags:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Déplace un lien vers un autre dossier
+   */
+  async moveLinkToFolder(linkId: string, targetFolderId: string | null): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from('links')
+        .update({ folder_id: targetFolderId })
+        .eq('id', linkId);
+
+      if (error) {
+        console.error('Error moving link to folder:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error moving link to folder:', error);
       return false;
     }
   }

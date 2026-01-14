@@ -245,3 +245,47 @@ export function useCreateLink(userId: string, folderId?: string) {
     },
   });
 }
+
+/**
+ * Hook pour déplacer un lien vers un autre dossier
+ */
+export function useMoveLinkToFolder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ linkId, targetFolderId }: { linkId: string; targetFolderId: string | null }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const response = await fetch(`/api/links/${linkId}/move`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ targetFolderId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to move link');
+      }
+
+      return response.json();
+    },
+
+    onSuccess: () => {
+      // Invalider toutes les queries de liens
+      queryClient.invalidateQueries({ queryKey: ['links'] });
+      // Invalider les dossiers pour mettre à jour les compteurs et miniatures
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['folder'] });
+      queryClient.invalidateQueries({ queryKey: ['sub-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['shared-folders'] });
+    },
+  });
+}
