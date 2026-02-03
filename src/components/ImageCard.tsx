@@ -6,6 +6,7 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 import ImagePreviewModal from "./ImagePreviewModal";
 import MoveToFolderModal from "./MoveToFolderModal";
 import Tooltip from "./Tooltip";
+import { useImageOrientation } from "@/hooks/useImageOrientation";
 
 interface ImageCardProps {
   linkId: string;
@@ -47,6 +48,7 @@ export default function ImageCard({
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const { isLandscape, onImageLoad } = useImageOrientation();
 
   // Proxy external images to avoid CORS issues
   const getProxiedImageUrl = (url: string, size?: "thumbnail" | "full") => {
@@ -107,7 +109,7 @@ export default function ImageCard({
         onClick={handleCardClick}
         className="group/card w-full aspect-[4/5] sm:aspect-[3/4] bg-black border-2 sm:border-4 border-black rounded-xl sm:rounded-[20px] relative cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border overflow-hidden"
       >
-        {/* Image - full bleed */}
+        {/* Image - full bleed avec rotation pour les images horizontales */}
         <div className="absolute inset-0 overflow-hidden">
           {thumbnailUrl ? (
             <img
@@ -115,7 +117,10 @@ export default function ImageCard({
               alt="Preview"
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
+              onLoad={onImageLoad}
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                isLandscape ? "rotate-90 scale-[1.33]" : ""
+              }`}
             />
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">

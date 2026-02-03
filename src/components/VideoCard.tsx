@@ -180,7 +180,7 @@ export default function VideoCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/card w-full bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
+        className="group/card w-full h-full bg-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_#000000] flex flex-col items-start box-border cursor-pointer relative overflow-hidden"
       >
         {/* Checkbox - shown when in selection mode */}
         {showHoverElements && (
@@ -307,7 +307,7 @@ export default function VideoCard({
         </div>
 
         {/* Bottom content with padding */}
-        <div className="flex flex-col gap-3 p-3 w-full">
+        <div className="flex flex-col gap-3 p-3 w-full mt-auto">
           {/* Title */}
           <h4 className="text-lg leading-[120%] font-bold text-[#0D0D0D] font-[Heebo] line-clamp-2">
             {title}

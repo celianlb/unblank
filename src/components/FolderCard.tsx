@@ -152,7 +152,7 @@ export default function FolderCard({
     <>
       <div
         onClick={handleCardClick}
-        className="w-full h-auto bg-[#FEF8EE] border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3"
+        className="w-full h-full bg-white border-4 border-black rounded-[20px] flex-none cursor-pointer transition-shadow hover:shadow-[4px_4px_0px_#000000] box-border flex flex-col gap-4 p-3"
       >
         {/* Frame 187 - Images Grid (2 images side by side) */}
         <div className="flex flex-row gap-2 w-full h-[150px] sm:h-[160px]">

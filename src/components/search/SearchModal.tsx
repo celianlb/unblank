@@ -186,6 +186,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Overlay */}

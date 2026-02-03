@@ -126,7 +126,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className={`w-full ${hasThumbnail ? 'h-auto bg-white' : 'h-auto bg-[#FEF8EE]'} border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden`}>
+      <div className="w-full h-full bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">
@@ -225,99 +225,102 @@ export default function DetailedLinkCard({
           </p>
         </div>
 
-        {/* Link bar with actions */}
-        <div className="flex flex-row items-center gap-2.5 w-full h-[41px]">
-          {/* Link input - fond blanc si pas de thumbnail (car le fond de la card est beige) */}
-          <div className={`flex-1 h-[41px] ${hasThumbnail ? 'bg-[#FEF8EE]' : 'bg-white'} border-2 border-black rounded-lg flex flex-row items-center justify-center px-2.5 gap-2.5`}>
-            <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
-              {displayLink}
-            </span>
-            <Tooltip content={isCopied ? "Copié !" : "Copier le lien"}>
-              <button
-                onClick={handleCopy}
-                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
-              >
-                {isCopied ? (
-                  <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
-                ) : (
-                  <Copy
-                    className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+        {/* Bottom section - pushed to bottom */}
+        <div className="flex flex-col gap-[10px] w-full mt-auto">
+          {/* Link bar with actions */}
+          <div className="flex flex-row items-center gap-2.5 w-full h-[41px]">
+            {/* Link input */}
+            <div className="flex-1 h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex flex-row items-center justify-center px-2.5 gap-2.5">
+              <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] truncate">
+                {displayLink}
+              </span>
+              <Tooltip content={isCopied ? "Copié !" : "Copier le lien"}>
+                <button
+                  onClick={handleCopy}
+                  className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer transition-all"
+                >
+                  {isCopied ? (
+                    <Check className="w-5 h-5 text-green-600" strokeWidth={2} />
+                  ) : (
+                    <Copy
+                      className="w-5 h-5 text-[#0D0D0D] hover:text-[#FF506F]"
+                      strokeWidth={2}
+                    />
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip content="Ouvrir dans un nouvel onglet">
+                <button
+                  onClick={handleOpenLink}
+                  className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
+                </button>
+              </Tooltip>
+            </div>
+
+            {/* Move button - only show if user can edit */}
+            {canEdit && (
+              <Tooltip content="Déplacer vers un dossier">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMoveModalOpen(true);
+                  }}
+                  className="w-[41px] h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex items-center justify-center p-2 shrink-0 cursor-pointer hover:bg-[#FFE3E8] transition-all"
+                >
+                  <FolderInput className="w-5 h-5 text-black" strokeWidth={2} />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Edit button - only show if user can edit */}
+            {canEdit && (
+              <Tooltip content="Modifier">
+                <button
+                  onClick={handleEdit}
+                  className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer hover:bg-[#1a1a1a] transition-all"
+                >
+                  <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
+                </button>
+              </Tooltip>
+            )}
+
+            {/* Delete button */}
+            {canDelete && (
+              <Tooltip content="Supprimer">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
+                >
+                  <Trash
+                    className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
                     strokeWidth={2}
                   />
-                )}
-              </button>
-            </Tooltip>
-            <Tooltip content="Ouvrir dans un nouvel onglet">
-              <button
-                onClick={handleOpenLink}
-                className="w-5 h-5 flex items-center justify-center shrink-0 cursor-pointer"
-              >
-                <ExternalLink className="w-5 h-5 text-black" strokeWidth={2} />
-              </button>
-            </Tooltip>
+                </button>
+              </Tooltip>
+            )}
           </div>
 
-          {/* Move button - only show if user can edit */}
-          {canEdit && (
-            <Tooltip content="Déplacer vers un dossier">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMoveModalOpen(true);
-                }}
-                className="w-[41px] h-[41px] bg-[#FEF8EE] border-2 border-black rounded-lg flex items-center justify-center p-2 shrink-0 cursor-pointer hover:bg-[#FFE3E8] transition-all"
-              >
-                <FolderInput className="w-5 h-5 text-black" strokeWidth={2} />
-              </button>
-            </Tooltip>
-          )}
-
-          {/* Edit button - only show if user can edit */}
-          {canEdit && (
-            <Tooltip content="Modifier">
-              <button
-                onClick={handleEdit}
-                className="w-[41px] h-[41px] bg-[#0D0D0D] rounded-lg flex items-center justify-center p-2 gap-1.5 shrink-0 cursor-pointer hover:bg-[#1a1a1a] transition-all"
-              >
-                <Pencil className="w-5 h-5 text-[#FEF8EE]" strokeWidth={2} />
-              </button>
-            </Tooltip>
-          )}
-
-          {/* Delete button */}
-          {canDelete && (
-            <Tooltip content="Supprimer">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDeleteModalOpen(true);
-                }}
-                className="w-[41px] h-[41px] bg-[#C5C5C5] rounded-lg flex items-center justify-center p-2 gap-1 shrink-0 group cursor-pointer"
-              >
-                <Trash
-                  className="w-5 h-5 text-black group-hover:text-[#FF5070] transition-colors"
-                  strokeWidth={2}
-                />
-              </button>
-            </Tooltip>
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-row items-start gap-1.5 w-full overflow-hidden">
+              {tags.map((tag, index) => (
+                <div
+                  key={index}
+                  className="flex flex-row justify-center items-center px-2 py-1 h-[29px] bg-[#FEF8EE] border-2 border-black rounded-lg shrink-0"
+                >
+                  <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
+                    #{tag}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-row items-start gap-1.5 w-full overflow-hidden">
-            {tags.map((tag, index) => (
-              <div
-                key={index}
-                className={`flex flex-row justify-center items-center px-2 py-1 h-[29px] ${hasThumbnail ? 'bg-[#FEF8EE]' : 'bg-white'} border-2 border-black rounded-lg shrink-0`}
-              >
-                <span className="text-sm leading-[21px] tracking-[-0.03em] font-normal text-[#0D0D0D] font-[Heebo] whitespace-nowrap">
-                  #{tag}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <DeleteConfirmModal
