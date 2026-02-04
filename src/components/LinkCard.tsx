@@ -246,11 +246,9 @@ export default function LinkCard({
           </div>
         )}
 
-        {/* Link bar - hidden by default, shown on hover */}
+        {/* Link bar - always visible, fixed at bottom */}
         <div
-          className={`absolute left-3 right-3 bottom-3 ${
-            showHoverElements ? "flex" : "hidden group-hover/card:flex"
-          } flex-row justify-center items-center p-2.5 gap-2.5 bg-[#FEF8EE] border-2 border-black rounded-lg`}
+          className="absolute left-3 right-3 bottom-3 flex flex-row justify-center items-center p-2.5 gap-2.5 bg-[#FEF8EE] border-2 border-black rounded-lg"
         >
           <span className="flex-1 text-sm leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}

@@ -126,7 +126,7 @@ export default function DetailedLinkCard({
 
   return (
     <>
-      <div className="w-full h-full bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 gap-[10px] box-border relative overflow-hidden">
+      <div className="w-full h-full bg-white border-[3px] border-black rounded-xl flex flex-col items-start p-3 box-border relative overflow-hidden">
         {/* Checkbox - shown when in selection mode */}
         {showCheckbox && (
           <div className="absolute left-3 top-3 z-10">
@@ -163,8 +163,10 @@ export default function DetailedLinkCard({
           </div>
         )}
 
-        {/* Header with favicon and site info - Frame 130 */}
-        <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
+        {/* Content section - grouped at top with internal gap */}
+        <div className="flex flex-col gap-[10px] w-full">
+          {/* Header with favicon and site info - Frame 130 */}
+          <div className="flex flex-row items-center p-[2px] gap-[10px] w-full">
           {/* Favicon */}
           <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center bg-white shrink-0 overflow-hidden">
             {effectiveFaviconUrl ? (
@@ -224,9 +226,13 @@ export default function DetailedLinkCard({
             {description}
           </p>
         </div>
+      </div>
+
+        {/* Flexible spacer */}
+        <div className="flex-1 min-h-[10px]" />
 
         {/* Bottom section - pushed to bottom */}
-        <div className="flex flex-col gap-[10px] w-full mt-auto">
+        <div className="flex flex-col gap-[10px] w-full shrink-0">
           {/* Link bar with actions */}
           <div className="flex flex-row items-center gap-2.5 w-full h-[41px]">
             {/* Link input */}

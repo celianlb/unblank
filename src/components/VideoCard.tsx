@@ -264,8 +264,10 @@ export default function VideoCard({
           )}
         </div>
 
-        {/* Header with platform logo and info */}
-        <div className="flex flex-row items-center p-3 gap-[10px] w-full bg-white z-10">
+        {/* Content section - grouped at top */}
+        <div className="flex flex-col w-full">
+          {/* Header with platform logo and info */}
+          <div className="flex flex-row items-center p-3 gap-[10px] w-full bg-white z-10">
           {/* Platform Logo */}
           <div className="w-[70px] h-[70px] min-w-[70px] min-h-[70px] rounded-full border-2 border-black flex items-center justify-center shrink-0 overflow-hidden bg-white">
             {getPlatformLogo()}
@@ -306,12 +308,17 @@ export default function VideoCard({
           )}
         </div>
 
-        {/* Bottom content with padding */}
-        <div className="flex flex-col gap-3 p-3 w-full mt-auto">
-          {/* Title */}
-          <h4 className="text-lg leading-[120%] font-bold text-[#0D0D0D] font-[Heebo] line-clamp-2">
-            {title}
-          </h4>
+        {/* Title */}
+        <h4 className="text-lg leading-[120%] font-bold text-[#0D0D0D] font-[Heebo] line-clamp-2 px-3 pt-3">
+          {title}
+        </h4>
+      </div>
+
+      {/* Flexible spacer */}
+      <div className="flex-1 min-h-[10px]" />
+
+      {/* Bottom section - pushed to bottom */}
+      <div className="flex flex-col gap-3 p-3 w-full shrink-0">
 
           {/* Link bar with actions */}
           <div className="flex flex-row items-center gap-2 w-full h-[41px]">

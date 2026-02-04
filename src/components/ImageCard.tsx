@@ -233,11 +233,9 @@ export default function ImageCard({
           </div>
         )}
 
-        {/* Link bar - hidden by default, shown on hover */}
+        {/* Link bar - always visible, fixed at bottom */}
         <div
-          className={`absolute left-2 sm:left-3 right-2 sm:right-3 bottom-2 sm:bottom-3 ${
-            showHoverElements ? "flex" : "hidden group-hover/card:flex"
-          } flex-row justify-center items-center p-2 sm:p-2.5 gap-2 sm:gap-2.5 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg`}
+          className="absolute left-2 sm:left-3 right-2 sm:right-3 bottom-2 sm:bottom-3 flex flex-row justify-center items-center p-2 sm:p-2.5 gap-2 sm:gap-2.5 bg-[#FEF8EE] border sm:border-2 border-black rounded-md sm:rounded-lg"
         >
           <span className="flex-1 text-xs sm:text-sm leading-tight sm:leading-[21px] tracking-[-0.03em] text-[#0D0D0D] font-[Heebo] truncate">
             {displayLink}

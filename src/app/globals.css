@@ -72,6 +72,7 @@ a {
 .card-grid-videos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+  grid-auto-rows: 1fr;
   gap: 1rem; /* 16px */
   width: 100%;
 }
@@ -93,6 +94,7 @@ a {
 .card-grid-folders {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  grid-auto-rows: 1fr;
   gap: 1rem; /* 16px */
   width: 100%;
 }
@@ -114,6 +116,7 @@ a {
 .card-grid-links {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
+  grid-auto-rows: 1fr;
   gap: 1rem; /* 16px */
   width: 100%;
 }
